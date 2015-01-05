@@ -342,12 +342,10 @@ transitionMatrixBackward <- function(r,K, migration){
   if ((length(r)>1)&(length(K)==1)){transition = t(matrix(r,nrow=length(r),ncol=length(r))) * K * t(migration)}
   if ((length(r)==1)&(length(K)>1)){transition = r * t(matrix(K,nrow=length(K),ncol=length(K))) * t(migration)}
   if ((length(r)>1)&(length(K)==1)){transition = t(matrix(r,nrow=length(r),ncol=length(r))) * K * t(migration)}
-  if ((length(r)>1)&(length(K)>1)) {
-  transition = t(matrix(r,nrow=length(r),ncol=length(r))) * t(matrix(K,nrow=length(K),ncol=length(K))) * t(migration)
+  if ((length(r)>1)&(length(K)>1)) {transition = t(matrix(r,nrow=length(r),ncol=length(r))) * t(matrix(K,nrow=length(K),ncol=length(K))) * t(migration)}
   transition = transition / rowSums(transition)  # Standardisation
   transition = transition * as.numeric(transition>1e-6) # removal of values below 1e-6
   transition = transition / rowSums(transition)  # Standardisation again
-  }
   transition
 }
 
@@ -676,7 +674,7 @@ t
 # genetic data table : with coordinates
 # aggre_gener : number of generations to aggregate in the simulation steps
 
-simul_coalescent <- function(geneticData,rasterStack,pK,pr,shapesK,shapesr,shapeDisp,pDisp,mutation_rate=1E-4,aggre_gener=1E3)
+simul_coalescent <- function(geneticData,rasterStack,pK,pr,shapesK,shapesr,shapeDisp,pDisp,mutation_rate=1E-4,initial_genetic_value=200)
 {
   prob_forward=NA
   K = ReactNorm(values(rasterStack),pK,shapesK)[,"Y"]
@@ -755,8 +753,16 @@ simul_coalescent <- function(geneticData,rasterStack,pK,pr,shapesK,shapesr,shape
   # we now move in the backward generation while coalescence loop
   cell_number_of_nodes = parent_cell_number_of_nodes
   }
-  list(coalescent=add_br_length_and_mutation(coalescent,mutation_rate),forward_log_prob=sum(prob_forward)/coalescent[[length(coalescent)]]$time)
+  coalescent[[length(coalescent)]]$genetic_value = initial_genetic_value
+  list(coalescent=add_br_length_and_mutation(coalescent),mutation_rate=mutation_rate,forward_log_prob=sum(prob_forward)/coalescent[[length(coalescent)]]$time)
   # forward_log_prob is the average per generation of the log probability of the forward movements of the genes in the landscape
+}
+
+coalist_2_coaltable <- function(coalist)
+{
+  coaldf <- data.frame(Reduce(rbind,coalist))
+  coaltable <- coaldf[rep(1:dim(coaltable)[2],unlist(lapply(coaltable$coalescing, length))),]
+  unlist(coaldf[,c("coalescing","br_length","mutations")])
 }
 
 #
@@ -764,34 +770,41 @@ simul_coalescent <- function(geneticData,rasterStack,pK,pr,shapesK,shapesr,shape
 #
 #
 
-add_br_length_and_mutation <- function(coalescent,mutation_rate=1E-4)
+add_br_length_and_mutation <- function(coalescent_simulated)
 {
   tips = NULL
   internals = NULL
   nodes = NULL
   times = NULL
-  for (i in 1:length(coalescent))#i=1;i=2
+  for (i in 1:length(coalescent_simulated$coalescent))#i=1;i=2
   {
-    nodes = append(nodes,coalescent[[i]]$coalescing,coalescent[[i]]$new_node)
-    internals = append(internals,coalescent[[i]]$new_node)
-    times = append(times,coalescent[[i]]$time)
+    nodes = append(nodes,coalescent_simulated$coalescent[[i]]$coalescing,coalescent_simulated$coalescent[[i]]$new_node)
+    internals = append(internals,coalescent_simulated$coalescent[[i]]$new_node)
+    times = append(times,coalescent_simulated$coalescent[[i]]$time)
   }
   nodes = as.numeric(levels(as.factor(c(nodes,internals))));nodes = nodes[order(nodes)]
   tips = nodes[!((nodes)%in%(internals))]
   # getting the branch length of each coalescing node
-  for (i in 1:length(coalescent))#i=1
+  for (i in 1:length(coalescent_simulated$coalescent))#i=1
   {
-    for (coalescing in coalescent[[i]]$coalescing)# coalescing = coalescent[[i]]$coalescing[1]
+    for (coalescing in coalescent_simulated$coalescent[[i]]$coalescing)# coalescing = coalescent_simulated$coalescent[[i]]$coalescing[1]
     {
-      if (coalescing %in% tips) {coalescent[[i]]$br_length <- append(coalescent[[i]]$br_length,coalescent[[i]]$time)
+      if (coalescing %in% tips) {coalescent_simulated$coalescent[[i]]$br_length <- append(coalescent_simulated$coalescent[[i]]$br_length,coalescent_simulated$coalescent[[i]]$time)
                                                                     } else {
-        coalescent[[i]]$br_length <- append(coalescent[[i]]$br_length,coalescent[[i]]$time-times[which(internals==coalescing)]) 
+        coalescent_simulated$coalescent[[i]]$br_length <- append(coalescent_simulated$coalescent[[i]]$br_length,coalescent_simulated$coalescent[[i]]$time-times[which(internals==coalescing)]) 
                                                                     } 
-      coalescent[[i]]$mutations <- rpois(rep(1,length(coalescent[[i]]$br_length)),coalescent[[i]]$br_length*mutation_rate)
+      coalescent_simulated$coalescent[[i]]$mutations <- rpois(rep(1,length(coalescent_simulated$coalescent[[i]]$br_length)),coalescent_simulated$coalescent[[i]]$br_length*mutation_rate)
     }
-  }  
-coalescent
+  }
+  
+  for (i in length(coalescent_simulated$coalescent):1)#i=1
+  {
+    coalescent_simulated$coalescent[[i]]$genetic_values
+  }
+coalescent_simulated
 }
+
+
 
 # coalescent_2_newick
 # fuinction that converts coalescent

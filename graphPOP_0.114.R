@@ -433,14 +433,14 @@ geneticDist <- function(commute_time, popSize){
 #           haploid or diploid : haploid or diploid 
 # nind = number of individuals sampled from the full carrying capacity population
 
-CreateGenetArray <- function(rasK, nb_locus, initial_locus_value,Option="1_col_diploid",nind=4)
+CreateGenetArray <- function(rasK, nb_locus, initial_locus_value,Option="sample_1_col_diploid",nind=4)
 {
   #Get coords for each cell
   coords = xyFromCell(rasK, 1:length(values(rasK[[1]])), spatial=FALSE)
   repet = switch(Option,
-                 sample_1col_diploid = sort(rep(sample(rep(1:length(rasK),round(values(rasK))),nind),2)), 
+                 sample_1col_diploid = sort(rep(sample(rep(1:ncell(rasK),round(values(rasK))),nind),2)), 
                  sample_2col_diploid = sample(rep(1:length(rasK),round(values(rasK))),nind), 
-                 sample_haploid = sample(rep(1:length(rasK),round(values(rasK))),nind),
+                 sample_haploid = sample(rep(1:ncell(rasK),round(values(rasK))),nind),
                  full_1col_diploid = rep(1:length(rasK),round(values(rasK))*2), 
                  full_2col_diploid = rep(1:length(rasK),round(values(rasK))), 
                  full_haploid = rep(1:length(rasK),round(values(rasK))),                 
@@ -456,7 +456,7 @@ CreateGenetArray <- function(rasK, nb_locus, initial_locus_value,Option="1_col_d
   )
   colnames(genes) = switch(Option,
                            sample_1col_diploid = paste("Locus",1:nb_locus, sep=""), 
-                           sample_2col_diploid = as.data.frame(array(initial_locus_value,dim=c(length(repet),nb_locus*2))), 
+                           sample_2col_diploid = paste("Locus",sort(rep(1:nb_locus,2)),".", 1:2, sep=""), 
                            sample_haploid = paste("Locus",1:nb_locus, sep=""),
                            full_1col_diploid = paste("Locus",1:nb_locus, sep=""), 
                            full_2col_diploid = paste("Locus",sort(rep(1:nb_locus,2)),".", 1:2, sep=""), 

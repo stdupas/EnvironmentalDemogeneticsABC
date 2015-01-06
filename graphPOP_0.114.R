@@ -436,9 +436,9 @@ CreateGenetArray <- function(rasK, nb_locus, initial_locus_value,Option="sample_
   #Get coords for each cell
   coords = xyFromCell(rasK, 1:length(values(rasK[[1]])), spatial=FALSE)
   repet = switch(Option,
-                 sample_1col_diploid = sort(rep(sample(rep(1:ncell(rasK),round(values(rasK))),nind),2)), 
-                 sample_2col_diploid = sample(rep(1:length(rasK),round(values(rasK))),nind), 
-                 sample_haploid = sample(rep(1:ncell(rasK),round(values(rasK))),nind),
+                 sample_1col_diploid = sort(rep(sample(rep(1:ncell(rasK),round(values(rasK))),nind),2),replace=TRUE), 
+                 sample_2col_diploid = sample(rep(1:length(rasK),round(values(rasK))),nind,replace=TRUE), 
+                 sample_haploid = sample(rep(1:ncell(rasK),round(values(rasK))),nind,replace=TRUE),
                  full_1col_diploid = rep(1:length(rasK),round(values(rasK))*2), 
                  full_2col_diploid = rep(1:length(rasK),round(values(rasK))), 
                  full_haploid = rep(1:length(rasK),round(values(rasK))),                 
@@ -846,6 +846,18 @@ plot_coalescent <- function(coalescent,with_landscape=FALSE,rasK=NULL)
   legend("topright", title="demes", cex=0.75, pch=16, col=tipcols[!duplicated(tipcols)], legend=tipcells[!duplicated(tipcols)], ncol=2, inset=c(-1,0))
   if (with_landscape) {plot(rasK)}
 }
+
+#
+# geneticDataSimulList : a list of simulations, with sublist geneticData and sublist log_lik_forward 
+#
+
+summary_stat <- function(geneticDataObs,geneticDataSimulList,log_lik_simul_list)
+{
+  
+}
+
+
+
 
 #
 # genetic_simulation

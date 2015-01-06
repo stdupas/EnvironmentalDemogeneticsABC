@@ -5,6 +5,7 @@ wd="/home/legs/Bureau/GraphPOP/" # fixe
 wd="/home/dupas/GraphPOP/" # fixe
 wd="/media/1To/IRD/ARTICLES/Dupas/NicheCoal/Graph_Pop" # portable
 wd="/media/dupas/1To/IRD/ARTICLES/Dupas/NicheCoal/Graph_Pop" # fixe
+wd="/home/arno/These/GraphPOP" # portable arno
 
 # test simulation backward
 setwd(wd)

@@ -69,11 +69,11 @@ system.time(
   )
 
 coalescent_simulated
-apetree <- coalescent_2_newick(coalescent=coalescent_simulated$coalescent)
+phylog_tree <- coalescent_2_phylog(coalescent=coalescent_simulated$coalescent)
 
 ##### Plot the coalescent
-plot_coalescent(coalescent=coalescent_simulated$coalescent, with_landscape=TRUE, rasK=rasK, legend_right_move=-.3)
-plot_coalescent(coalescent=coalescent_simulated$coalescent,rasK=rasK,legend_right_move=-.1)
+plot_coalescent(coalescent=coalescent_simulated$coalescent,genetic_table=coalescent_simulated$genetic_values,with_landscape=TRUE, rasK=rasK, legend_right_move=-.3)
+plot_coalescent(coalescent=coalescent_simulated$coalescent,genetic_table=coalescent_simulated$genetic_values,rasK=rasK,legend_right_move=-.3)
 
 ######################### end of Coalescence Simulation Test <<<<<<<<
 

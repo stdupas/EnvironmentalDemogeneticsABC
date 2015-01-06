@@ -1,6 +1,6 @@
 rm(list=ls())
 wd="/home/legs/Bureau/Graph_Pop/" # fixe
-wd="/home/dupas/Bureau/Graph_Pop/" # fixe
+wd="/home/legs/GraphPOP/" # portable
 wd="/media/1To/IRD/ARTICLES/Dupas/NicheCoal/Graph_Pop" # portable
 wd="/media/dupas/1To/IRD/ARTICLES/Dupas/NicheCoal/Graph_Pop" # fixe
 
@@ -18,6 +18,8 @@ rasterStack <- stack(list("BIO1"=raster(matrix(Data2$BIO1,nrow=1,ncol=4),xmn=0,x
 # the parameters of the reaction norm are given by  and pr
 shapesK=c(BIO1="conquadraticskewed",BIO12="conquadraticskewed")
 N=2
+mutation_rate=1E-4
+initial_genetic_value=200
 pK = matrix(c(100,500,300,0,N,N,300,3000,2500,0,N,N),nrow=6,ncol=2,dimnames=list(c("Xmin","Xmax","Xopt","Yxmin","Yxmax","Yopt"),c("BIO1","BIO12")))
 shapesr=c(BIO1="conquadraticskewed",BIO12="conquadraticskewed")
 pr = matrix(c(100,500,300,0,N,N,300,3000,2500,0,N,N),nrow=6,ncol=2,dimnames=list(c("Xmin","Xmax","Xopt","Yxmin","Yxmax","Yopt"),c("BIO1","BIO12")))
@@ -39,8 +41,8 @@ migrationMatrix(rasK,shapeDisp,pDisp)
 system.time(coalescent_simulated <- simul_coalescent(geneticData,rasterStack,pK,pr,shapesK,shapesr,shapeDisp,pDisp,mutation_rate=1E-1))# we simulate a coalescent
 coalescent_simulated
 apetree <- coalescent_2_newick(coalescent_simulated$coalescent)
-plot_coalescent(coalescent_simulated$coalescent,with_landscape=TRUE,rasK=rasK)
-plot_coalescent(coalescent_simulated$coalescent,rasK=rasK)
+plot_coalescent(coalescent_simulated$coalescent,with_landscape=TRUE,rasK=rasK,legend_right_move=-.3)
+plot_coalescent(coalescent_simulated$coalescent,rasK=rasK,legend_right_move=-.1)
 # we plot the coalescent
 
 

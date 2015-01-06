@@ -674,7 +674,7 @@ t
 # genetic data table : with coordinates
 # aggre_gener : number of generations to aggregate in the simulation steps
 
-simul_coalescent <- function(geneticData,rasterStack,pK,pr,shapesK,shapesr,shapeDisp,pDisp,mutation_rate=1E-4,initial_genetic_value=200)
+simul_coalescent <- function(geneticData,rasterStack,pK,pr,shapesK,shapesr,shapeDisp,pDisp,mutation_rate=1E-1,initial_genetic_value=200,mutation_model="stepwise",stepvalue=2)
 {
   prob_forward=NA
   K = ReactNorm(values(rasterStack),pK,shapesK)[,"Y"]
@@ -753,55 +753,87 @@ simul_coalescent <- function(geneticData,rasterStack,pK,pr,shapesK,shapesr,shape
   # we now move in the backward generation while coalescence loop
   cell_number_of_nodes = parent_cell_number_of_nodes
   }
-  coalescent[[length(coalescent)]]$genetic_value = initial_genetic_value
-  list(coalescent=add_br_length_and_mutation(coalescent),mutation_rate=mutation_rate,forward_log_prob=sum(prob_forward)/coalescent[[length(coalescent)]]$time)
+  coalescent=add_br_length_and_mutation(coalescent,mutation_rate,initial_genetic_value)
+  list(coalescent=coalescent,mutation_rate=mutation_rate,forward_log_prob=sum(prob_forward)/coalescent[[length(coalescent)]]$time,genetic_values=genetics_of_coaltable(coalist_2_coaltable(coalescent),initial_genetic_value,mutation_model,stepvalue))
   # forward_log_prob is the average per generation of the log probability of the forward movements of the genes in the landscape
 }
+
+#
+# coalist_2_coaltable function converts a coalescent list to a coalecent table format
+#
 
 coalist_2_coaltable <- function(coalist)
 {
   coaldf <- data.frame(Reduce(rbind,coalist))
-  coaltable <- coaldf[rep(1:dim(coaltable)[2],unlist(lapply(coaltable$coalescing, length))),]
-  unlist(coaldf[,c("coalescing","br_length","mutations")])
+  coaltable <- coaldf[rep(1:dim(coaldf)[1],unlist(lapply(coaldf$coalescing, length))),]
+  coaltable[,c("coalescing","br_length","mutations")] <- unlist(coaldf[,c("coalescing","br_length","mutations")])
+  coaltable
 }
 
+#
+# add_genetic_to_coaltable function
+# adds genetic values to a coalescent table containing mutation number per branch
+# knowing initial genetic value of the ancastor and mutation model
+
+genetics_of_coaltable <- function(coaltable,initial_genetic_value,mutation_model="stepwise",stepvalue=2)
+{
+ switch(mutation_model,
+        step_wise = stepwise(coaltable,initial_genetic_value,stepvalue),
+        my_ass = "rien"
+        ) 
+ stepwise(coaltable,initial_genetic_value,stepvalue)
+}
+
+stepwise <- function(coaltable,initial_genetic_value,stepvalue)
+{
+  coaltable$genetic_value=NA
+  # we calculate the oritattion of the mutations in the different branches using binomial rules
+  coaltable$directional = 2*rbinom(dim(coaltable)[1],coaltable[,"br_length"]*coaltable[,"mutations"],.5)-coaltable[,"br_length"]*coaltable[,"mutations"]
+  coaltable[dim(coaltable)[1]+1,] <- c(NA,max(unlist(coaltable$new_node)),NA,NA,NA,initial_genetic_value,NA)
+  for(branch in rev(rownames(coaltable)[-dim(coaltable)[1]]))
+  {
+    coaltable[branch,"genetic_value"] <- coaltable[branch,"directional"] + coaltable[which(coaltable$coalescing==coaltable[branch,"new_node"]),"genetic_value"]
+  }
+  coaltable[,"genetic_value"]
+}
 #
 # add br_length and mutation to coalescent list
 #
 #
 
-add_br_length_and_mutation <- function(coalescent_simulated)
+add_br_length_and_mutation <- function(coalescent,mutation_rate,initial_genetic_value)
 {
   tips = NULL
   internals = NULL
   nodes = NULL
   times = NULL
-  for (i in 1:length(coalescent_simulated$coalescent))#i=1;i=2
+  for (i in 1:length(coalescent))#i=1;i=2
   {
-    nodes = append(nodes,coalescent_simulated$coalescent[[i]]$coalescing,coalescent_simulated$coalescent[[i]]$new_node)
-    internals = append(internals,coalescent_simulated$coalescent[[i]]$new_node)
-    times = append(times,coalescent_simulated$coalescent[[i]]$time)
+    nodes = append(nodes,c(coalescent[[i]]$coalescing,coalescent[[i]]$new_node))
+    internals = append(internals,coalescent[[i]]$new_node)
+    times = append(times,coalescent[[i]]$time)
   }
   nodes = as.numeric(levels(as.factor(c(nodes,internals))));nodes = nodes[order(nodes)]
   tips = nodes[!((nodes)%in%(internals))]
   # getting the branch length of each coalescing node
-  for (i in 1:length(coalescent_simulated$coalescent))#i=1
+  for (i in 1:length(coalescent))#i=1
   {
-    for (coalescing in coalescent_simulated$coalescent[[i]]$coalescing)# coalescing = coalescent_simulated$coalescent[[i]]$coalescing[1]
+    for (coalescing in coalescent[[i]]$coalescing)# coalescing = coalescent[[i]]$coalescing[1]
     {
-      if (coalescing %in% tips) {coalescent_simulated$coalescent[[i]]$br_length <- append(coalescent_simulated$coalescent[[i]]$br_length,coalescent_simulated$coalescent[[i]]$time)
+      if (coalescing %in% tips) {coalescent[[i]]$br_length <- append(coalescent[[i]]$br_length,coalescent[[i]]$time)
                                                                     } else {
-        coalescent_simulated$coalescent[[i]]$br_length <- append(coalescent_simulated$coalescent[[i]]$br_length,coalescent_simulated$coalescent[[i]]$time-times[which(internals==coalescing)]) 
+        coalescent[[i]]$br_length <- append(coalescent[[i]]$br_length,coalescent[[i]]$time-times[which(internals==coalescing)]) 
                                                                     } 
-      coalescent_simulated$coalescent[[i]]$mutations <- rpois(rep(1,length(coalescent_simulated$coalescent[[i]]$br_length)),coalescent_simulated$coalescent[[i]]$br_length*mutation_rate)
+      coalescent[[i]]$mutations <- rpois(rep(1,length(coalescent[[i]]$br_length)),coalescent[[i]]$br_length*mutation_rate)
     }
   }
-  
-  for (i in length(coalescent_simulated$coalescent):1)#i=1
+  coaltable <- coalist_2_coaltable(coalescent)
+  coaltable$genetic_value[dim(coaltable)[1]] <- initial_genetic_value
+  for (i in dim(coaltable)[1]:1) 
   {
-    coalescent_simulated$coalescent[[i]]$genetic_values
+    
   }
-coalescent_simulated
+coalescent
 }
 
 
@@ -837,13 +869,13 @@ read.tree(text=coalescent_2_newick(coalescent))
 # plot_coalescent plots a coalescent simulation
 # argument: output of simul_coalescent()
 
-plot_coalescent <- function(coalescent,with_landscape=FALSE,rasK=NULL)
+plot_coalescent <- function(coalescent,with_landscape=FALSE,rasK=NULL,legend_right_move=-.2)
 {
   if (with_landscape) {par(mfrow=c(1,2),oma=c(0,0,0,4),xpd=TRUE)}else{par(mfrow=c(1,1),oma=c(0,0,0,4),xpd=TRUE)}
   tipcells <- geneticData$Cell_numbers[as.numeric(coalescent_2_phylog(coalescent)$tip.label)]
   tipcols = rainbow(ncell(rasK))[tipcells]
   plot(coalescent_2_phylog(coalescent),direction="downward",tip.color=tipcols)
-  legend("topright", title="demes", cex=0.75, pch=16, col=tipcols[!duplicated(tipcols)], legend=tipcells[!duplicated(tipcols)], ncol=2, inset=c(-1,0))
+  legend("topright", title="demes", cex=0.75, pch=16, col=tipcols[!duplicated(tipcols)], legend=tipcells[!duplicated(tipcols)], ncol=2, inset=c(legend_right_move,0))
   if (with_landscape) {plot(rasK)}
 }
 

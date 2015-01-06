@@ -44,6 +44,9 @@ plot_coalescent(coalescent_simulated$coalescent,rasK=rasK)
 # we plot the coalescent
 
 
+# Check 
+ 
+
 ###
 setwd(wd)
 source("graphPOP_0.113.R")

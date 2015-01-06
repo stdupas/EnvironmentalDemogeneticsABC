@@ -315,6 +315,10 @@ distanceMatrix <- function(rasterStack){
 #           "fat_tail1", "fat_tail2": ref :Chapman et all, Journal of Animal Ecology (2007) 76 , 36– 44
 #           "island" probability 1-m to stay, else homogen dispersion,
 #           "contiguous" near dispersal.
+# Note that rowSums and colSums are not 1: some cells are more isolated
+# geographically and migrate less than others to the rest of the world
+#
+
 migrationMatrix <- function(rasterStack,shapeDisp, pDisp){
   coords = xyFromCell(rasterStack, 1:length(values(rasterStack[[1]])), spatial=FALSE)
   distanceMatrix = as.matrix(dist(coords)) 
@@ -333,7 +337,7 @@ migrationMatrix <- function(rasterStack,shapeDisp, pDisp){
                                        #1: sigmaDisp    2: gammaDisp
                                        fat_tail2 = x^pDisp[2]*exp(-2*x/(pDisp[1]^0.5))
                     )))
-  return(migration)
+  return(migration/max(c(colSums(migration),rowSums(migration))))
 }
 
 # transitionMatrix obtained with an isotropic migration hypothesis for a backward model
@@ -350,10 +354,12 @@ transitionMatrixBackward <- function(r,K, migration){
 }
 
 # transitionMatrix obtained with an isotropic migration hypothesis for a formard model
+# note s the parental cell and u the descendant cell
+#
 transitionMatrixForward <- function(r,K, migration, meth="non_overlap"){
-  rs = matrix(r,nrow=length(r),ncol=length(r))
-  Ku = t(matrix(K,nrow=length(K),ncol=length(K)))
-  leave = migration*(1+rs)*t(Ku); leave = leave - diag(leave)
+  rs = matrix(r,nrow=length(r),ncol=length(r)) # growth rate in parental cell
+  Ku = t(matrix(K,nrow=length(K),ncol=length(K))) # carrying capacity in descendant cell
+  leave = migration*(1+rs)*t(Ku); leave = leave - diag(leave) # individuals that leave
   switch (meth,
   non_overlap = migration * rs * Ku / colSums(rs * t(Ku) * migration),
   overlap = migration * (1+rs) * Ku / (colSums((1+rs) * t(Ku) * migration - t(leave)))
@@ -436,7 +442,7 @@ CreateGenetArray <- function(rasK, nb_locus, initial_locus_value,Option="sample_
   #Get coords for each cell
   coords = xyFromCell(rasK, 1:length(values(rasK[[1]])), spatial=FALSE)
   repet = switch(Option,
-                 sample_1col_diploid = sort(rep(sample(rep(1:ncell(rasK),round(values(rasK))),nind),2),replace=TRUE), 
+                 sample_1col_diploid = sort(rep(sample(rep(1:ncell(rasK),round(values(rasK))),nind,,replace=TRUE),2)), 
                  sample_2col_diploid = sample(rep(1:length(rasK),round(values(rasK))),nind,replace=TRUE), 
                  sample_haploid = sample(rep(1:ncell(rasK),round(values(rasK))),nind,replace=TRUE),
                  full_1col_diploid = rep(1:length(rasK),round(values(rasK))*2), 

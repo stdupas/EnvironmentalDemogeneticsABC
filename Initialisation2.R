@@ -1,6 +1,8 @@
 rm(list=ls())
 wd="/home/legs/Bureau/Graph_Pop/" # fixe
 wd="/home/legs/GraphPOP/" # portable
+wd="/home/legs/Bureau/GraphPOP/" # fixe
+wd="/home/dupas/GraphPOP/" # fixe
 wd="/media/1To/IRD/ARTICLES/Dupas/NicheCoal/Graph_Pop" # portable
 wd="/media/dupas/1To/IRD/ARTICLES/Dupas/NicheCoal/Graph_Pop" # fixe
 
@@ -35,7 +37,7 @@ geneticData = CreateGenetArray(rasK, 20,200,Option="full_1col_diploid")# the gen
                                                               # but genetic data are not used. They will be modified according to the simulated coalescent
                                                               # we create as many individuals (lines) as K for each cell of the map 
                                                               # then we sample a few individuals for the coalescent
-geneticData = CreateGenetArray(rasK, 20,200,Option="sample_1col_diploid",nind=3)
+geneticData = CreateGenetArray(rasK, 20,sample((80:120)*2,6*20,replace=TRUE),Option="sample_1col_diploid",nind=3)
 dim(geneticData)
 migrationMatrix(rasK,shapeDisp,pDisp)
 system.time(coalescent_simulated <- simul_coalescent(geneticData,rasterStack,pK,pr,shapesK,shapesr,shapeDisp,pDisp,mutation_rate=1E-1))# we simulate a coalescent
@@ -45,6 +47,9 @@ plot_coalescent(coalescent_simulated$coalescent,with_landscape=TRUE,rasK=rasK,le
 plot_coalescent(coalescent_simulated$coalescent,rasK=rasK,legend_right_move=-.1)
 # we plot the coalescent
 
+
+# Check 
+ 
 
 ###
 setwd(wd)

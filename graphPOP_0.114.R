@@ -305,22 +305,22 @@ distanceMatrix <- function(rasterStack){
   return(distance)
 }
 
-# migrationMatrix return matrix of migration rate for each cell
-# From the raster Stack and the dispersal parameter pDisp (estimated),
-# this function calculates distance between all cells of raster
-# To this matrix of distance is applied a shapeDisp of migration.
-# And this function allows to choose the shapeDisp of study:
-# shapeDisp:  "gaussian" a simple normal density distribution, 
-#           "exponential" density distribution,
-#           "fat_tail1", "fat_tail2": ref :Chapman et all, Journal of Animal Ecology (2007) 76 , 36– 44
-#           "island" probability 1-m to stay, else homogen dispersion,
-#           "contiguous" near dispersal.
-# Note that rowSums and colSums are not 1: some cells are more isolated
-# geographically and migrate less than others to the rest of the world
-#
+
 
 migrationMatrix <- function(rasterStack,shapeDisp, pDisp){
-  coords = xyFromCell(rasterStack, 1:length(values(rasterStack[[1]])), spatial=FALSE)
+  # migrationMatrix computes a matrix of distance between cells, apply a model of dispersion and returns a matrix of migration.
+  # 
+  # Args :
+  #  rasterStack : raster of population sizes
+  #  shapeDisp :  "gaussian" a simple normal density distribution,
+  #               "exponential" density distribution,
+  #               "fat_tail1", "fat_tail2": ref :Chapman et all, Journal of Animal Ecology (2007) 76 , 36– 44
+  #               "island" probability 1-m to stay, else homogen dispersion,
+  #               "contiguous" near dispersal.
+  #  pDisp : parameters of the dispersion model, see further in the code for precisions
+  # Returns : a migration matrix (note that rowSums and colSums are not 1: some cells are more isolated geographically and migrate less than others to the rest of the world) 
+  #
+  coords = xyFromCell(object=rasterStack, cell=1:length(values(rasterStack[[1]])), spatial=FALSE)
   distanceMatrix = as.matrix(dist(coords)) 
   migration = apply(distanceMatrix, c(1,2), 
                     function(x)(switch(shapeDisp,

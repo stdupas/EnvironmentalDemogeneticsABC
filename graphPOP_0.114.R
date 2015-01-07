@@ -673,20 +673,41 @@ simul_coocur <- function(cells=c(1,2),transitionmatrice)
 t
 }
 
-# simul_coalescent
-# function that simulates a coalescent in a lansdcape characterized by an environmental variable raster
-# stack in aspecies with given niche function relating the carrying capacity and growth rate 
-# with the environemental variable 
-# pK : parameters of K / environmental variables
-# pr : parameters of r / environmental variables
-# shapesK : shapes of niche funciotn (reaction norm)
-# pDisp : parameters of dispersion 
-# rasterStack : environmental variables raster stack
-# genetic data table : with coordinates
-# aggre_gener : number of generations to aggregate in the simulation steps
 
-simul_coalescent <- function(geneticData,rasterStack,pK,pr,shapesK,shapesr,shapeDisp,pDisp,mutation_rate=1E-1,initial_genetic_value=200,mutation_model="tmp",stepvalue=2,mut_param=c(p=.5,sigma2=4))
+
+simul_coalescent <- function(geneticData, rasterStack, pK, pr, shapesK, shapesr, shapeDisp, pDisp,
+                             mutation_rate, initial_genetic_value, mutation_model, stepvalue, mut_param)
 {
+  # Simulates a coalescent in a lansdcape characterized by an environmental variable raster
+  # stack in a species with given niche function relating the carrying capacity and growth rate 
+  # with the environemental variable 
+  # Args :
+  #   geneticData : genetic data table : with coordinates
+  #   rasterStack : environmental variables raster stack
+  #   pK : parameters values of K (Xmin, Xmax, Xopt, YXmin, Yxmax, Yopt) for each environmental variable
+  #   pr : parameters values of r (Xmin, Xmax, Xopt, YXmin, Yxmax, Yopt) for each environmental variables
+  #   shapesK : shapes of niche function (reaction norm) for the carrying capacity K
+  #   shapesr : shapes of niche function (reaction norm) for the growth rate r
+  #   pDisp : parameters of dispersion
+  #   mutation rate
+  #   initial_genetic_value : genetic value attributed to the common ancestor
+  #   mutation_model : specify a model of mutation : "step_wise" (Stepwise Mutation Model),"tmp" (Two Phases Mutation Model)
+  #   stepvalue :  
+  #   mut_param : 
+  # Returns :
+  #   A list with all coalescence informations :
+  #   List of 4
+  #    $ coalescent      :List of "i" (with "i" the number of coalescence events)
+  #      ..$ :List of 5
+  #      ..  ..$ time           : time of coalescence
+  #      ..  ..$ coalescing     : coalescing nodes
+  #      ..  ..$ new_node       : "new" in a backward sense, the node resulting of the coalescence of the coalescing nodes
+  #      ..  ..$ br_length      : the length of the branches
+  #      ..  ..$ mutations      : the number of mutations which occured along the branch
+  #    $ mutation_rate          : 
+  #    $ forward_log_prob       : the logarithm of the forward probability of this coalescent
+  #    $ genetic_values         : a data frame with : time, coalescing, new_node, br_length, mutations (0 or NA), genetic_value (initial), resultant (0 or NA)
+  
   prob_forward=NA
   K = ReactNorm(values(rasterStack),pK,shapesK)[,"Y"]
   r = ReactNorm(values(rasterStack),pr,shapesr)[,"Y"]

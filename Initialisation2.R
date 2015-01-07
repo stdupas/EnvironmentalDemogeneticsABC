@@ -1,10 +1,8 @@
 rm(list=ls())
-wd="/home/legs/Bureau/Graph_Pop/" # fixe
-wd="/home/legs/GraphPOP/" # portable
-wd="/home/legs/Bureau/GraphPOP/" # fixe
-wd="/home/dupas/GraphPOP/" # fixe
 wd="/media/1To/IRD/ARTICLES/Dupas/NicheCoal/Graph_Pop" # portable
 wd="/media/dupas/1To/IRD/ARTICLES/Dupas/NicheCoal/Graph_Pop" # fixe
+wd="/home/legs/GraphPOP/" # portable
+wd="/home/dupas/GraphPOP/" # fixe
 wd="/home/arno/These/GraphPOP" # portable arno
 setwd(wd)
 source("graphPOP_0.114.R")
@@ -67,15 +65,18 @@ system.time(
                                            pK=pK, pr=pr,
                                            shapesK=shapesK, shapesr=shapesr,
                                            shapeDisp=shapeDisp, pDisp=pDisp,
-                                           mutation_rate=1E-1, initial_genetic_value=initial_genetic_value, mutation_model="stepwise",stepvalue=2)
+                                           mutation_rate=1E-1, 
+                                           initial_genetic_value=initial_genetic_value, 
+                                           mutation_model="tpm",stepvalue=2,
+                                           mut_param=c(p=.5,sigma2=4))
   )
 
 coalescent_simulated
-apetree <- coalescent_2_newick(coalescent=coalescent_simulated$coalescent)
+phylog_tree <- coalescent_2_phylog(coalescent=coalescent_simulated$coalescent)
 
 ##### Plot the coalescent
-plot_coalescent(coalescent=coalescent_simulated$coalescent, with_landscape=TRUE, rasK=rasK, legend_right_move=-.3)
-plot_coalescent(coalescent=coalescent_simulated$coalescent,rasK=rasK,legend_right_move=-.1)
+plot_coalescent(coalescent=coalescent_simulated$coalescent,genetic_table=coalescent_simulated$genetic_values,with_landscape=TRUE, rasK=rasK, legend_right_move=-.3)
+plot_coalescent(coalescent=coalescent_simulated$coalescent,genetic_table=coalescent_simulated$genetic_values,rasK=rasK,legend_right_move=-.5)
 
 ######################### end of Coalescence Simulation Test <<<<<<<<
 

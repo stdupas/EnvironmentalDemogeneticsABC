@@ -315,6 +315,10 @@ distanceMatrix <- function(rasterStack){
 #           "fat_tail1", "fat_tail2": ref :Chapman et all, Journal of Animal Ecology (2007) 76 , 36– 44
 #           "island" probability 1-m to stay, else homogen dispersion,
 #           "contiguous" near dispersal.
+# Note that rowSums and colSums are not 1: some cells are more isolated
+# geographically and migrate less than others to the rest of the world
+#
+
 migrationMatrix <- function(rasterStack,shapeDisp, pDisp){
   coords = xyFromCell(rasterStack, 1:length(values(rasterStack[[1]])), spatial=FALSE)
   distanceMatrix = as.matrix(dist(coords)) 
@@ -333,7 +337,7 @@ migrationMatrix <- function(rasterStack,shapeDisp, pDisp){
                                        #1: sigmaDisp    2: gammaDisp
                                        fat_tail2 = x^pDisp[2]*exp(-2*x/(pDisp[1]^0.5))
                     )))
-  return(migration)
+  return(migration/max(c(colSums(migration),rowSums(migration))))
 }
 
 # transitionMatrix obtained with an isotropic migration hypothesis for a backward model
@@ -350,10 +354,12 @@ transitionMatrixBackward <- function(r,K, migration){
 }
 
 # transitionMatrix obtained with an isotropic migration hypothesis for a formard model
+# note s the parental cell and u the descendant cell
+#
 transitionMatrixForward <- function(r,K, migration, meth="non_overlap"){
-  rs = matrix(r,nrow=length(r),ncol=length(r))
-  Ku = t(matrix(K,nrow=length(K),ncol=length(K)))
-  leave = migration*(1+rs)*t(Ku); leave = leave - diag(leave)
+  rs = matrix(r,nrow=length(r),ncol=length(r)) # growth rate in parental cell
+  Ku = t(matrix(K,nrow=length(K),ncol=length(K))) # carrying capacity in descendant cell
+  leave = migration*(1+rs)*t(Ku); leave = leave - diag(leave) # individuals that leave
   switch (meth,
   non_overlap = migration * rs * Ku / colSums(rs * t(Ku) * migration),
   overlap = migration * (1+rs) * Ku / (colSums((1+rs) * t(Ku) * migration - t(leave)))
@@ -694,7 +700,7 @@ t
 # genetic data table : with coordinates
 # aggre_gener : number of generations to aggregate in the simulation steps
 
-simul_coalescent <- function(geneticData,rasterStack,pK,pr,shapesK,shapesr,shapeDisp,pDisp,mutation_rate=1E-1,initial_genetic_value=200,mutation_model="stepwise",stepvalue=2)
+simul_coalescent <- function(geneticData,rasterStack,pK,pr,shapesK,shapesr,shapeDisp,pDisp,mutation_rate=1E-1,initial_genetic_value=200,mutation_model="tmp",stepvalue=2,mut_param=c(p=.5,sigma2=4))
 {
   prob_forward=NA
   K = ReactNorm(values(rasterStack),pK,shapesK)[,"Y"]
@@ -774,7 +780,9 @@ simul_coalescent <- function(geneticData,rasterStack,pK,pr,shapesK,shapesr,shape
   cell_number_of_nodes = parent_cell_number_of_nodes
   }
   coalescent=add_br_length_and_mutation(coalescent,mutation_rate,initial_genetic_value)
-  list(coalescent=coalescent,mutation_rate=mutation_rate,forward_log_prob=sum(prob_forward)/coalescent[[length(coalescent)]]$time,genetic_values=genetics_of_coaltable(coalist_2_coaltable(coalescent),initial_genetic_value,mutation_model,stepvalue))
+  list(coalescent=coalescent,mutation_rate=mutation_rate,
+       forward_log_prob=sum(prob_forward)/coalescent[[length(coalescent)]]$time,
+       genetic_values=genetics_of_coaltable(coalist_2_coaltable(coalescent),initial_genetic_value,mutation_model,stepvalue,mut_param))
   # forward_log_prob is the average per generation of the log probability of the forward movements of the genes in the landscape
 }
 
@@ -795,11 +803,11 @@ coalist_2_coaltable <- function(coalist)
 # adds genetic values to a coalescent table containing mutation number per branch
 # knowing initial genetic value of the ancastor and mutation model
 
-genetics_of_coaltable <- function(coaltable,initial_genetic_value,mutation_model="stepwise",stepvalue=2)
+genetics_of_coaltable <- function(coaltable,initial_genetic_value,mutation_model="stepwise",stepvalue=2,mut_param=c(p=.5,sigma=2))
 {
  switch(mutation_model,
         step_wise = stepwise(coaltable,initial_genetic_value,stepvalue),
-        my_ass = "rien"
+        tpm = tpm(coaltable,initial_genetic_value,stepvalue,mut_param)
         ) 
  stepwise(coaltable,initial_genetic_value,stepvalue)
 }
@@ -808,14 +816,32 @@ stepwise <- function(coaltable,initial_genetic_value,stepvalue)
 {
   coaltable$genetic_value=NA
   # we calculate the oritattion of the mutations in the different branches using binomial rules
-  coaltable$directional = 2*rbinom(dim(coaltable)[1],coaltable[,"br_length"]*coaltable[,"mutations"],.5)-coaltable[,"br_length"]*coaltable[,"mutations"]
+  coaltable$resultant = 2*(rbinom(dim(coaltable)[1],coaltable[,"mutations"],.5)-coaltable[,"mutations"]/2)
   coaltable[dim(coaltable)[1]+1,] <- c(NA,max(unlist(coaltable$new_node)),NA,NA,NA,initial_genetic_value,NA)
   for(branch in rev(rownames(coaltable)[-dim(coaltable)[1]]))
   {
-    coaltable[branch,"genetic_value"] <- coaltable[branch,"directional"] + coaltable[which(coaltable$coalescing==coaltable[branch,"new_node"]),"genetic_value"]
+    coaltable[branch,"genetic_value"] <- coaltable[branch,"resultant"]*stepvalue + coaltable[which(coaltable$coalescing==coaltable[branch,"new_node"]),"genetic_value"]
   }
-  coaltable[,"genetic_value"]
+  coaltable
 }
+
+tpm <- function(coaltable,initial_genetic_value,stepvalue,mut_param=c(p=.5,sigma2=4))
+{
+  p_loi_geometrique = ((1+4*mut_param["sigma2"])^.5-1)/(2*mut_param["sigma2"])
+  coaltable$genetic_value=NA
+  # we calculate the orientation of the mutations in the different branches using binomial rules
+  coaltable$n_stepw <- rbinom(dim(coaltable)[1],coaltable[,"mutations"],mut_param["p"])
+  coaltable$resultant_stepw <- 2*(rbinom(dim(coaltable)[1],coaltable[,"n_stepw"],.5)-coaltable[,"n_stepw"]/2)
+  coaltable$resultantmultiple = rnbinom(dim(coaltable)[1],size=coaltable$mutation-coaltable$n_stepw,p_loi_geometrique)
+  coaltable$resultantmultiple[is.na(coaltable$resultantmultiple)]=0
+  coaltable[dim(coaltable)[1]+1,] <- c(NA,max(unlist(coaltable$new_node)),NA,NA,NA,initial_genetic_value,NA,NA,NA)
+  for(branch in rev(rownames(coaltable)[-dim(coaltable)[1]]))
+  {
+    coaltable[branch,"genetic_value"] <- (coaltable[branch,"resultant_stepw"]+coaltable[branch,"resultantmultiple"])*stepvalue + coaltable[which(coaltable$coalescing==coaltable[branch,"new_node"]),"genetic_value"]
+  }
+  coaltable
+}
+
 #
 # add br_length and mutation to coalescent list
 #
@@ -889,12 +915,14 @@ read.tree(text=coalescent_2_newick(coalescent))
 # plot_coalescent plots a coalescent simulation
 # argument: output of simul_coalescent()
 
-plot_coalescent <- function(coalescent,with_landscape=FALSE,rasK=NULL,legend_right_move=-.2)
+plot_coalescent <- function(coalescent,genetic_table,with_landscape=FALSE,rasK=NULL,legend_right_move=-.2)
 {
   if (with_landscape) {par(mfrow=c(1,2),oma=c(0,0,0,4),xpd=TRUE)}else{par(mfrow=c(1,1),oma=c(0,0,0,4),xpd=TRUE)}
   tipcells <- geneticData$Cell_numbers[as.numeric(coalescent_2_phylog(coalescent)$tip.label)]
   tipcols = rainbow(ncell(rasK))[tipcells]
-  plot(coalescent_2_phylog(coalescent),direction="downward",tip.color=tipcols)
+  phylog_format_tree <- coalescent_2_phylog(coalescent)
+  phylog_format_tree$tip.label <- paste(phylog_format_tree$tip.label,genetic_table[order(genetic_table$coalescing)[as.numeric(phylog_format_tree$tip.label)],"genetic_value"],sep=":")
+  plot(phylog_format_tree,direction="downward",tip.color=tipcols)
   legend("topright", title="demes", cex=0.75, pch=16, col=tipcols[!duplicated(tipcols)], legend=tipcells[!duplicated(tipcols)], ncol=2, inset=c(legend_right_move,0))
   if (with_landscape) {plot(rasK)}
 }

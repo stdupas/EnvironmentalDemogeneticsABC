@@ -680,7 +680,7 @@ t
 # genetic data table : with coordinates
 # aggre_gener : number of generations to aggregate in the simulation steps
 
-simul_coalescent <- function(geneticData,rasterStack,pK,pr,shapesK,shapesr,shapeDisp,pDisp,mutation_rate=1E-1,initial_genetic_value=200,mutation_model="stepwise",stepvalue=2)
+simul_coalescent <- function(geneticData,rasterStack,pK,pr,shapesK,shapesr,shapeDisp,pDisp,mutation_rate=1E-1,initial_genetic_value=200,mutation_model="tmp",stepvalue=2,mut_param=c(p=.5,sigma2=4))
 {
   prob_forward=NA
   K = ReactNorm(values(rasterStack),pK,shapesK)[,"Y"]
@@ -762,7 +762,7 @@ simul_coalescent <- function(geneticData,rasterStack,pK,pr,shapesK,shapesr,shape
   coalescent=add_br_length_and_mutation(coalescent,mutation_rate,initial_genetic_value)
   list(coalescent=coalescent,mutation_rate=mutation_rate,
        forward_log_prob=sum(prob_forward)/coalescent[[length(coalescent)]]$time,
-       genetic_values=genetics_of_coaltable(coalist_2_coaltable(coalescent),initial_genetic_value,mutation_model,stepvalue))
+       genetic_values=genetics_of_coaltable(coalist_2_coaltable(coalescent),initial_genetic_value,mutation_model,stepvalue,mut_param))
   # forward_log_prob is the average per generation of the log probability of the forward movements of the genes in the landscape
 }
 

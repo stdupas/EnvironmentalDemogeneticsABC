@@ -65,7 +65,7 @@ system.time(
                                            pK=pK, pr=pr,
                                            shapesK=shapesK, shapesr=shapesr,
                                            shapeDisp=shapeDisp, pDisp=pDisp,
-                                           mutation_rate=1E-1, initial_genetic_value=initial_genetic_value, mutation_model="stepwise",stepvalue=2)
+                                           mutation_rate=1E-1, initial_genetic_value=initial_genetic_value, mutation_model="tpm",stepvalue=2,mut_param=c(p=.5,sigma2=4))
   )
 
 coalescent_simulated
@@ -73,7 +73,7 @@ phylog_tree <- coalescent_2_phylog(coalescent=coalescent_simulated$coalescent)
 
 ##### Plot the coalescent
 plot_coalescent(coalescent=coalescent_simulated$coalescent,genetic_table=coalescent_simulated$genetic_values,with_landscape=TRUE, rasK=rasK, legend_right_move=-.3)
-plot_coalescent(coalescent=coalescent_simulated$coalescent,genetic_table=coalescent_simulated$genetic_values,rasK=rasK,legend_right_move=-.3)
+plot_coalescent(coalescent=coalescent_simulated$coalescent,genetic_table=coalescent_simulated$genetic_values,rasK=rasK,legend_right_move=-.4)
 
 ######################### end of Coalescence Simulation Test <<<<<<<<
 

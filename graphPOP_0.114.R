@@ -983,19 +983,112 @@ plot_coalescent <- function(coalescent,genetic_table,with_landscape=FALSE,rasK=N
 #
 # geneticDataSimulList : a list of simulations, with sublist geneticData and sublist log_lik_forward 
 #
-
-summary_stat <- function(geneticDataObs,geneticDataSimulList,log_lik_simul_list)
+shared_allele_distance <- function(geneticData)
 {
-  #1) We calculate a matrix of observed genetic distance between individuals (DSAI = sum_j (Shared alleles) / (number of loci))
-  #   or reapeat number distance (Goldstein 1995)
-  #2) We select PCi representing 99% cumulative variance
-  #3) We express simulated data in these axis. First summary stats are the values of each invidiual on these major axes
-  #4) Second summary stats are mean number of alleles per individual for observed and simulated data
-  #5) Third summary stats are mean number of alleles per population for observed and simulated data
-  #
+  # calculates probability of identity between haplotypes
   
 }
 
+PCA_rotation <- function(geneticData)
+{
+  #
+  # PCA_rotation calculates the rotation to apply to genetic data from observed genetic data
+  # argument:
+  # geneticDataObs: observed genetic data (columns x, y, Cell_numbers, Locus1 ... Locusn)
+  # value: 
+  # rotation corresponding to the PCA axis
+  GenetDist = switch(Distance,
+                     Goldstein = dist(geneticData[,grep("Locus",colnames(geneticData))])^.5,
+                     pID = pID(geneticData)
+  )
+  rotation = prcomp(GenetDist)$rotation
+  # note we may have to select majors PCi containing information
+}
+
+pID <- function(geneticData)
+{
+  # calculates probability ofidentity between individuals in a geneticData dataframe
+  # argument : geneticData (with columns as loccus named "LocusX" and lines as haplotypes)
+  geneticData=geneticData[,grep("Locus",colnames(geneticData))]
+  geneticDataArray <- array(unlist(c(geneticData)), dim=c(dim(geneticData),dim(geneticData)[1]))
+  mean(na.omit(geneticDataArray==aperm(geneticDataArray,c(3,2,1))))
+}
+
+new_reference_table <- function(geneticData,Distance)
+{
+  # creates a new reference table from genetic data
+  # details : first line of reference table is rotated observed genetic data
+  GenetDist = switch(Distance,
+                     Goldstein = dist(geneticData[,grep("Locus",colnames(geneticData))])^.5,
+                     pID = pID(geneticData)
+  )
+  cbind(t(data.frame(as.vector(prcomp(GenetDist)$x))),loglik=0)
+}
+
+add_summary_stat <- function(reference_table,geneticDataSim,rotation,forward_log_lik,Distance="Goldstein")
+{
+  # add_summary_stats
+  # add summary statistics of a simulation to reference table for ABC analysis
+  # arguments: 
+  # reference_table the reference table to append
+  # rotation tha PCA rotation to apply to geneticData
+  # geneticDataSim : the simulated genetic data
+  # forward_log_lik : forward log likelihood of the simulated genetic data
+  # Distance : distance to apply to genetic data (Goldstein : difference in number of repeats)
+  # pID : proportion of identity.
+  # 
+  # value: appended reference_table
+  
+  #1) We calculate a matrix of observed genetic distance between individuals (DSAI = sum_j (Shared alleles) / (number of loci))
+  #   or reapeat number distance (Goldstein 1995)
+  GenetDist = switch(Distance,
+                     Goldstein = dist(geneticData[,grep("Locus",colnames(geneticData))])^.5,
+                     pID = pID(geneticData)
+  )
+  #2) We express simulated data in these axis. First summary stats are the values of each invidiual
+  # in each of these major axes
+  summary_stats = as.matrix(GenetDist) %*% rotation
+rbind(reference_table,as.vector(summary_stats))
+}
+
+fill_reference_table <- function(geneticData,Distance,rasterStack=rasterStack,
+                                 pK=pK, pr=pr,
+                                 shapesK=shapesK, shapesr=shapesr,
+                                 shapeDisp=shapeDisp, pDisp=pDisp,
+                                 mutation_rate=1E-1, 
+                                 initial_genetic_value=initial_genetic_value, 
+                                 mutation_model="tpm",stepvalue=2,
+                                 mut_param=c(p=.5,sigma2=4))
+{
+  # filling a reference table using parameters values
+  # args:
+  # parameters of the model, geneticData, type of distance used
+  rotation = PCA_rotation(geneticData)
+  ref_table = new_reference_table(geneticData,Distance="Goldstein")
+  simulated_genetic <- geneticData[,grep("locus",colnames(geneticData))]
+  # simulation de genetic data pour chaque locus
+  for (i in 1:length(grep("Locus",colnames(geneticData))))
+  {
+    new_simulation <- simul_coalescent(geneticData=geneticData,
+                                       rasterStack=rasterStack,
+                                       pK=pK, pr=pr,
+                                       shapesK=shapesK, shapesr=shapesr,
+                                       shapeDisp=shapeDisp, pDisp=pDisp,
+                                       mutation_rate=1E-1, 
+                                       initial_genetic_value=initial_genetic_value, 
+                                       mutation_model="tpm",stepvalue=2,
+                                       mut_param=c(p=.5,sigma2=4))
+    simulated_genetic[,i] <- new_simulation$genetic_values[order( new_simulation$coalescing)[1:dim(geneticData)[1]],"genetic_value"]
+    forward_log_lik <- new_simulation$forward_log_prob
+  }
+  simulated_genetic  
+  ref_table = add_summary_stat(reference_table=ref_table,
+                               geneticDataSim=simulated_genetic,
+                               rotation=rotation,
+                               forward_log_lik=,Distance="Goldstein")
+  ref_table
+  
+}
 
 
 

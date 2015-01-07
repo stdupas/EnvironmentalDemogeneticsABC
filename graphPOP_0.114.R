@@ -422,21 +422,6 @@ geneticDist <- function(commute_time, popSize){
 #####  SIMULATION OF OBSERVED GENETIC DATA   ######
 ###################################################
 
-
-# This function returns a data frame that contains genetic data:
-# coords X and Y of each cell - number of cells - locus with 2 alleles
-# ARGUMENTS: 
-# RasPopSizes = raster of pop sizes
-# dataSize = data that contains number of individuals in each cell
-# nb_locus = number of locus wished
-# initial_locus_value = genetic information for the first generation (parents)
-# option =  sample/full_1col/2col_haploid/diploid
-#           sample : nind individuals are sampled from the full population
-#           full : number of individuals per cell equals carrying capacity
-#           1col/2col : for diploids, one columns or 2 columns representation
-#           haploid or diploid : haploid or diploid 
-# nind = number of individuals sampled from the full carrying capacity population
-
 CreateGenetArray <- function(rasK, nb_locus, initial_locus_value, Option, nind)
 {
   # This function constructs the genetic dataset 

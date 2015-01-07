@@ -787,7 +787,7 @@ genetics_of_coaltable <- function(coaltable,initial_genetic_value,mutation_model
 {
  switch(mutation_model,
         step_wise = stepwise(coaltable,initial_genetic_value,stepvalue),
-        tpm = tpm(coaltable,initial_genetic_value,sepvalue,mut_param)
+        tpm = tpm(coaltable,initial_genetic_value,stepvalue,mut_param)
         ) 
  stepwise(coaltable,initial_genetic_value,stepvalue)
 }
@@ -796,11 +796,11 @@ stepwise <- function(coaltable,initial_genetic_value,stepvalue)
 {
   coaltable$genetic_value=NA
   # we calculate the oritattion of the mutations in the different branches using binomial rules
-  coaltable$directional = 2*(rbinom(dim(coaltable)[1],coaltable[,"mutations"],.5)-coaltable[,"mutations"]/2)
+  coaltable$resultant = 2*(rbinom(dim(coaltable)[1],coaltable[,"mutations"],.5)-coaltable[,"mutations"]/2)
   coaltable[dim(coaltable)[1]+1,] <- c(NA,max(unlist(coaltable$new_node)),NA,NA,NA,initial_genetic_value,NA)
   for(branch in rev(rownames(coaltable)[-dim(coaltable)[1]]))
   {
-    coaltable[branch,"genetic_value"] <- coaltable[branch,"directional"]*stepvalue + coaltable[which(coaltable$coalescing==coaltable[branch,"new_node"]),"genetic_value"]
+    coaltable[branch,"genetic_value"] <- coaltable[branch,"resultant"]*stepvalue + coaltable[which(coaltable$coalescing==coaltable[branch,"new_node"]),"genetic_value"]
   }
   coaltable
 }
@@ -810,14 +810,14 @@ tpm <- function(coaltable,initial_genetic_value,stepvalue,mut_param=c(p=.5,sigma
   p_loi_geometrique = ((1+4*mut_param["sigma2"])^.5-1)/(2*mut_param["sigma2"])
   coaltable$genetic_value=NA
   # we calculate the orientation of the mutations in the different branches using binomial rules
-  coaltable$simple <- rbinom(dim(coaltable)[1],coaltable[,"mutations"],mut_param["p"])
-  coaltable$directionalsimple <- 2*(rbinom(dim(coaltable)[1],coaltable[,"simple"],.5)-coaltable[,"simple"]/2)
-  coaltable$directionalmultiple = rnbinom(dim(coaltable)[1],size=coaltable$mutation-coaltable$simple,p_loi_geometrique)
-  coaltable$directionalmultiple[is.na(coaltable$directionalmultiple)]=0
+  coaltable$n_stepw <- rbinom(dim(coaltable)[1],coaltable[,"mutations"],mut_param["p"])
+  coaltable$resultant_stepw <- 2*(rbinom(dim(coaltable)[1],coaltable[,"n_stepw"],.5)-coaltable[,"n_stepw"]/2)
+  coaltable$resultantmultiple = rnbinom(dim(coaltable)[1],size=coaltable$mutation-coaltable$n_stepw,p_loi_geometrique)
+  coaltable$resultantmultiple[is.na(coaltable$resultantmultiple)]=0
   coaltable[dim(coaltable)[1]+1,] <- c(NA,max(unlist(coaltable$new_node)),NA,NA,NA,initial_genetic_value,NA,NA,NA)
   for(branch in rev(rownames(coaltable)[-dim(coaltable)[1]]))
   {
-    coaltable[branch,"genetic_value"] <- (coaltable[branch,"directionalsimple"]+coaltable[branch,"directionalmultiple"])*stepvalue + coaltable[which(coaltable$coalescing==coaltable[branch,"new_node"]),"genetic_value"]
+    coaltable[branch,"genetic_value"] <- (coaltable[branch,"resultant_stepw"]+coaltable[branch,"resultantmultiple"])*stepvalue + coaltable[which(coaltable$coalescing==coaltable[branch,"new_node"]),"genetic_value"]
   }
   coaltable
 }

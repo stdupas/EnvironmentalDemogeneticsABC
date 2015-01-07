@@ -847,7 +847,7 @@ plot_coalescent <- function(coalescent,with_landscape=FALSE,rasK=NULL)
   if (with_landscape) {plot(rasK)}
 }
 
-#
+# summary_stat calculates summary stats for observed and simulated data and creates a reference table
 # geneticDataSimulList : a list of simulations, with sublist geneticData and sublist log_lik_forward 
 #
 
@@ -855,12 +855,11 @@ summary_stat <- function(geneticDataObs,geneticDataSimulList,log_lik_simul_list)
 {
   #1) We calculate a matrix of observed genetic distance between individuals (DSAI = sum_j (Shared alleles) / (number of loci))
   #   or reapeat number distance (Goldstein 1995)
-  #2) We select PCi representing 99% cumulative variance
+  #2) We select PCi representing signal (major proportion of genetic variance)
   #3) We express simulated data in these axis. First summary stats are the values of each invidiual on these major axes
   #4) Second summary stats are mean number of alleles per individual for observed and simulated data
   #5) Third summary stats are mean number of alleles per population for observed and simulated data
-  #
-  
+  #6) forward_log_lik is another statistics that should be closest to 0, so we set observed data to 0 for this summary statistics.
 }
 
 

@@ -678,9 +678,8 @@ t
 simul_coalescent <- function(geneticData, rasterStack, pK, pr, shapesK, shapesr, shapeDisp, pDisp,
                              mutation_rate, initial_genetic_value, mutation_model, stepvalue, mut_param)
 {
-  # Simulates a coalescent in a lansdcape characterized by an environmental variable raster
-  # stack in a species with given niche function relating the carrying capacity and growth rate 
-  # with the environemental variable 
+  # Simulates a coalescent in a lansdcape characterized by an environmental variable raster stack, for a species with a given niche function. 
+  #
   # Args :
   #   geneticData : genetic data table : with coordinates
   #   rasterStack : environmental variables raster stack
@@ -697,38 +696,49 @@ simul_coalescent <- function(geneticData, rasterStack, pK, pr, shapesK, shapesr,
   # Returns :
   #   A list with all coalescence informations :
   #   List of 4
-  #    $ coalescent      :List of "i" (with "i" the number of coalescence events)
+  #    $ coalescent      :List of "i" (with "i" the number of coalescence events, coalescence involving multiple individuals counts for 1 event.)
   #      ..$ :List of 5
   #      ..  ..$ time           : time of coalescence
   #      ..  ..$ coalescing     : coalescing nodes
-  #      ..  ..$ new_node       : "new" in a backward sense, the node resulting of the coalescence of the coalescing nodes
+  #      ..  ..$ new_node       : "new" in a backward sense, ie the node resulting of the coalescence of the coalescing nodes
   #      ..  ..$ br_length      : the length of the branches
   #      ..  ..$ mutations      : the number of mutations which occured along the branch
   #    $ mutation_rate          : 
   #    $ forward_log_prob       : the logarithm of the forward probability of this coalescent
   #    $ genetic_values         : a data frame with : time, coalescing, new_node, br_length, mutations (0 or NA), genetic_value (initial), resultant (0 or NA)
   
-  prob_forward=NA
+  ### Computes Niche Function variables :
   K = ReactNorm(values(rasterStack),pK,shapesK)[,"Y"]
   r = ReactNorm(values(rasterStack),pr,shapesr)[,"Y"]
+  
+  ### Computes stochastic matrix :
   migrationM <- migrationMatrix(rasterStack,shapeDisp, pDisp)
   transitionmatrice = transitionMatrixBackward(r, K, migration= migrationM);
   transition_forward = transitionMatrixForward(r, K, migration= migrationM)
+  
+  #### Initialize variables needed for the coalescent simulation process :
+  time=0
+  prob_forward=NA
   N <- round(K)
-  coalescent = list() # list containing all the times and genes conserved by coalescent events
-  # when 2 genes or more coalesce, only the the genes tagged by has the smallest number remains
-  nodes = as.numeric(rownames(geneticData));names(nodes)=as.character(nodes)# names of the tip nodes that will coalesce
-  cell_number_of_nodes <- geneticData[,"Cell_numbers"] # where were the genes sampled in the landscape
+  coalescent = list() 
+  # Nodes are initialized : 1 individual <=> 1 node
+  nodes = as.numeric(rownames(geneticData)); names(nodes)=as.character(nodes)
+  # Cells in which were the genes sampled in the landscape :
+  cell_number_of_nodes <- geneticData[,"Cell_numbers"] 
   names(cell_number_of_nodes) <- nodes
-  parent_cell_number_of_nodes <- cell_number_of_nodes # where the previous generation genes were in the landscape
-  nodes_remaining_by_cell = list() # a list of cells with all the genes remaining in each cell
-  time=0 # backward time
-  single_coalescence_events=0 # number of single coalescence events. Coalescence involving multiple individuals counts for 1 event.
-  single_and_multiple_coalescence_events=0 # number of single and multiple coalescence events. Coalescence involving multiple individuals counts for "the number of individuals - 1" events.
+  # Cells in which the previous generation genes were in the landscape :
+  parent_cell_number_of_nodes <- cell_number_of_nodes 
+  # A list of cells with all the genes remaining in each cell. Initialized.
+  nodes_remaining_by_cell = list()
   for (cell in 1:ncell(rasterStack))#cell=1)
   {
     nodes_remaining_by_cell[[cell]] <- which(cell_number_of_nodes==cell)
   }
+  # Number of coalescence events :
+  single_coalescence_events=0 
+  single_and_multiple_coalescence_events=0
+  
+  ### Simulating the coalescent process :
   while (length(unlist(nodes_remaining_by_cell))>1) 
   {
     # migration
@@ -785,6 +795,8 @@ simul_coalescent <- function(geneticData, rasterStack, pK, pr, shapesK, shapesr,
   # we now move in the backward generation while coalescence loop
   cell_number_of_nodes = parent_cell_number_of_nodes
   }
+  
+  
   coalescent=add_br_length_and_mutation(coalescent,mutation_rate,initial_genetic_value)
   list(coalescent=coalescent,mutation_rate=mutation_rate,
        forward_log_prob=sum(prob_forward)/coalescent[[length(coalescent)]]$time,

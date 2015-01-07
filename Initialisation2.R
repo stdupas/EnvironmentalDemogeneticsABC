@@ -53,7 +53,7 @@ values(rasK)= as.matrix(ReactNorm(X=values(rasterStack),p=pK,shapes=shapesK)[,"Y
 # but genetic data are not used. They will be modified according to the simulated coalescent
 # we create as many individuals (lines) as K for each cell of the map 
 # then we sample a few individuals for the coalescent
-geneticData = CreateGenetArray(rasK=rasK, nb_locus=20, initial_locus_value=200, Option="full_1col_diploid")          
+geneticData = CreateGenetArray(rasK=rasK, nb_locus=20, initial_locus_value=200, Option="full_1col_diploid",nind=4)          
 geneticData = CreateGenetArray(rasK=rasK, nb_locus=20, initial_locus_value=sample((80:120)*2,6*20,replace=TRUE), Option="sample_1col_diploid", nind=3)
 dim(geneticData)
 

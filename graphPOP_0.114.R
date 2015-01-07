@@ -76,6 +76,7 @@ Aggregate_and_adjust_raster_to_data <- function(Envir_raster_stack,release,recov
 
 # conquadraticskewed
 # asymetric concave conquadratic function 
+# arguments: 
 # X : matrix or data frame providing the values of independent variable to calculate reaction norm
 # p : matrix parameter values for the reaction norm
 # line names of p : c("Xmin","Xmax","Xopt","Ymax"), 
@@ -83,6 +84,8 @@ Aggregate_and_adjust_raster_to_data <- function(Envir_raster_stack,release,recov
 # [Xmin, Xmax] is the enveloppe, 
 # Xopt is the value that maximises the function
 # Yopt is the maximum value of the function
+# value:
+# reaction norm
 
 conquadraticskewed <- function(X,p=matrix(c(100,400,250,1,0.5,1,300,2000,1000,1,0.5,1),nrow=6,ncol=2,dimnames=list(c("Xmin","Xmax","Xopt","Yopt","Yxmin","Yxmax"),c("BIO1","BIO12"))))
 {
@@ -96,6 +99,18 @@ conquadraticskewed <- function(X,p=matrix(c(100,400,250,1,0.5,1,300,2000,1000,1,
   y[X<Xmin] <-0
   y
 }
+# conquadraticskewed sq
+# asymetric concave conquadratic function 
+# arguments: 
+# X : matrix or data frame providing the values of independent variable to calculate reaction norm
+# p : matrix parameter values for the reaction norm
+# line names of p : c("Xmin","Xmax","Xopt","Ymax"), 
+# column names of p : names of the independent variables of X used for the reaction norm calculation
+# [Xmin, Xmax] is the enveloppe, 
+# Xopt is the value that maximises the function
+# Yopt is the maximum value of the function
+# value:
+# reaction norm
 
 conquadraticskewedsq <- function(X,p=matrix(c(100,400,250,1,0.5,1,300,2000,1000,1,0.5,1),nrow=6,ncol=2,dimnames=list(c("Xmin","Xmax","Xopt","Yopt","Yxmin","Yxmax"),c("BIO1","BIO12"))))
 {
@@ -207,8 +222,17 @@ linear <- function(X,p)
 
 # ReactNorm computes reaction norm value and geometric mean of the reaction 
 # norms for each variable in a data frame
-# p are the parameter values of the reaction norm for each variable
-# shape is the shape of the reaction norm
+# Arguments: 
+# X : vector of environemental variables
+# p : parameter values of the reaction norm for each environmental variable
+# shape : is the shape of the reaction norm
+# Value : 
+# The reaction norm vector corresponding to the environmental variables
+# Example :
+# p = matrix(c(100,500,300,0,30,30,300,3000,2500,0,30,30),nrow=6,ncol=2,dimnames=list(c("Xmin","Xmax","Xopt","Yxmin","Yxmax","Yopt"),c("BIO1","BIO12")))
+# shapes = c(BIO1="conquadraticskewed",BIO12="conquadraticskewed")
+# Data = data.frame(BIO12=(2:32)*100,BIO1=(10:40)*10) 
+# ReactNorm(Data,p,shapes)
 
 ReactNorm <- function(X,p,shapes)
   #p=c(p["Xmin"]=10,p["Xmax"]=20,p["Xopt"]=18,p["Ymax"]=0.1)
@@ -259,6 +283,17 @@ R_Function <- function(rasterStack, alpha, beta){
   R[is.na(R)]<-0 # replace NA by 0
   R
 }
+
+
+# Show niche is a function to visualize two dimensional niche function 
+# Arguments
+#
+#
+#
+# Example
+# Data <- data.frame(BIO12=(2:32)*100,BIO1=(10:40)*10)
+# 
+#
 
 Show_Niche <- function(Data,p,shapes=c(BIO1="conquadraticskewed",BIO12="conquadraticskewed")) # non terminé
 {

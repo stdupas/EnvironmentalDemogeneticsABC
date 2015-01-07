@@ -431,7 +431,7 @@ geneticDist <- function(commute_time, popSize){
 #           haploid or diploid : haploid or diploid 
 # nind = number of individuals sampled from the full carrying capacity population
 
-CreateGenetArray <- function(rasK, nb_locus, initial_locus_value,Option="sample_1_col_diploid",nind=4)
+CreateGenetArray <- function(rasK, nb_locus, initial_locus_value,Option,nind)
 {
   #Get coords for each cell
   coords = xyFromCell(rasK, 1:length(values(rasK[[1]])), spatial=FALSE)

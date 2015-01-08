@@ -29,8 +29,14 @@ library(lattice)
 ####################################################
 
 
-# Function to get spatial resolution in km
 degree2km = function(rasterStack){
+  # Function to get spatial resolution in km from a rasterStack
+  #
+  # Args:
+  #   rasterStack: the rasterStack from which to obtain the resolution
+  #
+  # Returns:
+  #   The spatial resolution in km from the rasterStack 
   x_origin = ((xmin(rasterStack)+xmax(rasterStack))/2) #longitude origin
   y_origin = ((ymin(rasterStack)+ymax(rasterStack))/2) #latitude origin
   x_destination = (x_origin + xres(rasterStack)) #longitude of destination point
@@ -41,14 +47,18 @@ degree2km = function(rasterStack){
   dist_km
 }
 
-# Aggregate_and_adjust_raster_to_data change resolution and extent of environmental stacked layers
-# according to data geographic range and extension zone outside geographic range of data
-# ARGUMENTS:
-# Envir_raster_stack = raster file 
-# release = release points file (columns "X" and "Y" as longitude nd latitude)
-# recovery = recovery points file (columns "X" and "Y" as longitude nd latitude)
+
 Aggregate_and_adjust_raster_to_data <- function(Envir_raster_stack,release,recovery,extend_band_size,aggregate_index)
 {
+  # Change resolution and extent of environmental stacked layers according to data geographic range and extension zone outside geographic range of data
+  #
+  # Args:
+  #   Envir_raster_stack: raster file 
+  #   release: release points file (columns "X" and "Y" as longitude nd latitude)
+  #   recovery: recovery points file (columns "X" and "Y" as longitude nd latitude)
+  #
+  # Returns:
+  #   The transformed rasterStack
   samples <- SpatialPoints(rbind(na.omit(release[,c("X","Y")]),na.omit(recovery[,c("X","Y")])))
   if (aggregate_index > 1) {Envir_raster_stack <- aggregate(crop(Envir_raster_stack,extent(samples)+extend_band_size), fact=aggregate_index, fun=mean, expand=TRUE, na.rm=TRUE)} else {
     Envir_raster_stack <- crop(Envir_raster_stack,extent(samples)+extend_band_size)
@@ -74,21 +84,19 @@ Aggregate_and_adjust_raster_to_data <- function(Envir_raster_stack,release,recov
 #Xmax=p[2];p["Xmin"]=p[1];Ymax=p["Ymax"];p["Xopt"]=p["Xopt"]
 
 
-# conquadraticskewed
-# asymetric concave conquadratic function 
-# arguments: 
-# X : matrix or data frame providing the values of independent variable to calculate reaction norm
-# p : matrix parameter values for the reaction norm
-# line names of p : c("Xmin","Xmax","Xopt","Ymax"), 
-# column names of p : names of the independent variables of X used for the reaction norm calculation
-# [Xmin, Xmax] is the enveloppe, 
-# Xopt is the value that maximises the function
-# Yopt is the maximum value of the function
-# value:
-# reaction norm
+
 
 conquadraticskewed <- function(X,p=matrix(c(100,400,250,1,0.5,1,300,2000,1000,1,0.5,1),nrow=6,ncol=2,dimnames=list(c("Xmin","Xmax","Xopt","Yopt","Yxmin","Yxmax"),c("BIO1","BIO12"))))
 {
+  # Asymetric concave conquadratic function 
+  # 
+  # Args: 
+  #   X : matrix or data frame providing the values of independent variable to calculate reaction norm
+  #   p : matrix parameter values for the reaction norm
+  #   dimnames: lines and column names of p : list of 2 : [[1]] c("Xmin","Xmax","Xopt","Ymin",Ymax") with [Xmin, Xmax] the enveloppe, Xopt the value that maximises the function,  Yopt the maximum value of the function and [[2]] names of the independent variables of X used for the reaction norm calculation
+  #
+  # Returns:
+  #   The reaction norm
   Yopt = p[rep("Yopt",dim(X)[1]),colnames(X)]
   Xopt = p[rep("Xopt",dim(X)[1]),colnames(X)]
   Xmin = p[rep("Xmin",dim(X)[1]),colnames(X)]
@@ -99,21 +107,19 @@ conquadraticskewed <- function(X,p=matrix(c(100,400,250,1,0.5,1,300,2000,1000,1,
   y[X<Xmin] <-0
   y
 }
-# conquadraticskewed sq
-# asymetric concave conquadratic function 
-# arguments: 
-# X : matrix or data frame providing the values of independent variable to calculate reaction norm
-# p : matrix parameter values for the reaction norm
-# line names of p : c("Xmin","Xmax","Xopt","Ymax"), 
-# column names of p : names of the independent variables of X used for the reaction norm calculation
-# [Xmin, Xmax] is the enveloppe, 
-# Xopt is the value that maximises the function
-# Yopt is the maximum value of the function
-# value:
-# reaction norm
+
 
 conquadraticskewedsq <- function(X,p=matrix(c(100,400,250,1,0.5,1,300,2000,1000,1,0.5,1),nrow=6,ncol=2,dimnames=list(c("Xmin","Xmax","Xopt","Yopt","Yxmin","Yxmax"),c("BIO1","BIO12"))))
 {
+  # Asymetric concave conquadratic function 
+  #
+  # Args: 
+  #   X : matrix or data frame providing the values of independent variable to calculate reaction norm
+  #   p : matrix parameter values for the reaction norm
+  #   dimnames: lines and column names of p : list of 2 : [[1]] c("Xmin","Xmax","Xopt","Ymin",Ymax") with [Xmin, Xmax] the enveloppe, Xopt the value that maximises the function,  Yopt the maximum value of the function and [[2]] names of the independent variables of X used for the reaction norm calculation
+  #
+  # Returns:
+  #   The reaction norm
   Yopt = p[rep("Yopt",dim(X)[1]),colnames(X)]
   Xopt = p[rep("Xopt",dim(X)[1]),colnames(X)]
   Xmin = p[rep("Xmin",dim(X)[1]),colnames(X)]
@@ -125,34 +131,36 @@ conquadraticskewedsq <- function(X,p=matrix(c(100,400,250,1,0.5,1,300,2000,1000,
 #  y[X<Xmin] <-0
 }
 
-# conquadratic = concave quadratic function 
-# X : matrix or data frame providing the values of independent variable to calculate reaction norm
-# p : matrix parameter values for the reaction norm
-# line names of p : c("Xmin","Xmax","Xopt","Ymax"), 
-# column names of p : names of the independent variables of X used for the reaction norm calculation
-# [Xmin, Xmax] is the enveloppe, 
-# Xopt, is not considered and is given the value (Xmin+Xmax)/2
-# Yopt is the maximum value of the function
 
 conquadratic <- function(X,p)
 {
+  # conquadratic = concave quadratic function 
+  #
+  # Args: 
+  #   X : matrix or data frame providing the values of independent variable to calculate reaction norm
+  #   p : matrix parameter values for the reaction norm
+  #   dimnames: lines and column names of p : list of 2 : [[1]] c("Xmin","Xmax","Xopt","Ymin",Ymax") with [Xmin, Xmax] the enveloppe, Xopt the value that maximises the function,  Yopt the maximum value of the function and [[2]] names of the independent variables of X used for the reaction norm calculation
+  #
+  # Returns:
+  #   The reaction norm
   xmax = p[rep("Xmax",dim(X)[1]),colnames(X)]
   xmin = p[rep("Xmin",dim(X)[1]),colnames(X)]  
   yopt = p[rep("Yopt",dim(X)[1]),colnames(X)]  
   (yopt-(4*yopt/(xmax-xmin)^2)*(X-(xmin+xmax)/2)^2)*((X>xmin)&(X<xmax))
 }
 
-# conquadraticqsq = concave squared quadratic function 
-# X : matrix or data frame providing the values of independent variable to calculate reaction norm
-# p : matrix parameter values for the reaction norm
-# line names of p : c("Xmin","Xmax","Xopt","Ymax"), 
-# column names of p : names of the independent variables of X used for the reaction norm calculation
-# [Xmin, Xmax] is the enveloppe, 
-# Xopt, is not considered and is given the value (Xmin+Xmax)/2
-# Yopt is the maximum value of the function
 
 conquadraticsq <- function(X,p)
 {
+  # conquadraticqsq = concave squared quadratic function 
+  #
+  # Args: 
+  #   X : matrix or data frame providing the values of independent variable to calculate reaction norm
+  #   p : matrix parameter values for the reaction norm
+  #   dimnames: lines and column names of p : list of 2 : [[1]] c("Xmin","Xmax","Xopt","Ymin",Ymax") with [Xmin, Xmax] the enveloppe, Xopt the value that maximises the function,  Yopt the maximum value of the function and [[2]] names of the independent variables of X used for the reaction norm calculation
+  #
+  # Returns:
+  #   The reaction norm
   xmax = p[rep("Xmax",dim(X)[1]),colnames(X)]
   xmin = p[rep("Xmin",dim(X)[1]),colnames(X)]  
   yopt = p[rep("Yopt",dim(X)[1]),colnames(X)]  

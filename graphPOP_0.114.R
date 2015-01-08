@@ -776,7 +776,7 @@ simul_coalescent <- function(geneticData, rasterStack, pK, pr, shapesK, shapesr,
   ### Simulating the coalescent process :
   while (length(unlist(nodes_remaining_by_cell))>1) 
   {
-    # migration
+    ## Migration
     # we localize the parents in the landscape by sampling in the backward transition matrix
     for (node in 1:length(parent_cell_number_of_nodes))#gene=1;node=1# parent_cell_number_of_nodes
     {
@@ -784,55 +784,72 @@ simul_coalescent <- function(geneticData, rasterStack, pK, pr, shapesK, shapesr,
     }
     # once we know the parent cell numbers, we calculate the forward dispersion probability of the event
     prob_forward[time] = sum(log( transition_forward[parent_cell_number_of_nodes,cell_number_of_nodes]))
-    # coalescence
+    
+    ## Coalescence
     time=time+1; if (round(time/10)*10==time) {print(time)}
+    
     # we now perform coalescence within each cell of the landscape for the parents
     for (cell in 1:ncell(rasterStack))#cell=1;cell=2;cell=3;cell=4;cell=5;cell=26;cell=10
-    {     
+    {
+      # add a local variable, easier to manipulate than the reference to a list...
       nodes_remaining_in_the_cell = nodes_remaining_by_cell[[cell]] <- as.numeric(names(which(parent_cell_number_of_nodes==cell)))
-      # we obtain the identities in the geneticData table (line) of the genes remaining in the cell
+      
+      # we obtain the identities in the geneticData table (line) of the nodes remaining in the cell
       if (length(nodes_remaining_in_the_cell)>1) 
       {
-        # We create a logical matrix in which lines represent genes of the sample (nodes) remaining in the cell 
-        # and column represent their parent chosen from the whole population of size N[cell]. 
-        # If two genes (lines) coalesce if they have TRUE for the same parent (column) 
         nbgenesremaining=length(nodes_remaining_in_the_cell)
+       
+        # Attribute parents (among K possible parents) to each node present in the cell
         smp = sample(N[cell],length(nodes_remaining_in_the_cell),replace=TRUE)
+        
+        # A logical matrix in which lines represent the nodes in the cell and column represent their parent :
+        # (actually, this line is a simple test to transform the parentality info under a TRUE/FALSE form)
+        # two nodes coalesce if they have TRUE for the same parent (parents are in columns)
         parentoffspringmatrix <- matrix(smp,nrow=nbgenesremaining,ncol=N[cell])==matrix(1:N[cell],nrow=nbgenesremaining,ncol=N[cell],byrow=TRUE)
-        #        colnames(parentoffspringmatrix) <- nodes_remaining_in_the_cell
+        # colnames(parentoffspringmatrix) <- nodes_remaining_in_the_cell
         rownames(parentoffspringmatrix) <- nodes_remaining_in_the_cell
-        # the columns  column of parentoffspringmatrix that have more than one TRUE
-        # identifies the individuals that coalesce with the lines of the TRUEs
+        
+        # Columns of parentoffspringmatrix with more than one TRUE allow to identify coalescing individuals :
         if (any(colSums(parentoffspringmatrix)>1) )
         {
-          #  which(colSums(parentoffspringmatrix)>1)) gives the column names 
-          #  of parentoffspringmatrix that have coalescence information
+          #  Loop over all the parents in which coalescence event occur
           for (multiple in which(colSums(parentoffspringmatrix)>1)) # multiple<-which(colSums(parentoffspringmatrix)>1)[1]
           {
-            # there is coalescence 
+            # Record the coalescence event : 
             single_coalescence_events = single_coalescence_events +1
+            
             # which(parentoffspringmatrix[,multiple]) identifies which node in the column coalesce
             nodes_that_coalesce = names(which(parentoffspringmatrix[,multiple]))
-            # attibutes new node number to the ancestor, adds this to the nodes vector, removes the nodes that coalesced from the node vector
-            new_node <- max(nodes)+1;nodes=nodes[!(names(nodes)%in%nodes_that_coalesce)];nodes=append(nodes,new_node);names(nodes)[length(nodes)]=new_node
+            
+            # attibutes new node number to the ancestor
+            new_node <- max(nodes)+1
+            # removes the nodes that coalesced from the node vector
+            nodes=nodes[!(names(nodes)%in%nodes_that_coalesce)]
+            # adds them to the nodes vector
+            nodes=append(nodes,new_node)
+            names(nodes)[length(nodes)]=new_node
+            
             # updating of vector parent_cell_number_of_nodes (adding the cell number of the new node and removing the nodes that disapeared)
-            parent_cell_number_of_nodes <- append(parent_cell_number_of_nodes[!(names(parent_cell_number_of_nodes)%in%nodes_that_coalesce)],cell);names(parent_cell_number_of_nodes)[length(parent_cell_number_of_nodes)]<-new_node
+            parent_cell_number_of_nodes <- append(parent_cell_number_of_nodes[!(names(parent_cell_number_of_nodes)%in%nodes_that_coalesce)],cell)
+            names(parent_cell_number_of_nodes)[length(parent_cell_number_of_nodes)]<-new_node
             # adds the event to the list coalescent: time, which node coalesced, and the number of the new node
             coalescent[[single_coalescence_events]] <- list(time=time,coalescing=as.numeric(nodes_that_coalesce),new_node=new_node)
             # updating the nodes vector for the cell
             nodes_remaining_in_the_cell = nodes_remaining_by_cell[[cell]] <- append(nodes_remaining_in_the_cell[!nodes_remaining_in_the_cell %in% nodes_that_coalesce],new_node)
             # updates the number of coalescent events 
             single_and_multiple_coalescence_events = single_and_multiple_coalescence_events + length(nodes_that_coalesce) - 1
-          }
-        }
-      }
-    }
-  # we now move in the backward generation while coalescence loop
+            
+          } #  end of loop over all the parents in which coalescence event occur
+        } # end of the if condition "there are coalescing events"
+      } # end of the condition "there are more than 1 individual in the cell
+    } # end of the loop across the cells
+    
   cell_number_of_nodes = parent_cell_number_of_nodes
-  }
+  } # end of the backward generation while coalescence loop
   
-  
+  # Inform historical and mutational processes
   coalescent=add_br_length_and_mutation(coalescent,mutation_rate,initial_genetic_value)
+  # Formatting the output
   list(coalescent=coalescent,mutation_rate=mutation_rate,
        forward_log_prob=sum(prob_forward)/coalescent[[length(coalescent)]]$time,
        genetic_values=genetics_of_coaltable(coalist_2_coaltable(coalescent),initial_genetic_value,mutation_model,stepvalue,mut_param))

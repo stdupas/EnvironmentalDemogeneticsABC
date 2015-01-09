@@ -754,6 +754,7 @@ simul_coalescent <- function(geneticData, rasterStack, pK, pr, shapesK, shapesr,
   #### Initialize variables needed for the coalescent simulation process :
   time=0
   prob_forward=NA
+  number_of_nodes_over_generations=0
   N <- round(K)
   coalescent = list() 
   # Nodes are initialized : 1 individual <=> 1 node
@@ -783,8 +784,8 @@ simul_coalescent <- function(geneticData, rasterStack, pK, pr, shapesK, shapesr,
       parent_cell_number_of_nodes[node] = sample(ncell(rasterStack),size=1,prob=c(transitionmatrice[cell_number_of_nodes[node],]))
     }
     # once we know the parent cell numbers, we calculate the forward dispersion probability of the event
-    prob_forward[time] = sum(log( transition_forward[parent_cell_number_of_nodes,cell_number_of_nodes]))
-    
+    prob_forward[time] = sum(log(transition_forward[parent_cell_number_of_nodes,cell_number_of_nodes]))
+    number_of_nodes_over_generations = number_of_nodes_over_generations + length(cell_number_of_nodes)
     ## Coalescence
     time=time+1; if (round(time/10)*10==time) {print(time)}
     
@@ -851,7 +852,7 @@ simul_coalescent <- function(geneticData, rasterStack, pK, pr, shapesK, shapesr,
   coalescent=add_br_length_and_mutation(coalescent,mutation_rate,initial_genetic_value)
   # Formatting the output
   list(coalescent=coalescent,mutation_rate=mutation_rate,
-       forward_log_prob=sum(prob_forward)/coalescent[[length(coalescent)]]$time,
+       forward_log_prob=sum(prob_forward)/number_of_nodes_over_generations,
        genetic_values=genetics_of_coaltable(coalist_2_coaltable(coalescent),initial_genetic_value,mutation_model,stepvalue,mut_param))
   # forward_log_prob is the average per generation of the log probability of the forward movements of the genes in the landscape
 }

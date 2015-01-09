@@ -280,34 +280,6 @@ ReactNorm <- function(X,p,shapes)
 }
 
 
-K_Function <- function(rasterStack, p, shapes)
-{
-  # Computes effective carrying capacity from environmental variables 
-  # p : parameters 
-  # rasterStack = environmental variables 
-  # shapes = vector of shapes used for the niche function of each environemental variable 
-  # (among enveloppe, envelin, envloglin, conquadratic, conquadraticskewed)
-  #K=matrix(combineReactNorms(values(rasterStack),p,shapes),byrow=TRUE,nrow=length(rasterStack),ncol=legnth(rasterStack))
-  ReactNorm(values(rasterStack),p,shapes)
-}
-
-
-R_Function <- function(rasterStack, alpha, beta)
-{
-  # R_Function: Gets effective growth rate from environmental variables 
-  # alpha and beta are fixed by estimation
-  # rasterStack = environmental variables 
-  if(nlayers(rasterStack)>1){
-    R = exp(as.matrix(alpha+sum(beta*rasterStack)))# utilisation d'un modele lineaire generalise
-  }
-  else{ R = exp(as.matrix(alpha+beta*rasterStack)) }
-  R = t(R) # transpose to get niche predicted values that fits to matrix organisation (by columns) and not in raster organisation (by rows)
-  R = t(matrix(R,nrow=length(R),ncol=length(R))) # Get population size by columns
-  R[is.na(R)]<-0 # replace NA by 0
-  R
-}
-
-
 # Show niche is a function to visualize two dimensional niche function 
 # Arguments
 #

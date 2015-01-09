@@ -29,8 +29,14 @@ library(lattice)
 ####################################################
 
 
-# Function to get spatial resolution in km
 degree2km = function(rasterStack){
+  # Function to get spatial resolution in km from a rasterStack
+  #
+  # Args:
+  #   rasterStack: the rasterStack from which to obtain the resolution
+  #
+  # Returns:
+  #   The spatial resolution in km from the rasterStack 
   x_origin = ((xmin(rasterStack)+xmax(rasterStack))/2) #longitude origin
   y_origin = ((ymin(rasterStack)+ymax(rasterStack))/2) #latitude origin
   x_destination = (x_origin + xres(rasterStack)) #longitude of destination point
@@ -41,14 +47,18 @@ degree2km = function(rasterStack){
   dist_km
 }
 
-# Aggregate_and_adjust_raster_to_data change resolution and extent of environmental stacked layers
-# according to data geographic range and extension zone outside geographic range of data
-# ARGUMENTS:
-# Envir_raster_stack = raster file 
-# release = release points file (columns "X" and "Y" as longitude nd latitude)
-# recovery = recovery points file (columns "X" and "Y" as longitude nd latitude)
+
 Aggregate_and_adjust_raster_to_data <- function(Envir_raster_stack,release,recovery,extend_band_size,aggregate_index)
 {
+  # Change resolution and extent of environmental stacked layers according to data geographic range and extension zone outside geographic range of data
+  #
+  # Args:
+  #   Envir_raster_stack: raster file 
+  #   release: release points file (columns "X" and "Y" as longitude nd latitude)
+  #   recovery: recovery points file (columns "X" and "Y" as longitude nd latitude)
+  #
+  # Returns:
+  #   The transformed rasterStack
   samples <- SpatialPoints(rbind(na.omit(release[,c("X","Y")]),na.omit(recovery[,c("X","Y")])))
   if (aggregate_index > 1) {Envir_raster_stack <- aggregate(crop(Envir_raster_stack,extent(samples)+extend_band_size), fact=aggregate_index, fun=mean, expand=TRUE, na.rm=TRUE)} else {
     Envir_raster_stack <- crop(Envir_raster_stack,extent(samples)+extend_band_size)
@@ -74,21 +84,19 @@ Aggregate_and_adjust_raster_to_data <- function(Envir_raster_stack,release,recov
 #Xmax=p[2];p["Xmin"]=p[1];Ymax=p["Ymax"];p["Xopt"]=p["Xopt"]
 
 
-# conquadraticskewed
-# asymetric concave conquadratic function 
-# arguments: 
-# X : matrix or data frame providing the values of independent variable to calculate reaction norm
-# p : matrix parameter values for the reaction norm
-# line names of p : c("Xmin","Xmax","Xopt","Ymax"), 
-# column names of p : names of the independent variables of X used for the reaction norm calculation
-# [Xmin, Xmax] is the enveloppe, 
-# Xopt is the value that maximises the function
-# Yopt is the maximum value of the function
-# value:
-# reaction norm
+
 
 conquadraticskewed <- function(X,p=matrix(c(100,400,250,1,0.5,1,300,2000,1000,1,0.5,1),nrow=6,ncol=2,dimnames=list(c("Xmin","Xmax","Xopt","Yopt","Yxmin","Yxmax"),c("BIO1","BIO12"))))
 {
+  # Asymetric concave conquadratic function 
+  # 
+  # Args: 
+  #   X : matrix or data frame providing the values of independent variable to calculate reaction norm
+  #   p : matrix parameter values for the reaction norm
+  #   dimnames: lines and column names of p : list of 2 : [[1]] c("Xmin","Xmax","Xopt","Ymin",Ymax") with [Xmin, Xmax] the enveloppe, Xopt the value that maximises the function,  Yopt the maximum value of the function and [[2]] names of the independent variables of X used for the reaction norm calculation
+  #
+  # Returns:
+  #   The reaction norm
   Yopt = p[rep("Yopt",dim(X)[1]),colnames(X)]
   Xopt = p[rep("Xopt",dim(X)[1]),colnames(X)]
   Xmin = p[rep("Xmin",dim(X)[1]),colnames(X)]
@@ -99,21 +107,19 @@ conquadraticskewed <- function(X,p=matrix(c(100,400,250,1,0.5,1,300,2000,1000,1,
   y[X<Xmin] <-0
   y
 }
-# conquadraticskewed sq
-# asymetric concave conquadratic function 
-# arguments: 
-# X : matrix or data frame providing the values of independent variable to calculate reaction norm
-# p : matrix parameter values for the reaction norm
-# line names of p : c("Xmin","Xmax","Xopt","Ymax"), 
-# column names of p : names of the independent variables of X used for the reaction norm calculation
-# [Xmin, Xmax] is the enveloppe, 
-# Xopt is the value that maximises the function
-# Yopt is the maximum value of the function
-# value:
-# reaction norm
+
 
 conquadraticskewedsq <- function(X,p=matrix(c(100,400,250,1,0.5,1,300,2000,1000,1,0.5,1),nrow=6,ncol=2,dimnames=list(c("Xmin","Xmax","Xopt","Yopt","Yxmin","Yxmax"),c("BIO1","BIO12"))))
 {
+  # Asymetric concave conquadratic function 
+  #
+  # Args: 
+  #   X : matrix or data frame providing the values of independent variable to calculate reaction norm
+  #   p : matrix parameter values for the reaction norm
+  #   dimnames: lines and column names of p : list of 2 : [[1]] c("Xmin","Xmax","Xopt","Ymin",Ymax") with [Xmin, Xmax] the enveloppe, Xopt the value that maximises the function,  Yopt the maximum value of the function and [[2]] names of the independent variables of X used for the reaction norm calculation
+  #
+  # Returns:
+  #   The reaction norm
   Yopt = p[rep("Yopt",dim(X)[1]),colnames(X)]
   Xopt = p[rep("Xopt",dim(X)[1]),colnames(X)]
   Xmin = p[rep("Xmin",dim(X)[1]),colnames(X)]
@@ -125,34 +131,36 @@ conquadraticskewedsq <- function(X,p=matrix(c(100,400,250,1,0.5,1,300,2000,1000,
 #  y[X<Xmin] <-0
 }
 
-# conquadratic = concave quadratic function 
-# X : matrix or data frame providing the values of independent variable to calculate reaction norm
-# p : matrix parameter values for the reaction norm
-# line names of p : c("Xmin","Xmax","Xopt","Ymax"), 
-# column names of p : names of the independent variables of X used for the reaction norm calculation
-# [Xmin, Xmax] is the enveloppe, 
-# Xopt, is not considered and is given the value (Xmin+Xmax)/2
-# Yopt is the maximum value of the function
 
 conquadratic <- function(X,p)
 {
+  # conquadratic = concave quadratic function 
+  #
+  # Args: 
+  #   X : matrix or data frame providing the values of independent variable to calculate reaction norm
+  #   p : matrix parameter values for the reaction norm
+  #   dimnames: lines and column names of p : list of 2 : [[1]] c("Xmin","Xmax","Xopt","Ymin",Ymax") with [Xmin, Xmax] the enveloppe, Xopt the value that maximises the function,  Yopt the maximum value of the function and [[2]] names of the independent variables of X used for the reaction norm calculation
+  #
+  # Returns:
+  #   The reaction norm
   xmax = p[rep("Xmax",dim(X)[1]),colnames(X)]
   xmin = p[rep("Xmin",dim(X)[1]),colnames(X)]  
   yopt = p[rep("Yopt",dim(X)[1]),colnames(X)]  
   (yopt-(4*yopt/(xmax-xmin)^2)*(X-(xmin+xmax)/2)^2)*((X>xmin)&(X<xmax))
 }
 
-# conquadraticqsq = concave squared quadratic function 
-# X : matrix or data frame providing the values of independent variable to calculate reaction norm
-# p : matrix parameter values for the reaction norm
-# line names of p : c("Xmin","Xmax","Xopt","Ymax"), 
-# column names of p : names of the independent variables of X used for the reaction norm calculation
-# [Xmin, Xmax] is the enveloppe, 
-# Xopt, is not considered and is given the value (Xmin+Xmax)/2
-# Yopt is the maximum value of the function
 
 conquadraticsq <- function(X,p)
 {
+  # conquadraticqsq = concave squared quadratic function 
+  #
+  # Args: 
+  #   X : matrix or data frame providing the values of independent variable to calculate reaction norm
+  #   p : matrix parameter values for the reaction norm
+  #   dimnames: lines and column names of p : list of 2 : [[1]] c("Xmin","Xmax","Xopt","Ymin",Ymax") with [Xmin, Xmax] the enveloppe, Xopt the value that maximises the function,  Yopt the maximum value of the function and [[2]] names of the independent variables of X used for the reaction norm calculation
+  #
+  # Returns:
+  #   The reaction norm
   xmax = p[rep("Xmax",dim(X)[1]),colnames(X)]
   xmin = p[rep("Xmin",dim(X)[1]),colnames(X)]  
   yopt = p[rep("Yopt",dim(X)[1]),colnames(X)]  
@@ -160,29 +168,31 @@ conquadraticsq <- function(X,p)
   res + res * (1-res)
 }
 
-# envelope = simple envelope function 
-# X : matrix or data frame providing the values of independent variable to calculate reaction norm
-# p : matrix parameter values for the reaction norm
-# line names of p used for caclculation : c("Xmin","Xmax","Yopt"), 
-# column names of p : names of the independent variables of X used for the reaction norm calculation
-# [Xmin, Xmax] is the enveloppe, 
-# Yopt is the value of the function in the [Xmin, Xmax] interval
 
 enveloppe <- function(X,p)
 {
+  # simple envelope function, which affects a single value of Yopt to all cells in which the value of the environmental variable is between Xmin and Xmax
+  #
+  # Args:
+  #   X : matrix or data frame providing the values of independent variable to calculate reaction norm
+  #   p : matrix parameter values for the reaction norm, line names: c("Xmin","Xmax","Yopt"), column names: names of the independent variables of X used for the reaction norm calculation
+  #
+  # Returns: 
+  #   A matrix of Yopt the value of the function for each cell, for each environmental variable
   p[rep("Yopt",dim(X)[1]),colnames(X)]*((X>p[rep("Xmin",dim(X)[1]),])&(X<p[rep("Xmax",dim(X)[1]),colnames(X)]))
 }
 
-# envelope = linear response within an envelope
-# X : matrix or data frame providing the values of independent variable to calculate reaction norm
-# p : matrix parameter values for the reaction norm
-# line names of p used for caclculation : c("Xmin","Xmax","Yxmin","Yxmax"), 
-# column names of p : names of the independent variables of X used for the reaction norm calculation
-# [Xmin, Xmax] is the enveloppe, 
-# Yxmin and Yxmax are the values at Xmin and Xmax
 
 envelinear <- function(X,p,log=FALSE)
 {
+  # Compute a linear response within an envelope
+  #
+  # Args:
+  #   X : matrix or data frame providing the values of independent variable to calculate reaction norm
+  #   p : matrix parameter values for the reaction norm, line names: c("Xmin","Xmax","Yopt"), column names: names of the independent variables of X used for the reaction norm calculation
+  # 
+  # Returns: 
+  #   A matrix of Yopt the value of the function for each cell, for each environmental variable
   Yxmin = p[rep("Yxmax",dim(X)[1]),colnames(X)]
   Yxmax = p[rep("Yxmin",dim(X)[1]),colnames(X)]
   Xmin=  p[rep("Xmin",dim(X)[1]),colnames(X)]
@@ -194,6 +204,14 @@ envelinear <- function(X,p,log=FALSE)
   
 envelin0 <- function(X,p,log=FALSE)
 {
+  # Compute a linear response within an envelope # ?????
+  #
+  # Args:
+  #   X : matrix or data frame providing the values of independent variable to calculate reaction norm
+  #   p : matrix parameter values for the reaction norm, line names: c("Xmin","Xmax","Yopt"), column names: names of the independent variables of X used for the reaction norm calculation
+  # 
+  # Returns: 
+  #   A matrix of Yopt the value of the function for each cell, for each environmental variable
   Yxmin = p[rep("Yxmax",dim(X)[1]),colnames(X)]
   Yxmax = p[rep("Yxmin",dim(X)[1]),colnames(X)]
   Xmin=  p[rep("Xmin",dim(X)[1]),colnames(X)]
@@ -205,6 +223,14 @@ envelin0 <- function(X,p,log=FALSE)
 
 linear <- function(X,p)
 {
+  # Compute a linear response within an envelope ?????
+  #
+  # Args:
+  #   X : matrix or data frame providing the values of independent variable to calculate reaction norm
+  #   p : matrix parameter values for the reaction norm, line names: c("Xmin","Xmax","Yopt"), column names: names of the independent variables of X used for the reaction norm calculation
+  # 
+  # Returns: 
+  #   A matrix of Yopt the value of the function for each cell, for each environmental variable
   Yx1 = p[rep("Yx1",dim(X)[1]),colnames(X)]
   Yx0 = p[rep("Yx0",dim(X)[1]),colnames(X)]
   a = (Yx1 - Yx0)
@@ -220,68 +246,37 @@ linear <- function(X,p)
 #conquadraticskewed[]
 #(p[4]-4*p[4]/((p[2]-p[1])^2)*(( ((X-p[1])/(p[2]-p[1]))^-log(2)/log((p["Xopt"]-p[1])/(p[2]-p[1]))*(p[2]-p[1])+p[1])-(p[1]+p[2])/2)^2)*(X>=p[1])*(X<=p[2])
 
-# ReactNorm computes reaction norm value and geometric mean of the reaction 
-# norms for each variable in a data frame
-# Arguments: 
-# X : vector of environemental variables
-# p : parameter values of the reaction norm for each environmental variable
-# shape : is the shape of the reaction norm
-# Value : 
-# The reaction norm vector corresponding to the environmental variables
-# Example :
-# p = matrix(c(100,500,300,0,30,30,300,3000,2500,0,30,30),nrow=6,ncol=2,dimnames=list(c("Xmin","Xmax","Xopt","Yxmin","Yxmax","Yopt"),c("BIO1","BIO12")))
-# shapes = c(BIO1="conquadraticskewed",BIO12="conquadraticskewed")
-# Data = data.frame(BIO12=(2:32)*100,BIO1=(10:40)*10) 
-# ReactNorm(Data,p,shapes)
+
 
 ReactNorm <- function(X,p,shapes)
-  #p=c(p["Xmin"]=10,p["Xmax"]=20,p["Xopt"]=18,p["Ymax"]=0.1)
-  ## shapeDisps in c("enveloppe","envelin","envloglin","loG","conquadratic","conquadraticskewed","conquadraticsq","conquadraticskewedsq")
 {
+  # ReactNorm computes reaction norm value and geometric mean of the reaction norms for each variable in a data frame
+  #
+  # Args: 
+  #   X: matrix of environemental variables values (rows: cell number, columns: variable name)
+  #   p: parameter values of the reaction norm for each environmental variable
+  #   shapes: is the shape of the reaction norm
+  # Returns: 
+  #  The reaction norm vector corresponding to the environmental variables
   Y=X
   if (!all(colnames(p)%in%names(shapes))) {stop ("variable names do not correspond between parameters 'p' ans 'shape'")}
   for (shape in as.character(levels(as.factor(shapes))))
   {
     variables = colnames(p)[which(shapes==shape)]
     Y[,variables]=switch(shape,
-           enveloppe=enveloppe(subset(X,select=variables),p),
-           envelin=envelinear(subset(X,select=variables),p),
-           envloglin=envelinear(subset(X,select=variables),p,log=TRUE),
-           loG = log(subset(X,select=variables)),
-           linear = linear(subset(X,select=variables),p),
-           conquadratic=conquadratic(subset(X,select=variables),p),
-           conquadraticskewed=conquadraticskewed(subset(X,select=variables),p),
-           conquadraticsq=conquadraticsq(subset(X,select=variables),p),
-           conquadraticskewedsq=conquadraticskewedsq(subset(X,select=variables),p)
+           enveloppe=enveloppe(X=subset(X,select=variables),p=p),
+           envelin=envelinear(X=subset(X,select=variables),p=p),
+           envloglin=envelinear(X=subset(X,select=variables),p=p,log=TRUE),
+           loG = log(x=subset(X,select=variables)),
+           linear = linear(X=subset(X,select=variables),p=p),
+           conquadratic=conquadratic(X=subset(X,select=variables),p=p),
+           conquadraticskewed=conquadraticskewed(X=subset(X,select=variables),p=p),
+           conquadraticsq=conquadraticsq(X=subset(X,select=variables),p=p),
+           conquadraticskewedsq=conquadraticskewedsq(X=subset(X,select=variables),p=p)
     )
   }
   Y=cbind(Y,Y=apply(Y, 1, prod)^(1/dim(p)[2])) # geometric mean
   Y
-}
-
-
-# K_Function: Gets effective carrying capacity from environmental variables 
-# p : parameters 
-# rasterStack = environmental variables 
-# shapes = vector of shapes used for the niche function of each environemental variable 
-# (among enveloppe, envelin, envloglin, conquadratic, conquadraticskewed) 
-K_Function <- function(rasterStack, p, shapes){
-  #K=matrix(combineReactNorms(values(rasterStack),p,shapes),byrow=TRUE,nrow=length(rasterStack),ncol=legnth(rasterStack))
-  ReactNorm(values(rasterStack),p,shapes)
-}
-
-# R_Function: Gets effective growth rate from environmental variables 
-# alpha and beta are fixed by estimation
-# rasterStack = environmental variables 
-R_Function <- function(rasterStack, alpha, beta){
-  if(nlayers(rasterStack)>1){
-    R = exp(as.matrix(alpha+sum(beta*rasterStack)))# utilisation d'un modele lineaire generalise
-  }
-  else{ R = exp(as.matrix(alpha+beta*rasterStack)) }
-  R = t(R) # transpose to get niche predicted values that fits to matrix organisation (by columns) and not in raster organisation (by rows)
-  R = t(matrix(R,nrow=length(R),ncol=length(R))) # Get population size by columns
-  R[is.na(R)]<-0 # replace NA by 0
-  R
 }
 
 
@@ -346,15 +341,15 @@ migrationMatrix <- function(rasterStack,shapeDisp, pDisp){
   # migrationMatrix computes a matrix of distance between cells, apply a model of dispersion and returns a matrix of migration.
   # 
   # Args :
-  #  rasterStack : raster of population sizes
-  #  shapeDisp :  "gaussian" a simple normal density distribution,
+  #   rasterStack : raster of population sizes
+  #   shapeDisp :  "gaussian" a simple normal density distribution,
   #               "exponential" density distribution,
   #               "fat_tail1", "fat_tail2": ref :Chapman et all, Journal of Animal Ecology (2007) 76 , 36– 44
   #               "island" probability 1-m to stay, else homogen dispersion,
   #               "contiguous" near dispersal.
-  #  pDisp : parameters of the dispersion model, see further in the code for precisions
-  # Returns : a migration matrix (note that rowSums and colSums are not 1: some cells are more isolated geographically and migrate less than others to the rest of the world) 
+  #   pDisp : parameters of the dispersion model, see further in the code for precisions
   #
+  # Returns : a migration matrix (note that rowSums and colSums are not 1: some cells are more isolated geographically and migrate less than others to the rest of the world)   
   coords = xyFromCell(object=rasterStack, cell=1:length(values(rasterStack[[1]])), spatial=FALSE)
   distanceMatrix = as.matrix(dist(coords)) 
   migration = apply(distanceMatrix, c(1,2), 

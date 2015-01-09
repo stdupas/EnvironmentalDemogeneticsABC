@@ -51,7 +51,7 @@ values(rasK)= as.matrix(ReactNorm(X=values(rasterStack),p=pK,shapes=shapesK)[,"Y
 # but genetic data are not used. They will be modified according to the simulated coalescent
 # we create as many individuals (lines) as K for each cell of the map 
 # then we sample a few individuals for the coalescent
-geneticData = CreateGenetArray(rasK=rasK, nb_locus=20, initial_locus_value=200, Option="full_1col_diploid")          
+geneticData = CreateGenetArray(rasK=rasK, nb_locus=20, initial_locus_value=200, Option="full_1col_diploid",nind=4)          
 geneticData = CreateGenetArray(rasK=rasK, nb_locus=20, initial_locus_value=sample((80:120)*2,6*20,replace=TRUE), Option="sample_1col_diploid", nind=3)
 dim(geneticData)
 
@@ -78,6 +78,18 @@ phylog_tree <- coalescent_2_phylog(coalescent=coalescent_simulated$coalescent)
 plot_coalescent(coalescent=coalescent_simulated$coalescent,genetic_table=coalescent_simulated$genetic_values,with_landscape=TRUE, rasK=rasK, legend_right_move=-.3)
 plot_coalescent(coalescent=coalescent_simulated$coalescent,genetic_table=coalescent_simulated$genetic_values,rasK=rasK,legend_right_move=-.5)
 
+##### Appending summary stats reference table
+new_reference_table(geneticData,Distance="Goldstein")
+fill_reference_table <- function(geneticData=geneticData,Distance=Distance,
+                                 rasterStack=rasterStack,
+                                 pK=pK, pr=pr,
+                                 shapesK=shapesK, shapesr=shapesr,
+                                 shapeDisp=shapeDisp, pDisp=pDisp,
+                                 mutation_rate=1E-1, 
+                                 initial_genetic_value=initial_genetic_value, 
+                                 mutation_model="tpm",stepvalue=2,
+                                 mut_param=c(p=.5,sigma2=4))
+  
 ######################### end of Coalescence Simulation Test <<<<<<<<
 
  

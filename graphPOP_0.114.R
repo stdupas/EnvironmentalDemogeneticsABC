@@ -76,6 +76,7 @@ Aggregate_and_adjust_raster_to_data <- function(Envir_raster_stack,release,recov
 
 # conquadraticskewed
 # asymetric concave conquadratic function 
+# arguments: 
 # X : matrix or data frame providing the values of independent variable to calculate reaction norm
 # p : matrix parameter values for the reaction norm
 # line names of p : c("Xmin","Xmax","Xopt","Ymax"), 
@@ -83,6 +84,8 @@ Aggregate_and_adjust_raster_to_data <- function(Envir_raster_stack,release,recov
 # [Xmin, Xmax] is the enveloppe, 
 # Xopt is the value that maximises the function
 # Yopt is the maximum value of the function
+# value:
+# reaction norm
 
 conquadraticskewed <- function(X,p=matrix(c(100,400,250,1,0.5,1,300,2000,1000,1,0.5,1),nrow=6,ncol=2,dimnames=list(c("Xmin","Xmax","Xopt","Yopt","Yxmin","Yxmax"),c("BIO1","BIO12"))))
 {
@@ -96,6 +99,18 @@ conquadraticskewed <- function(X,p=matrix(c(100,400,250,1,0.5,1,300,2000,1000,1,
   y[X<Xmin] <-0
   y
 }
+# conquadraticskewed sq
+# asymetric concave conquadratic function 
+# arguments: 
+# X : matrix or data frame providing the values of independent variable to calculate reaction norm
+# p : matrix parameter values for the reaction norm
+# line names of p : c("Xmin","Xmax","Xopt","Ymax"), 
+# column names of p : names of the independent variables of X used for the reaction norm calculation
+# [Xmin, Xmax] is the enveloppe, 
+# Xopt is the value that maximises the function
+# Yopt is the maximum value of the function
+# value:
+# reaction norm
 
 conquadraticskewedsq <- function(X,p=matrix(c(100,400,250,1,0.5,1,300,2000,1000,1,0.5,1),nrow=6,ncol=2,dimnames=list(c("Xmin","Xmax","Xopt","Yopt","Yxmin","Yxmax"),c("BIO1","BIO12"))))
 {
@@ -207,8 +222,17 @@ linear <- function(X,p)
 
 # ReactNorm computes reaction norm value and geometric mean of the reaction 
 # norms for each variable in a data frame
-# p are the parameter values of the reaction norm for each variable
-# shape is the shape of the reaction norm
+# Arguments: 
+# X : vector of environemental variables
+# p : parameter values of the reaction norm for each environmental variable
+# shape : is the shape of the reaction norm
+# Value : 
+# The reaction norm vector corresponding to the environmental variables
+# Example :
+# p = matrix(c(100,500,300,0,30,30,300,3000,2500,0,30,30),nrow=6,ncol=2,dimnames=list(c("Xmin","Xmax","Xopt","Yxmin","Yxmax","Yopt"),c("BIO1","BIO12")))
+# shapes = c(BIO1="conquadraticskewed",BIO12="conquadraticskewed")
+# Data = data.frame(BIO12=(2:32)*100,BIO1=(10:40)*10) 
+# ReactNorm(Data,p,shapes)
 
 ReactNorm <- function(X,p,shapes)
   #p=c(p["Xmin"]=10,p["Xmax"]=20,p["Xopt"]=18,p["Ymax"]=0.1)
@@ -260,6 +284,17 @@ R_Function <- function(rasterStack, alpha, beta){
   R
 }
 
+
+# Show niche is a function to visualize two dimensional niche function 
+# Arguments
+#
+#
+#
+# Example
+# Data <- data.frame(BIO12=(2:32)*100,BIO1=(10:40)*10)
+# 
+#
+
 Show_Niche <- function(Data,p,shapes=c(BIO1="conquadraticskewed",BIO12="conquadraticskewed")) # non terminé
 {
   pairs = NULL;i=0
@@ -305,22 +340,22 @@ distanceMatrix <- function(rasterStack){
   return(distance)
 }
 
-# migrationMatrix return matrix of migration rate for each cell
-# From the raster Stack and the dispersal parameter pDisp (estimated),
-# this function calculates distance between all cells of raster
-# To this matrix of distance is applied a shapeDisp of migration.
-# And this function allows to choose the shapeDisp of study:
-# shapeDisp:  "gaussian" a simple normal density distribution, 
-#           "exponential" density distribution,
-#           "fat_tail1", "fat_tail2": ref :Chapman et all, Journal of Animal Ecology (2007) 76 , 36– 44
-#           "island" probability 1-m to stay, else homogen dispersion,
-#           "contiguous" near dispersal.
-# Note that rowSums and colSums are not 1: some cells are more isolated
-# geographically and migrate less than others to the rest of the world
-#
+
 
 migrationMatrix <- function(rasterStack,shapeDisp, pDisp){
-  coords = xyFromCell(rasterStack, 1:length(values(rasterStack[[1]])), spatial=FALSE)
+  # migrationMatrix computes a matrix of distance between cells, apply a model of dispersion and returns a matrix of migration.
+  # 
+  # Args :
+  #  rasterStack : raster of population sizes
+  #  shapeDisp :  "gaussian" a simple normal density distribution,
+  #               "exponential" density distribution,
+  #               "fat_tail1", "fat_tail2": ref :Chapman et all, Journal of Animal Ecology (2007) 76 , 36– 44
+  #               "island" probability 1-m to stay, else homogen dispersion,
+  #               "contiguous" near dispersal.
+  #  pDisp : parameters of the dispersion model, see further in the code for precisions
+  # Returns : a migration matrix (note that rowSums and colSums are not 1: some cells are more isolated geographically and migrate less than others to the rest of the world) 
+  #
+  coords = xyFromCell(object=rasterStack, cell=1:length(values(rasterStack[[1]])), spatial=FALSE)
   distanceMatrix = as.matrix(dist(coords)) 
   migration = apply(distanceMatrix, c(1,2), 
                     function(x)(switch(shapeDisp,
@@ -422,42 +457,44 @@ geneticDist <- function(commute_time, popSize){
 #####  SIMULATION OF OBSERVED GENETIC DATA   ######
 ###################################################
 
-
-# This function returns a data frame that contains genetic data:
-# coords X and Y of each cell - number of cells - locus with 2 alleles
-# ARGUMENTS: 
-# RasPopSizes = raster of pop sizes
-# dataSize = data that contains number of individuals in each cell
-# nb_locus = number of locus wished
-# initial_locus_value = genetic information for the first generation (parents)
-# option =  sample/full_1col/2col_haploid/diploid
-#           sample : nind individuals are sampled from the full population
-#           full : number of individuals per cell equals carrying capacity
-#           1col/2col : for diploids, one columns or 2 columns representation
-#           haploid or diploid : haploid or diploid 
-# nind = number of individuals sampled from the full carrying capacity population
-
-CreateGenetArray <- function(rasK, nb_locus, initial_locus_value,Option="sample_1_col_diploid",nind=4)
+CreateGenetArray <- function(rasK, nb_locus, initial_locus_value, Option, nind)
 {
-  #Get coords for each cell
-  coords = xyFromCell(rasK, 1:length(values(rasK[[1]])), spatial=FALSE)
+  # This function constructs the genetic dataset 
+  # coords X and Y of each cell - number of cells - locus with 2 alleles
+  # Args :
+  #   rasK : raster of pop sizes
+  #   dataSize : data that contains number of individuals in each cell
+  #   nb_locus : number of locus wished
+  #   initial_locus_value : genetic information for the first generation (parents)
+  #   Option : sample/full_1col/2col_haploid/diploid
+  #            sample : nind individuals are sampled from the full population
+  #            full : number of individuals per cell equals carrying capacity
+  #            1col/2col : for diploids, one columns or 2 columns representation
+  #            haploid or diploid : haploid or diploid 
+  #   nind = number of individuals sampled from the full carrying capacity population
+  # Returns : a data frame that contains genetic data : x, y, Cell_numbers, 
+  # 
+  # Get coords for each cell
+  coords = xyFromCell(object=rasK, cell=1:length(values(rasK[[1]])), spatial=FALSE)
+  # Get a vector giving the number of the deme, repeted as many times as sampled individuals within (ex : 111144 )
   repet = switch(Option,
-                 sample_1col_diploid = sort(rep(sample(rep(1:ncell(rasK),round(values(rasK))),nind,,replace=TRUE),2)), 
-                 sample_2col_diploid = sample(rep(1:length(rasK),round(values(rasK))),nind,replace=TRUE), 
+                 sample_1col_diploid = sort(rep(sample(rep(1:ncell(rasK),round(values(rasK))),nind,replace=TRUE),2)),
+                 sample_2col_diploid = sample(rep(1:length(rasK),round(values(rasK))),nind,replace=TRUE),
                  sample_haploid = sample(rep(1:ncell(rasK),round(values(rasK))),nind,replace=TRUE),
-                 full_1col_diploid = rep(1:length(rasK),round(values(rasK))*2), 
-                 full_2col_diploid = rep(1:length(rasK),round(values(rasK))), 
-                 full_haploid = rep(1:length(rasK),round(values(rasK))),                 
+                 full_1col_diploid = rep(1:length(rasK),round(values(rasK))*2),
+                 full_2col_diploid = rep(1:length(rasK),round(values(rasK))),
+                 full_haploid = rep(1:length(rasK),round(values(rasK))),            
   )
-  geneticData <- as.data.frame(coords[repet,]) ; geneticData[,"Cell_numbers"] <- repet
+  # Make a data frame of genetic values :
   genes = switch(Option,
                  sample_1col_diploid = as.data.frame(array(initial_locus_value,dim=c(length(repet),nb_locus))), 
-                 sample_2col_diploid = as.data.frame(array(initial_locus_value,dim=c(length(repet),nb_locus*2))), 
+                 sample_2col_diploid  = as.data.frame(array(initial_locus_value,dim=c(length(repet),nb_locus*2))), 
                  sample_haploid = as.data.frame(array(initial_locus_value,dim=c(length(repet),nb_locus))),
                  full_1col_diploid = as.data.frame(array(initial_locus_value,dim=c(length(repet),nb_locus))), 
                  full_2col_diploid = as.data.frame(array(initial_locus_value,dim=c(length(repet),nb_locus*2))), 
                  full_haploid = as.data.frame(array(initial_locus_value,dim=c(length(repet),nb_locus))),                 
   )
+  # determine names of column, like "Locus 1","Locus 2" for 1_col_diploid and haploid, or "Locus_1.1", "Locus_1.2" for 2_col_diploid 
   colnames(genes) = switch(Option,
                            sample_1col_diploid = paste("Locus",1:nb_locus, sep=""), 
                            sample_2col_diploid = paste("Locus",sort(rep(1:nb_locus,2)),".", 1:2, sep=""), 
@@ -466,8 +503,11 @@ CreateGenetArray <- function(rasK, nb_locus, initial_locus_value,Option="sample_
                            full_2col_diploid = paste("Locus",sort(rep(1:nb_locus,2)),".", 1:2, sep=""), 
                            full_haploid = paste("Locus",1:nb_locus, sep=""),                 
   )
+  # Merge sampling, geographic, genetic informations
+  geneticData <- as.data.frame(coords[repet,])
+  geneticData[,"Cell_numbers"] <- repet
   geneticData <- cbind(geneticData,genes) # add locus to geneticData 
-  geneticData
+  return(geneticData)
 }
 
 
@@ -668,44 +708,75 @@ simul_coocur <- function(cells=c(1,2),transitionmatrice)
 t
 }
 
-# simul_coalescent
-# function that simulates a coalescent in a lansdcape characterized by an environmental variable raster
-# stack in aspecies with given niche function relating the carrying capacity and growth rate 
-# with the environemental variable 
-# pK : parameters of K / environmental variables
-# pr : parameters of r / environmental variables
-# shapesK : shapes of niche funciotn (reaction norm)
-# pDisp : parameters of dispersion 
-# rasterStack : environmental variables raster stack
-# genetic data table : with coordinates
-# aggre_gener : number of generations to aggregate in the simulation steps
 
-simul_coalescent <- function(geneticData,rasterStack,pK,pr,shapesK,shapesr,shapeDisp,pDisp,mutation_rate=1E-1,initial_genetic_value=200,mutation_model="tmp",stepvalue=2,mut_param=c(p=.5,sigma2=4))
+
+simul_coalescent <- function(geneticData, rasterStack, pK, pr, shapesK, shapesr, shapeDisp, pDisp,
+                             mutation_rate, initial_genetic_value, mutation_model, stepvalue, mut_param)
 {
-  prob_forward=NA
+  # Simulates a coalescent in a lansdcape characterized by an environmental variable raster stack, for a species with a given niche function. 
+  #
+  # Args :
+  #   geneticData : genetic data table : with coordinates
+  #   rasterStack : environmental variables raster stack
+  #   pK : parameters values of K (Xmin, Xmax, Xopt, YXmin, Yxmax, Yopt) for each environmental variable
+  #   pr : parameters values of r (Xmin, Xmax, Xopt, YXmin, Yxmax, Yopt) for each environmental variables
+  #   shapesK : shapes of niche function (reaction norm) for the carrying capacity K
+  #   shapesr : shapes of niche function (reaction norm) for the growth rate r
+  #   pDisp : parameters of dispersion
+  #   mutation rate
+  #   initial_genetic_value : genetic value attributed to the common ancestor
+  #   mutation_model : specify a model of mutation : "step_wise" (Stepwise Mutation Model),"tmp" (Two Phases Mutation Model)
+  #   stepvalue :  
+  #   mut_param : 
+  # Returns :
+  #   A list with all coalescence informations :
+  #   List of 4
+  #    $ coalescent      :List of "i" (with "i" the number of coalescence events, coalescence involving multiple individuals counts for 1 event.)
+  #      ..$ :List of 5
+  #      ..  ..$ time           : time of coalescence
+  #      ..  ..$ coalescing     : coalescing nodes
+  #      ..  ..$ new_node       : "new" in a backward sense, ie the node resulting of the coalescence of the coalescing nodes
+  #      ..  ..$ br_length      : the length of the branches
+  #      ..  ..$ mutations      : the number of mutations which occured along the branch
+  #    $ mutation_rate          : 
+  #    $ forward_log_prob       : the logarithm of the forward probability of this coalescent
+  #    $ genetic_values         : a data frame with : time, coalescing, new_node, br_length, mutations (0 or NA), genetic_value (initial), resultant (0 or NA)
+  
+  ### Computes Niche Function variables :
   K = ReactNorm(values(rasterStack),pK,shapesK)[,"Y"]
   r = ReactNorm(values(rasterStack),pr,shapesr)[,"Y"]
+  
+  ### Computes stochastic matrix :
   migrationM <- migrationMatrix(rasterStack,shapeDisp, pDisp)
   transitionmatrice = transitionMatrixBackward(r, K, migration= migrationM);
   transition_forward = transitionMatrixForward(r, K, migration= migrationM)
+  
+  #### Initialize variables needed for the coalescent simulation process :
+  time=0
+  prob_forward=NA
   N <- round(K)
-  coalescent = list() # list containing all the times and genes conserved by coalescent events
-  # when 2 genes or more coalesce, only the the genes tagged by has the smallest number remains
-  nodes = as.numeric(rownames(geneticData));names(nodes)=as.character(nodes)# names of the tip nodes that will coalesce
-  cell_number_of_nodes <- geneticData[,"Cell_numbers"] # where were the genes sampled in the landscape
+  coalescent = list() 
+  # Nodes are initialized : 1 individual <=> 1 node
+  nodes = as.numeric(rownames(geneticData)); names(nodes)=as.character(nodes)
+  # Cells in which were the genes sampled in the landscape :
+  cell_number_of_nodes <- geneticData[,"Cell_numbers"] 
   names(cell_number_of_nodes) <- nodes
-  parent_cell_number_of_nodes <- cell_number_of_nodes # where the previous generation genes were in the landscape
-  nodes_remaining_by_cell = list() # a list of cells with all the genes remaining in each cell
-  time=0 # backward time
-  single_coalescence_events=0 # number of single coalescence events. Coalescence involving multiple individuals counts for 1 event.
-  single_and_multiple_coalescence_events=0 # number of single and multiple coalescence events. Coalescence involving multiple individuals counts for "the number of individuals - 1" events.
+  # Cells in which the previous generation genes were in the landscape :
+  parent_cell_number_of_nodes <- cell_number_of_nodes 
+  # A list of cells with all the genes remaining in each cell. Initialized.
+  nodes_remaining_by_cell = list()
   for (cell in 1:ncell(rasterStack))#cell=1)
   {
     nodes_remaining_by_cell[[cell]] <- which(cell_number_of_nodes==cell)
   }
+  # Number of coalescence events :
+  single_coalescence_events=0 
+  single_and_multiple_coalescence_events=0
+  
+  ### Simulating the coalescent process :
   while (length(unlist(nodes_remaining_by_cell))>1) 
   {
-    # migration
+    ## Migration
     # we localize the parents in the landscape by sampling in the backward transition matrix
     for (node in 1:length(parent_cell_number_of_nodes))#gene=1;node=1# parent_cell_number_of_nodes
     {
@@ -713,53 +784,72 @@ simul_coalescent <- function(geneticData,rasterStack,pK,pr,shapesK,shapesr,shape
     }
     # once we know the parent cell numbers, we calculate the forward dispersion probability of the event
     prob_forward[time] = sum(log( transition_forward[parent_cell_number_of_nodes,cell_number_of_nodes]))
-    # coalescence
+    
+    ## Coalescence
     time=time+1; if (round(time/10)*10==time) {print(time)}
+    
     # we now perform coalescence within each cell of the landscape for the parents
     for (cell in 1:ncell(rasterStack))#cell=1;cell=2;cell=3;cell=4;cell=5;cell=26;cell=10
-    {     
+    {
+      # add a local variable, easier to manipulate than the reference to a list...
       nodes_remaining_in_the_cell = nodes_remaining_by_cell[[cell]] <- as.numeric(names(which(parent_cell_number_of_nodes==cell)))
-      # we obtain the identities in the geneticData table (line) of the genes remaining in the cell
+      
+      # we obtain the identities in the geneticData table (line) of the nodes remaining in the cell
       if (length(nodes_remaining_in_the_cell)>1) 
       {
-        # We create a logical matrix in which lines represent genes of the sample (nodes) remaining in the cell 
-        # and column represent their parent chosen from the whole population of size N[cell]. 
-        # If two genes (lines) coalesce if they have TRUE for the same parent (column) 
         nbgenesremaining=length(nodes_remaining_in_the_cell)
+       
+        # Attribute parents (among K possible parents) to each node present in the cell
         smp = sample(N[cell],length(nodes_remaining_in_the_cell),replace=TRUE)
+        
+        # A logical matrix in which lines represent the nodes in the cell and column represent their parent :
+        # (actually, this line is a simple test to transform the parentality info under a TRUE/FALSE form)
+        # two nodes coalesce if they have TRUE for the same parent (parents are in columns)
         parentoffspringmatrix <- matrix(smp,nrow=nbgenesremaining,ncol=N[cell])==matrix(1:N[cell],nrow=nbgenesremaining,ncol=N[cell],byrow=TRUE)
-        #        colnames(parentoffspringmatrix) <- nodes_remaining_in_the_cell
+        # colnames(parentoffspringmatrix) <- nodes_remaining_in_the_cell
         rownames(parentoffspringmatrix) <- nodes_remaining_in_the_cell
-        # the columns  column of parentoffspringmatrix that have more than one TRUE
-        # identifies the individuals that coalesce with the lines of the TRUEs
+        
+        # Columns of parentoffspringmatrix with more than one TRUE allow to identify coalescing individuals :
         if (any(colSums(parentoffspringmatrix)>1) )
         {
-          #  which(colSums(parentoffspringmatrix)>1)) gives the column names 
-          #  of parentoffspringmatrix that have coalescence information
+          #  Loop over all the parents in which coalescence event occur
           for (multiple in which(colSums(parentoffspringmatrix)>1)) # multiple<-which(colSums(parentoffspringmatrix)>1)[1]
           {
-            # there is coalescence 
+            # Record the coalescence event : 
             single_coalescence_events = single_coalescence_events +1
+            
             # which(parentoffspringmatrix[,multiple]) identifies which node in the column coalesce
             nodes_that_coalesce = names(which(parentoffspringmatrix[,multiple]))
-            # attibutes new node number to the ancestor, adds this to the nodes vector, removes the nodes that coalesced from the node vector
-            new_node <- max(nodes)+1;nodes=nodes[!(names(nodes)%in%nodes_that_coalesce)];nodes=append(nodes,new_node);names(nodes)[length(nodes)]=new_node
+            
+            # attibutes new node number to the ancestor
+            new_node <- max(nodes)+1
+            # removes the nodes that coalesced from the node vector
+            nodes=nodes[!(names(nodes)%in%nodes_that_coalesce)]
+            # adds them to the nodes vector
+            nodes=append(nodes,new_node)
+            names(nodes)[length(nodes)]=new_node
+            
             # updating of vector parent_cell_number_of_nodes (adding the cell number of the new node and removing the nodes that disapeared)
-            parent_cell_number_of_nodes <- append(parent_cell_number_of_nodes[!(names(parent_cell_number_of_nodes)%in%nodes_that_coalesce)],cell);names(parent_cell_number_of_nodes)[length(parent_cell_number_of_nodes)]<-new_node
+            parent_cell_number_of_nodes <- append(parent_cell_number_of_nodes[!(names(parent_cell_number_of_nodes)%in%nodes_that_coalesce)],cell)
+            names(parent_cell_number_of_nodes)[length(parent_cell_number_of_nodes)]<-new_node
             # adds the event to the list coalescent: time, which node coalesced, and the number of the new node
             coalescent[[single_coalescence_events]] <- list(time=time,coalescing=as.numeric(nodes_that_coalesce),new_node=new_node)
             # updating the nodes vector for the cell
             nodes_remaining_in_the_cell = nodes_remaining_by_cell[[cell]] <- append(nodes_remaining_in_the_cell[!nodes_remaining_in_the_cell %in% nodes_that_coalesce],new_node)
             # updates the number of coalescent events 
             single_and_multiple_coalescence_events = single_and_multiple_coalescence_events + length(nodes_that_coalesce) - 1
-          }
-        }
-      }
-    }
-  # we now move in the backward generation while coalescence loop
+            
+          } #  end of loop over all the parents in which coalescence event occur
+        } # end of the if condition "there are coalescing events"
+      } # end of the condition "there are more than 1 individual in the cell
+    } # end of the loop across the cells
+    
   cell_number_of_nodes = parent_cell_number_of_nodes
-  }
+  } # end of the backward generation while coalescence loop
+  
+  # Inform historical and mutational processes
   coalescent=add_br_length_and_mutation(coalescent,mutation_rate,initial_genetic_value)
+  # Formatting the output
   list(coalescent=coalescent,mutation_rate=mutation_rate,
        forward_log_prob=sum(prob_forward)/coalescent[[length(coalescent)]]$time,
        genetic_values=genetics_of_coaltable(coalist_2_coaltable(coalescent),initial_genetic_value,mutation_model,stepvalue,mut_param))
@@ -910,18 +1000,112 @@ plot_coalescent <- function(coalescent,genetic_table,with_landscape=FALSE,rasK=N
 # summary_stat calculates summary stats for observed and simulated data and creates a reference table
 # geneticDataSimulList : a list of simulations, with sublist geneticData and sublist log_lik_forward 
 #
-
-summary_stat <- function(geneticDataObs,geneticDataSimulList,log_lik_simul_list)
+shared_allele_distance <- function(geneticData)
 {
-  #1) We calculate a matrix of observed genetic distance between individuals (DSAI = sum_j (Shared alleles) / (number of loci))
-  #   or reapeat number distance (Goldstein 1995)
-  #2) We select PCi representing signal (major proportion of genetic variance)
-  #3) We express simulated data in these axis. First summary stats are the values of each invidiual on these major axes
-  #4) Second summary stats are mean number of alleles per individual for observed and simulated data
-  #5) Third summary stats are mean number of alleles per population for observed and simulated data
-  #6) forward_log_lik is another statistics that should be closest to 0, so we set observed data to 0 for this summary statistics.
+  # calculates probability of identity between haplotypes
+  
 }
 
+PCA_rotation <- function(geneticData)
+{
+  # PCA_rotation calculates the rotation to apply to genetic data from observed genetic data
+  # argument:
+  # geneticDataObs: observed genetic data (columns x, y, Cell_numbers, Locus1 ... Locusn)
+  # value: 
+  # rotation corresponding to the PCA axis
+  GenetDist = switch(Distance,
+                     Goldstein = dist(geneticData[,grep("Locus",colnames(geneticData))])^.5,
+                     pID = pID(geneticData)
+  )
+  rotation = prcomp(GenetDist)$rotation
+  # note we may have to select majors PCi containing information
+}
+
+pID <- function(geneticData)
+{
+  # calculates probability ofidentity between individuals in a geneticData dataframe
+  # argument : geneticData (with columns as loccus named "LocusX" and lines as haplotypes)
+  geneticData=geneticData[,grep("Locus",colnames(geneticData))]
+  geneticDataArray <- array(unlist(c(geneticData)), dim=c(dim(geneticData),dim(geneticData)[1]))
+  mean(na.omit(geneticDataArray==aperm(geneticDataArray,c(3,2,1))))
+}
+
+new_reference_table <- function(geneticData,Distance)
+{
+  # creates a new reference table from genetic data
+  # details : first line of reference table is rotated observed genetic data
+  GenetDist = switch(Distance,
+                     Goldstein = dist(geneticData[,grep("Locus",colnames(geneticData))])^.5,
+                     pID = pID(geneticData)
+  )
+  cbind(t(data.frame(as.vector(prcomp(GenetDist)$x))),loglik=0)
+}
+
+add_summary_stat <- function(reference_table,geneticDataSim,rotation,forward_log_lik,Distance="Goldstein")
+{
+
+  # add_summary_stats
+  # add summary statistics of a simulation to reference table for ABC analysis
+  # arguments: 
+  # reference_table the reference table to append
+  # rotation tha PCA rotation to apply to geneticData
+  # geneticDataSim : the simulated genetic data
+  # forward_log_lik : forward log likelihood of the simulated genetic data
+  # Distance : distance to apply to genetic data (Goldstein : difference in number of repeats)
+  # pID : proportion of identity.
+  # 
+  # value: appended reference_table
+  
+  #1) We calculate a matrix of observed genetic distance between individuals (DSAI = sum_j (Shared alleles) / (number of loci))
+  #   or reapeat number distance (Goldstein 1995)
+  GenetDist = switch(Distance,
+                     Goldstein = dist(geneticData[,grep("Locus",colnames(geneticData))])^.5,
+                     pID = pID(geneticData)
+  )
+  #2) We express simulated data in these axis. First summary stats are the values of each invidiual
+  # in each of these major axes
+  summary_stats = as.matrix(GenetDist) %*% rotation
+rbind(reference_table,as.vector(summary_stats))
+}
+
+fill_reference_table <- function(geneticData,Distance,rasterStack=rasterStack,
+                                 pK=pK, pr=pr,
+                                 shapesK=shapesK, shapesr=shapesr,
+                                 shapeDisp=shapeDisp, pDisp=pDisp,
+                                 mutation_rate=1E-1, 
+                                 initial_genetic_value=initial_genetic_value, 
+                                 mutation_model="tpm",stepvalue=2,
+                                 mut_param=c(p=.5,sigma2=4))
+{
+  # filling a reference table using parameters values
+  # args:
+  # parameters of the model, geneticData, type of distance used
+  rotation = PCA_rotation(geneticData)
+  ref_table = new_reference_table(geneticData,Distance="Goldstein")
+  simulated_genetic <- geneticData[,grep("locus",colnames(geneticData))]
+  # simulation de genetic data pour chaque locus
+  for (i in 1:length(grep("Locus",colnames(geneticData))))
+  {
+    new_simulation <- simul_coalescent(geneticData=geneticData,
+                                       rasterStack=rasterStack,
+                                       pK=pK, pr=pr,
+                                       shapesK=shapesK, shapesr=shapesr,
+                                       shapeDisp=shapeDisp, pDisp=pDisp,
+                                       mutation_rate=1E-1, 
+                                       initial_genetic_value=initial_genetic_value, 
+                                       mutation_model="tpm",stepvalue=2,
+                                       mut_param=c(p=.5,sigma2=4))
+    simulated_genetic[,i] <- new_simulation$genetic_values[order( new_simulation$coalescing)[1:dim(geneticData)[1]],"genetic_value"]
+    forward_log_lik <- new_simulation$forward_log_prob
+  }
+  simulated_genetic  
+  ref_table = add_summary_stat(reference_table=ref_table,
+                               geneticDataSim=simulated_genetic,
+                               rotation=rotation,
+                               forward_log_lik=,Distance="Goldstein")
+  ref_table
+  
+}
 
 
 

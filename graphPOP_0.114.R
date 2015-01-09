@@ -171,26 +171,28 @@ conquadraticsq <- function(X,p)
 
 enveloppe <- function(X,p)
 {
-  # envelope = simple envelope function, which affects a single value of Yopt to all cells in which the value of the environmental variable
-  # X : matrix or data frame providing the values of independent variable to calculate reaction norm
-  # p : matrix parameter values for the reaction norm
-  # line names of p used for caclculation : c("Xmin","Xmax","Yopt"), 
-  # column names of p : names of the independent variables of X used for the reaction norm calculation
-  # [Xmin, Xmax] is the enveloppe, 
-  # Yopt is the value of the function in the [Xmin, Xmax] interval
+  # simple envelope function, which affects a single value of Yopt to all cells in which the value of the environmental variable is between Xmin and Xmax
+  #
+  # Args:
+  #   X : matrix or data frame providing the values of independent variable to calculate reaction norm
+  #   p : matrix parameter values for the reaction norm, line names: c("Xmin","Xmax","Yopt"), column names: names of the independent variables of X used for the reaction norm calculation
+  #
+  # Returns: 
+  #   A matrix of Yopt the value of the function for each cell, for each environmental variable
   p[rep("Yopt",dim(X)[1]),colnames(X)]*((X>p[rep("Xmin",dim(X)[1]),])&(X<p[rep("Xmax",dim(X)[1]),colnames(X)]))
 }
 
-# envelope = linear response within an envelope
-# X : matrix or data frame providing the values of independent variable to calculate reaction norm
-# p : matrix parameter values for the reaction norm
-# line names of p used for caclculation : c("Xmin","Xmax","Yxmin","Yxmax"), 
-# column names of p : names of the independent variables of X used for the reaction norm calculation
-# [Xmin, Xmax] is the enveloppe, 
-# Yxmin and Yxmax are the values at Xmin and Xmax
 
 envelinear <- function(X,p,log=FALSE)
 {
+  # Compute a linear response within an envelope
+  #
+  # Args:
+  #   X : matrix or data frame providing the values of independent variable to calculate reaction norm
+  #   p : matrix parameter values for the reaction norm, line names: c("Xmin","Xmax","Yopt"), column names: names of the independent variables of X used for the reaction norm calculation
+  # 
+  # Returns: 
+  #   A matrix of Yopt the value of the function for each cell, for each environmental variable
   Yxmin = p[rep("Yxmax",dim(X)[1]),colnames(X)]
   Yxmax = p[rep("Yxmin",dim(X)[1]),colnames(X)]
   Xmin=  p[rep("Xmin",dim(X)[1]),colnames(X)]
@@ -202,6 +204,14 @@ envelinear <- function(X,p,log=FALSE)
   
 envelin0 <- function(X,p,log=FALSE)
 {
+  # Compute a linear response within an envelope # ?????
+  #
+  # Args:
+  #   X : matrix or data frame providing the values of independent variable to calculate reaction norm
+  #   p : matrix parameter values for the reaction norm, line names: c("Xmin","Xmax","Yopt"), column names: names of the independent variables of X used for the reaction norm calculation
+  # 
+  # Returns: 
+  #   A matrix of Yopt the value of the function for each cell, for each environmental variable
   Yxmin = p[rep("Yxmax",dim(X)[1]),colnames(X)]
   Yxmax = p[rep("Yxmin",dim(X)[1]),colnames(X)]
   Xmin=  p[rep("Xmin",dim(X)[1]),colnames(X)]
@@ -213,6 +223,14 @@ envelin0 <- function(X,p,log=FALSE)
 
 linear <- function(X,p)
 {
+  # Compute a linear response within an envelope ?????
+  #
+  # Args:
+  #   X : matrix or data frame providing the values of independent variable to calculate reaction norm
+  #   p : matrix parameter values for the reaction norm, line names: c("Xmin","Xmax","Yopt"), column names: names of the independent variables of X used for the reaction norm calculation
+  # 
+  # Returns: 
+  #   A matrix of Yopt the value of the function for each cell, for each environmental variable
   Yx1 = p[rep("Yx1",dim(X)[1]),colnames(X)]
   Yx0 = p[rep("Yx0",dim(X)[1]),colnames(X)]
   a = (Yx1 - Yx0)
@@ -262,20 +280,23 @@ ReactNorm <- function(X,p,shapes)
 }
 
 
-# K_Function: Gets effective carrying capacity from environmental variables 
-# p : parameters 
-# rasterStack = environmental variables 
-# shapes = vector of shapes used for the niche function of each environemental variable 
-# (among enveloppe, envelin, envloglin, conquadratic, conquadraticskewed) 
-K_Function <- function(rasterStack, p, shapes){
+K_Function <- function(rasterStack, p, shapes)
+{
+  # Computes effective carrying capacity from environmental variables 
+  # p : parameters 
+  # rasterStack = environmental variables 
+  # shapes = vector of shapes used for the niche function of each environemental variable 
+  # (among enveloppe, envelin, envloglin, conquadratic, conquadraticskewed)
   #K=matrix(combineReactNorms(values(rasterStack),p,shapes),byrow=TRUE,nrow=length(rasterStack),ncol=legnth(rasterStack))
   ReactNorm(values(rasterStack),p,shapes)
 }
 
-# R_Function: Gets effective growth rate from environmental variables 
-# alpha and beta are fixed by estimation
-# rasterStack = environmental variables 
-R_Function <- function(rasterStack, alpha, beta){
+
+R_Function <- function(rasterStack, alpha, beta)
+{
+  # R_Function: Gets effective growth rate from environmental variables 
+  # alpha and beta are fixed by estimation
+  # rasterStack = environmental variables 
   if(nlayers(rasterStack)>1){
     R = exp(as.matrix(alpha+sum(beta*rasterStack)))# utilisation d'un modele lineaire generalise
   }
@@ -348,15 +369,15 @@ migrationMatrix <- function(rasterStack,shapeDisp, pDisp){
   # migrationMatrix computes a matrix of distance between cells, apply a model of dispersion and returns a matrix of migration.
   # 
   # Args :
-  #  rasterStack : raster of population sizes
-  #  shapeDisp :  "gaussian" a simple normal density distribution,
+  #   rasterStack : raster of population sizes
+  #   shapeDisp :  "gaussian" a simple normal density distribution,
   #               "exponential" density distribution,
   #               "fat_tail1", "fat_tail2": ref :Chapman et all, Journal of Animal Ecology (2007) 76 , 36– 44
   #               "island" probability 1-m to stay, else homogen dispersion,
   #               "contiguous" near dispersal.
-  #  pDisp : parameters of the dispersion model, see further in the code for precisions
-  # Returns : a migration matrix (note that rowSums and colSums are not 1: some cells are more isolated geographically and migrate less than others to the rest of the world) 
+  #   pDisp : parameters of the dispersion model, see further in the code for precisions
   #
+  # Returns : a migration matrix (note that rowSums and colSums are not 1: some cells are more isolated geographically and migrate less than others to the rest of the world)   
   coords = xyFromCell(object=rasterStack, cell=1:length(values(rasterStack[[1]])), spatial=FALSE)
   distanceMatrix = as.matrix(dist(coords)) 
   migration = apply(distanceMatrix, c(1,2), 

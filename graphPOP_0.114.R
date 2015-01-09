@@ -168,16 +168,16 @@ conquadraticsq <- function(X,p)
   res + res * (1-res)
 }
 
-# envelope = simple envelope function 
-# X : matrix or data frame providing the values of independent variable to calculate reaction norm
-# p : matrix parameter values for the reaction norm
-# line names of p used for caclculation : c("Xmin","Xmax","Yopt"), 
-# column names of p : names of the independent variables of X used for the reaction norm calculation
-# [Xmin, Xmax] is the enveloppe, 
-# Yopt is the value of the function in the [Xmin, Xmax] interval
 
 enveloppe <- function(X,p)
 {
+  # envelope = simple envelope function, which affects a single value of Yopt to all cells in which the value of the environmental variable
+  # X : matrix or data frame providing the values of independent variable to calculate reaction norm
+  # p : matrix parameter values for the reaction norm
+  # line names of p used for caclculation : c("Xmin","Xmax","Yopt"), 
+  # column names of p : names of the independent variables of X used for the reaction norm calculation
+  # [Xmin, Xmax] is the enveloppe, 
+  # Yopt is the value of the function in the [Xmin, Xmax] interval
   p[rep("Yopt",dim(X)[1]),colnames(X)]*((X>p[rep("Xmin",dim(X)[1]),])&(X<p[rep("Xmax",dim(X)[1]),colnames(X)]))
 }
 
@@ -228,39 +228,33 @@ linear <- function(X,p)
 #conquadraticskewed[]
 #(p[4]-4*p[4]/((p[2]-p[1])^2)*(( ((X-p[1])/(p[2]-p[1]))^-log(2)/log((p["Xopt"]-p[1])/(p[2]-p[1]))*(p[2]-p[1])+p[1])-(p[1]+p[2])/2)^2)*(X>=p[1])*(X<=p[2])
 
-# ReactNorm computes reaction norm value and geometric mean of the reaction 
-# norms for each variable in a data frame
-# Arguments: 
-# X : vector of environemental variables
-# p : parameter values of the reaction norm for each environmental variable
-# shape : is the shape of the reaction norm
-# Value : 
-# The reaction norm vector corresponding to the environmental variables
-# Example :
-# p = matrix(c(100,500,300,0,30,30,300,3000,2500,0,30,30),nrow=6,ncol=2,dimnames=list(c("Xmin","Xmax","Xopt","Yxmin","Yxmax","Yopt"),c("BIO1","BIO12")))
-# shapes = c(BIO1="conquadraticskewed",BIO12="conquadraticskewed")
-# Data = data.frame(BIO12=(2:32)*100,BIO1=(10:40)*10) 
-# ReactNorm(Data,p,shapes)
+
 
 ReactNorm <- function(X,p,shapes)
-  #p=c(p["Xmin"]=10,p["Xmax"]=20,p["Xopt"]=18,p["Ymax"]=0.1)
-  ## shapeDisps in c("enveloppe","envelin","envloglin","loG","conquadratic","conquadraticskewed","conquadraticsq","conquadraticskewedsq")
 {
+  # ReactNorm computes reaction norm value and geometric mean of the reaction norms for each variable in a data frame
+  #
+  # Args: 
+  #   X: matrix of environemental variables values (rows: cell number, columns: variable name)
+  #   p: parameter values of the reaction norm for each environmental variable
+  #   shapes: is the shape of the reaction norm
+  # Returns: 
+  #  The reaction norm vector corresponding to the environmental variables
   Y=X
   if (!all(colnames(p)%in%names(shapes))) {stop ("variable names do not correspond between parameters 'p' ans 'shape'")}
   for (shape in as.character(levels(as.factor(shapes))))
   {
     variables = colnames(p)[which(shapes==shape)]
     Y[,variables]=switch(shape,
-           enveloppe=enveloppe(subset(X,select=variables),p),
-           envelin=envelinear(subset(X,select=variables),p),
-           envloglin=envelinear(subset(X,select=variables),p,log=TRUE),
-           loG = log(subset(X,select=variables)),
-           linear = linear(subset(X,select=variables),p),
-           conquadratic=conquadratic(subset(X,select=variables),p),
-           conquadraticskewed=conquadraticskewed(subset(X,select=variables),p),
-           conquadraticsq=conquadraticsq(subset(X,select=variables),p),
-           conquadraticskewedsq=conquadraticskewedsq(subset(X,select=variables),p)
+           enveloppe=enveloppe(X=subset(X,select=variables),p=p),
+           envelin=envelinear(X=subset(X,select=variables),p=p),
+           envloglin=envelinear(X=subset(X,select=variables),p=p,log=TRUE),
+           loG = log(x=subset(X,select=variables)),
+           linear = linear(X=subset(X,select=variables),p=p),
+           conquadratic=conquadratic(X=subset(X,select=variables),p=p),
+           conquadraticskewed=conquadraticskewed(X=subset(X,select=variables),p=p),
+           conquadraticsq=conquadraticsq(X=subset(X,select=variables),p=p),
+           conquadraticskewedsq=conquadraticskewedsq(X=subset(X,select=variables),p=p)
     )
   }
   Y=cbind(Y,Y=apply(Y, 1, prod)^(1/dim(p)[2])) # geometric mean

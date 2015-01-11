@@ -702,11 +702,11 @@ simul_coocur <- function(cells=c(1,2),transitionmatrice)
 t
 }
 
-is_subset <- function(sub_vect,vect)
+is_subset <- function(sub_char,char)
 {
   is_subset=NA
-  for (i in 1:length(sub_vect)) {
-    is_subset[i] = any(vect==sub_vect[i])
+  for (i in 1:length(sub_char)) {
+    is_subset[i] = any(vect==sub_char[i])
   }
 all(is_subset)
 }
@@ -738,17 +738,6 @@ check_ReactionNorm <- function(object)
   return(TRUE)
 }
 
-check_ReactNorm <- function(object)
-{
-  if (!is_subset(object@shapes, c("enveloppe", "envelin", "envloglin","loG","linear",
-                                  "conquadratic","conquadraticskewed","conquadraticsq",
-                                  "conquadraticskewedsq")))
-    return("unknown shape name for reaction norm, 
-           please chose among 'enveloppe', 'envelin', 'envloglin','loG','linear',
-           'conquadratic','conquadraticskewed','conquadraticsq' or 'conquadraticskewedsq'
-           ")  else if (length(object@shapes)!=dim(object@p)[2])
-             return("number of layers incompatible between shapes and parameters") else return(TRUE)
-}
 
 setClass("ReactionNorm",representation(shapes = "character",
                                        p="matrix"),validity = check_ReactNorm)

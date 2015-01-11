@@ -221,21 +221,21 @@ envelin0 <- function(X,p,log=FALSE)
   if (log) {log(a*X+b)*((X>Xmin)&(X<Xmax))} else {(a*X+b)*((X>Xmin)&(X<Xmax))}
 }
 
-linear <- function(X,p)
+linear <- function(X,p,Log)
 {
   # Compute a linear response within an envelope ?????
   #
   # Args:
   #   X : matrix or data frame providing the values of independent variable to calculate reaction norm
-  #   p : matrix parameter values for the reaction norm, line names: c("Xmin","Xmax","Yopt"), column names: names of the independent variables of X used for the reaction norm calculation
+  #   p : matrix parameter values for the reaction norm, 
+  #       line names: c("X0","slope"), 
+  #       column names: names of the independent variables of X used for the reaction norm calculation
   # 
   # Returns: 
   #   A matrix of Yopt the value of the function for each cell, for each environmental variable
-  Yx1 = p[rep("Yx1",dim(X)[1]),colnames(X)]
-  Yx0 = p[rep("Yx0",dim(X)[1]),colnames(X)]
-  a = (Yx1 - Yx0)
-  b = Yx0
-  if (log) {log(a*X+b)*((X>Xmin)&(X<Xmax))} else {(a*X+b)*((X>Xmin)&(X<Xmax))}
+  X0 = p[rep("X0",dim(X)[1]),colnames(X)]
+  slope = p[rep("slope",dim(X)[1]),colnames(X)]
+  if (Log) {log(slope*X-slope*X0)} else {slope*X-slope*X0}
 }
 
 #inc=(X-xmin)/(Xmax-xmin)*p["Ymax",]*(X>xmin)*(X<xmax),
@@ -259,7 +259,6 @@ ReactNorm <- function(X,p,shapes)
   # Returns: 
   #  The reaction norm vector corresponding to the environmental variables
   Y=X
-  if (!all(colnames(p)%in%names(shapes))) {stop ("variable names do not correspond between parameters 'p' ans 'shape'")}
   for (shape in as.character(levels(as.factor(shapes))))
   {
     variables = colnames(p)[which(shapes==shape)]
@@ -703,7 +702,70 @@ simul_coocur <- function(cells=c(1,2),transitionmatrice)
 t
 }
 
+is_subset <- function(sub_vect,vect)
+{
+  is_subset=NA
+  for (i in 1:length(sub_vect)) {
+    is_subset[i] = any(vect==sub_vect[i])
+  }
+all(is_subset)
+}
 
+check_ReactionNorm <- function(object)
+{
+  if (!is_subset(object@shapes, c("enveloppe", "envelin", "envloglin","loG","linear",
+    "conquadratic","conquadraticskewed","conquadraticsq",
+    "conquadraticskewedsq")))
+  return("unknown shape name for reaction norm, 
+         please chose among 'enveloppe', 'envelin', 'envloglin','loG','linear',
+         'conquadratic','conquadraticskewed','conquadraticsq' or 'conquadraticskewedsq'
+         ") else if (length(object@shapes)!=dim(object@p)[2])
+           return("number of layers incompatible between shapes and parameters") else {
+             compatible=NA
+             for (i in 1:length(object@shapes))
+             {compatible[i] <- switch(object@shapes,
+                                   envelope = is_subset(c("Xmin","Xmax"),row.names(object@p)),
+                                   envelin = is_subset(c("Yxmin","Yxmax","Xmin","Xmax"),row.names(object@p)),
+                                   envloglin = is_subset(c("Yxmin","Yxmax","Xmin","Xmax"),row.names(object@p)),
+                                   linear = is_subset(c("X0","slope"),row.names(object@p)),
+                                   conquadratic = is_subset(c("Xmin","Xmax","Xopt"),row.names(object@p)),
+                                   conquadraticsq = is_subset(c("Xmin","Xmax","Xopt"),row.names(object@p)),
+                                   conquadraticskewed = is_subset(c("Xmin","Xmax","Xopt","Yopt"),row.names(object@p)),
+                                   conquadraticskewedsq = is_subset(c("Xmin","Xmax","Xopt","Yopt"),row.names(object@p)))
+             } 
+             if (!all(compatible)) return(paste(compatible[2],"bad row names in variable number", which(!compatible),sep=" "))
+           }
+  return(TRUE)
+}
+
+check_ReactNorm <- function(object)
+{
+  if (!is_subset(object@shapes, c("enveloppe", "envelin", "envloglin","loG","linear",
+                                  "conquadratic","conquadraticskewed","conquadraticsq",
+                                  "conquadraticskewedsq")))
+    return("unknown shape name for reaction norm, 
+           please chose among 'enveloppe', 'envelin', 'envloglin','loG','linear',
+           'conquadratic','conquadraticskewed','conquadraticsq' or 'conquadraticskewedsq'
+           ")  else if (length(object@shapes)!=dim(object@p)[2])
+             return("number of layers incompatible between shapes and parameters") else return(TRUE)
+}
+
+setClass("ReactionNorm",representation(shapes = "character",
+                                       p="matrix"),validity = check_ReactNorm)
+
+setClass("DispersionModel", representation(ID="numeric",
+                                           shapeDisp="character",
+                                           pDisp="vector"
+                                           )
+         )
+
+setClass("MutationModel",representation(model="character"
+                                        )) 
+setClass("EnvDemogenetModel",representation(ID = "numeric",
+                                              K = "ReactionNorm",
+                                              r = "ReactionNorm",
+                                              Dispersion = "DispersionModel"
+                                              ))
 
 simul_coalescent <- function(geneticData, rasterStack, pK, pr, shapesK, shapesr, shapeDisp, pDisp,
                              mutation_rate, initial_genetic_value, mutation_model, stepvalue, mut_param)
@@ -869,11 +931,12 @@ coalist_2_coaltable <- function(coalist)
 # adds genetic values to a coalescent table containing mutation number per branch
 # knowing initial genetic value of the ancastor and mutation model
 
-genetics_of_coaltable <- function(coaltable,initial_genetic_value,mutation_model="stepwise",stepvalue=2,mut_param=c(p=.5,sigma=2))
+genetics_of_coaltable <- function(coaltable,initial_genetic_value,mutation_model,stepvalue=2,mut_param=c(p=.5,sigma=2))
 {
  switch(mutation_model,
         step_wise = stepwise(coaltable,initial_genetic_value,stepvalue),
-        tpm = tpm(coaltable,initial_genetic_value,stepvalue,mut_param)
+        tpm = tpm(coaltable,initial_genetic_value,stepvalue,mut_param),
+        bigeometric = bigeometric(coaltable,initial_genetic_value,stepvalue,mut_param)
         ) 
  stepwise(coaltable,initial_genetic_value,stepvalue)
 }
@@ -895,17 +958,38 @@ tpm <- function(coaltable,initial_genetic_value,stepvalue,mut_param=c(p=.5,sigma
 {
   p_loi_geometrique = ((1+4*mut_param["sigma2"])^.5-1)/(2*mut_param["sigma2"])
   coaltable$genetic_value=NA
-  # we calculate the orientation of the mutations in the different branches using binomial rules
-  coaltable$n_stepw <- rbinom(dim(coaltable)[1],coaltable[,"mutations"],mut_param["p"])
+  # we calculate the type of mutations in the different branches using binomial rules
+  # either stepwise, or geometric positive, or geopetric negative
+  coaltable[,c("n_stepw","n_geom_pos","n_geom_neg")] <- t(rmultinom(dim(coaltable)[1],coaltable[,"mutations"],c(mut_param["p"],(1-mut_param["p"])/2,(1-mut_param["p"])/2)))
   coaltable$resultant_stepw <- 2*(rbinom(dim(coaltable)[1],coaltable[,"n_stepw"],.5)-coaltable[,"n_stepw"]/2)
-  coaltable$resultantmultiple = rnbinom(dim(coaltable)[1],size=coaltable$mutation-coaltable$n_stepw,p_loi_geometrique)
-  coaltable$resultantmultiple[is.na(coaltable$resultantmultiple)]=0
-  coaltable[dim(coaltable)[1]+1,] <- c(NA,max(unlist(coaltable$new_node)),NA,NA,NA,initial_genetic_value,NA,NA,NA)
+  coaltable$resultant_geom <- (rnbinom(dim(coaltable)[1],size=coaltable$n_geom_pos,p_loi_geometrique)
+                               - rnbinom(dim(coaltable)[1],size=coaltable$n_geom_neg,p_loi_geometrique))
+  coaltable$resultant_geom[is.na(coaltable$resultant_geom)]=0
+  coaltable[dim(coaltable)[1]+1,] <- c(NA,max(unlist(coaltable$new_node)),NA,NA,NA,initial_genetic_value,NA,NA,NA,NA,NA)
   for(branch in rev(rownames(coaltable)[-dim(coaltable)[1]]))
   {
-    coaltable[branch,"genetic_value"] <- (coaltable[branch,"resultant_stepw"]+coaltable[branch,"resultantmultiple"])*stepvalue + coaltable[which(coaltable$coalescing==coaltable[branch,"new_node"]),"genetic_value"]
+    coaltable[branch,"genetic_value"] <- (coaltable[branch,"resultant_stepw"]+coaltable[branch,"resultant_geom"])*stepvalue + coaltable[which(coaltable$coalescing==coaltable[branch,"new_node"]),"genetic_value"]
   }
   coaltable
+}
+
+
+bigeometric <- function(coaltable,initial_genetic_value,stepvalue,mut_param=c(sigma2=4))
+{
+  p_loi_geometrique = ((1+4*mut_param["sigma2"])^.5-1)/(2*mut_param["sigma2"])
+  coaltable$genetic_value=NA
+  # we calculate the type of mutations in the different branches using binomial rules
+  # either stepwise, or geometric positive, or geopetric negative
+  coaltable[,"n_geom_pos"] <- rbinom(dim(coaltable)[1],coaltable[,"mutations"],c(mut_param["p"],(1-mut_param["p"])/2,(1-mut_param["p"])/2))
+  coaltable$resultant_geom <- (rnbinom(dim(coaltable)[1],size=coaltable$n_geom_pos,p_loi_geometrique)
+                               - rnbinom(dim(coaltable)[1],size=coaltable$mutations-coaltable$n_geom_pos,p_loi_geometrique))
+  coaltable$resultant_geom[is.na(coaltable$resultant_geom)]=0
+  coaltable[dim(coaltable)[1]+1,] <- c(NA,max(unlist(coaltable$new_node)),NA,NA,NA,initial_genetic_value,NA,NA,NA,NA)
+  for(branch in rev(rownames(coaltable)[-dim(coaltable)[1]]))
+  {
+    coaltable[branch,"genetic_value"] <- coaltable[branch,"resultant_geom"]*stepvalue + coaltable[which(coaltable$coalescing==coaltable[branch,"new_node"]),"genetic_value"]
+  }
+  coaltable  
 }
 
 #
@@ -1026,16 +1110,22 @@ pID <- function(geneticData)
   mean(na.omit(geneticDataArray==aperm(geneticDataArray,c(3,2,1))))
 }
 
-new_reference_table <- function(geneticData,Distance)
+new_reference_table <- function(geneticData,Distance,priors)
 {
-  # creates a new reference table from genetic data
-  # details : first line of reference table is rotated observed genetic data
+  # creates a new reference table from genetic data and priors data
+  # !!!!!! details : first line of reference table is NOT rotated observed genetic data
+  #list of of parameters
+  
+  #list of summary stats
   GenetDist = switch(Distance,
                      Goldstein = dist(geneticData[,grep("Locus",colnames(geneticData))])^.5,
                      pID = pID(geneticData)
   )
-  cbind(t(data.frame(as.vector(prcomp(GenetDist)$x))),loglik=0)
+  Significant_Components <- which(abs(prcomp(GenetDist)$x)>1E-5)
+  df <- as.data.frame(matrix(NA,nrow=1,ncol=length(Significant_Components)+1,dimnames=list("l1",c(paste("C",c(Significant_Components),sep=""),"loglik"))))[FALSE,]
+  df
 }
+
 
 add_summary_stat <- function(reference_table,geneticDataSim,rotation,forward_log_lik,Distance="Goldstein")
 {

@@ -67,7 +67,7 @@ system.time(
                                            shapeDisp=shapeDisp, pDisp=pDisp,
                                            mutation_rate=1E-1, 
                                            initial_genetic_value=initial_genetic_value, 
-                                           mutation_model="tpm",stepvalue=2,
+                                           mutation_model="bigeometric",stepvalue=2,
                                            mut_param=c(p=.5,sigma2=4))
   )
 

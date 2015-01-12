@@ -769,12 +769,12 @@ simul_coalescent <- function(geneticData, rasterStack, pK, pr, shapesK, shapesr,
   names(cell_number_of_nodes) <- nodes
   # Cells in which the previous generation genes were in the landscape :
   parent_cell_number_of_nodes <- cell_number_of_nodes 
-  # A list of cells with all the genes remaining in each cell. Initialized.
+  # A list of cells with all the genes remaining in each cell. Initialized and optimized.
   nodes_remaining_by_cell = list()
-  for (cell in 1:ncell(rasterStack))#cell=1)
-  {
-    nodes_remaining_by_cell[[cell]] <- which(cell_number_of_nodes==cell)
-  }
+  cell <- as.array(seq(from=1,to=ncell(rasterStack),by=1))
+  remainingNodes <- function(cell, cell_number_of_nodes){return(which(cell_number_of_nodes==cell))}
+  nodes_remaining_by_cell <- lapply(X=cell, FUN=remainingNodes, cell_number_of_nodes)
+  
   # Number of coalescence events :
   single_coalescence_events=0 
   single_and_multiple_coalescence_events=0
@@ -783,11 +783,13 @@ simul_coalescent <- function(geneticData, rasterStack, pK, pr, shapesK, shapesr,
   while (length(unlist(nodes_remaining_by_cell))>1) 
   {
     ## Migration
-    # we localize the parents in the landscape by sampling in the backward transition matrix
-    for (node in 1:length(parent_cell_number_of_nodes))#gene=1;node=1# parent_cell_number_of_nodes
-    {
-      parent_cell_number_of_nodes[node] = sample(ncell(rasterStack),size=1,prob=c(transitionmatrice[cell_number_of_nodes[node],]))
-    }
+    # we localize the parents in the landscape by sampling in the backward transition matrix. Optimized.    
+    backwardParentsLocalizationSampling <- function(node, rasterStack, transitionmatrice,cell_number_of_nodes)
+      {
+      return(sample(ncell(rasterStack),size=1,prob=c(transitionmatrice[cell_number_of_nodes[node],])))
+    } 
+    node <- as.array(1:length(parent_cell_number_of_nodes))
+    parent_cell_number_of_nodes <- apply(X=node, MARGIN=1, FUN=backwardParentsLocalizationSampling, rasterStack, transitionmatrice, cell_number_of_nodes) 
     # once we know the parent cell numbers, we calculate the forward dispersion probability of the event
     prob_forward[time] = sum(log(transition_forward[parent_cell_number_of_nodes,cell_number_of_nodes]))
     number_of_nodes_over_generations = number_of_nodes_over_generations + length(cell_number_of_nodes)

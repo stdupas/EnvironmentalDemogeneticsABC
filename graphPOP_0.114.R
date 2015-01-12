@@ -712,6 +712,7 @@ simul_coocur <- function(cells=c(1,2),transitionmatrice)
 t
 }
 
+
 is_subset <- function(sub_char,char)
 {
   is_subset=NA
@@ -757,6 +758,7 @@ setClass("DispersionModel", representation(ID="numeric",
                                            pDisp="vector"
                                            )
          )
+
 
 setClass("MutationModel",representation(model="character"
                                         )) 
@@ -814,18 +816,18 @@ simul_coalescent <- function(geneticData, rasterStack, pK, pr, shapesK, shapesr,
   N <- round(K)
   coalescent = list() 
   # Nodes are initialized : 1 individual <=> 1 node
-  nodes = as.numeric(rownames(geneticData)); names(nodes)=as.character(nodes)
+  nodes = as.numeric(rownames(geneticData))
+  names(nodes)=as.character(nodes)
   # Cells in which were the genes sampled in the landscape :
-  cell_number_of_nodes <- geneticData[,"Cell_numbers"] 
+  cell_number_of_nodes <- geneticData[,"Cell_numbers"]
   names(cell_number_of_nodes) <- nodes
   # Cells in which the previous generation genes were in the landscape :
   parent_cell_number_of_nodes <- cell_number_of_nodes 
-  # A list of cells with all the genes remaining in each cell. Initialized.
+  # A list of cells with all the genes remaining in each cell. Initialized and optimized.
   nodes_remaining_by_cell = list()
-  for (cell in 1:ncell(rasterStack))#cell=1)
-  {
-    nodes_remaining_by_cell[[cell]] <- which(cell_number_of_nodes==cell)
-  }
+  cell <- as.array(seq(from=1,to=ncell(rasterStack),by=1))
+  nodes_remaining_by_cell <- lapply(X=cell, FUN=remainingNodes, cell_number_of_nodes)
+  
   # Number of coalescence events :
   single_coalescence_events=0 
   single_and_multiple_coalescence_events=0
@@ -833,15 +835,16 @@ simul_coalescent <- function(geneticData, rasterStack, pK, pr, shapesK, shapesr,
   ### Simulating the coalescent process :
   while (length(unlist(nodes_remaining_by_cell))>1) 
   {
+    
     ## Migration
-    # we localize the parents in the landscape by sampling in the backward transition matrix
-    for (node in 1:length(parent_cell_number_of_nodes))#gene=1;node=1# parent_cell_number_of_nodes
-    {
-      parent_cell_number_of_nodes[node] = sample(ncell(rasterStack),size=1,prob=c(transitionmatrice[cell_number_of_nodes[node],]))
-    }
+    # we localize the parents in the landscape by sampling in the backward transition matrix. Optimized.
+    names_node <- names(parent_cell_number_of_nodes)
+    parent_cell_number_of_nodes <- apply(X=as.array(1:length(parent_cell_number_of_nodes)), MARGIN=1, FUN=backwardParentsLocalizationSampling, rasterStack, transitionmatrice, cell_number_of_nodes) 
+    names(parent_cell_number_of_nodes) <- names_node
     # once we know the parent cell numbers, we calculate the forward dispersion probability of the event
     prob_forward[time] = sum(log(transition_forward[parent_cell_number_of_nodes,cell_number_of_nodes]))
     number_of_nodes_over_generations = number_of_nodes_over_generations + length(cell_number_of_nodes)
+    
     ## Coalescence
     time=time+1; if (round(time/10)*10==time) {print(time)}
     
@@ -852,19 +855,10 @@ simul_coalescent <- function(geneticData, rasterStack, pK, pr, shapesK, shapesr,
       nodes_remaining_in_the_cell = nodes_remaining_by_cell[[cell]] <- as.numeric(names(which(parent_cell_number_of_nodes==cell)))
       
       # we obtain the identities in the geneticData table (line) of the nodes remaining in the cell
-      if (length(nodes_remaining_in_the_cell)>1) 
+      if (length(nodes_remaining_in_the_cell)>1)
       {
-        nbgenesremaining=length(nodes_remaining_in_the_cell)
-       
-        # Attribute parents (among K possible parents) to each node present in the cell
-        smp = sample(N[cell],length(nodes_remaining_in_the_cell),replace=TRUE)
-        
-        # A logical matrix in which lines represent the nodes in the cell and column represent their parent :
-        # (actually, this line is a simple test to transform the parentality info under a TRUE/FALSE form)
-        # two nodes coalesce if they have TRUE for the same parent (parents are in columns)
-        parentoffspringmatrix <- matrix(smp,nrow=nbgenesremaining,ncol=N[cell])==matrix(1:N[cell],nrow=nbgenesremaining,ncol=N[cell],byrow=TRUE)
-        # colnames(parentoffspringmatrix) <- nodes_remaining_in_the_cell
-        rownames(parentoffspringmatrix) <- nodes_remaining_in_the_cell
+        # Create a function for parentality attribution within a cell :
+        parentoffspringmatrix <- parentalityAttributationWithinACell(nodes_remaining_in_the_cell=nodes_remaining_in_the_cell, N=N, cell=cell)
         
         # Columns of parentoffspringmatrix with more than one TRUE allow to identify coalescing individuals :
         if (any(colSums(parentoffspringmatrix)>1) )
@@ -912,6 +906,38 @@ simul_coalescent <- function(geneticData, rasterStack, pK, pr, shapesK, shapesr,
        genetic_values=genetics_of_coaltable(coalist_2_coaltable(coalescent),initial_genetic_value,mutation_model,stepvalue,mut_param))
   # forward_log_prob is the average per generation of the log probability of the forward movements of the genes in the landscape
 }
+
+parentalityAttributationWithinACell <- function(nodes_remaining_in_the_cell, N, cell)
+{
+  # Create a function for parentality attribution within a cell used in simul_coalescent
+  
+  nbgenesremaining=length(nodes_remaining_in_the_cell)
+  
+  # Attribute parents (among K possible parents) to each node present in the cell
+  smp = sample(N[cell],length(nodes_remaining_in_the_cell),replace=TRUE)
+  
+  # A logical matrix in which lines represent the nodes in the cell and column represent their parent :
+  # (actually, this line is a simple test to transform the parentality info under a TRUE/FALSE form)
+  # two nodes coalesce if they have TRUE for the same parent (parents are in columns)
+  parentoffspringmatrix <- matrix(smp,nrow=nbgenesremaining,ncol=N[cell])==matrix(1:N[cell],nrow=nbgenesremaining,ncol=N[cell],byrow=TRUE)
+  # colnames(parentoffspringmatrix) <- nodes_remaining_in_the_cell
+  rownames(parentoffspringmatrix) <- nodes_remaining_in_the_cell
+  
+  return(parentoffspringmatrix)
+}
+
+backwardParentsLocalizationSampling <- function(node, rasterStack, transitionmatrice,cell_number_of_nodes)
+{
+  # we localize the parents in the landscape by sampling in the backward transition matrix. Optimized.    
+  
+  return(sample(ncell(rasterStack),size=1,prob=c(transitionmatrice[cell_number_of_nodes[node],])))
+} 
+
+remainingNodes <- function(cell, cell_number_of_nodes)
+{
+  return(which(cell_number_of_nodes==cell))
+}
+
 
 #
 # coalist_2_coaltable function converts a coalescent list to a coalecent table format

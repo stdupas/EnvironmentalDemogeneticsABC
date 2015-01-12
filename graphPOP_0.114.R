@@ -280,18 +280,19 @@ ReactNorm <- function(X,p,shapes)
 }
 
 
-# Show niche is a function to visualize two dimensional niche function 
-# Arguments
-#
-#
-#
-# Example
-# Data <- data.frame(BIO12=(2:32)*100,BIO1=(10:40)*10)
-# 
-#
-
 Show_Niche <- function(Data,p,shapes=c(BIO1="conquadraticskewed",BIO12="conquadraticskewed")) # non terminé
 {
+  # Allow to visualize two dimensional niche function 
+  #
+  # Args:
+  #   Data:
+  #   p:
+  #   shapes:
+  #
+  # Returns:
+  #
+  # Example
+  # Data <- data.frame(BIO12=(2:32)*100,BIO1=(10:40)*10)
   pairs = NULL;i=0
   while (i < dim(p)[2])
   {
@@ -322,14 +323,23 @@ Show_Niche <- function(Data,p,shapes=c(BIO1="conquadraticskewed",BIO12="conquadr
 #
 populationSize <- function(donneesEnvironmentObs, p, shapes)
 {
+  # Give population size according to a landscape raster.
+  #
+  # Args:
+  #   donneesEnvironmentObs:
+  #   p:
+  #   shapes:
+  #
+  # Returns:
+  #   Population size
   populationSize <- donneesEnvironmentObs
   values(populationSize) <- ReactNorm(valules(donneesEnvironmentObs), p, shapes)[1,]
   populationSize
 }
   
-# (optional) distanceMatrix return distance between all cells of raster
 distanceMatrix <- function(rasterStack){
-  #get x and y coordinates for each cell of raster object put in parameters
+  # (optional) distanceMatrix return distance between all cells of raster
+  # get x and y coordinates for each cell of raster object put in parameters
   coords = xyFromCell(rasterStack, 1:length(values(rasterStack[[1]])), spatial=FALSE)
   distance = as.matrix(dist(coords)) # distance matrix of coordinates
   return(distance)

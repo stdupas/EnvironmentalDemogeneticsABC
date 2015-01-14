@@ -17,12 +17,13 @@ Data2 <- data.frame(BIO1=c(300,120,120,400),BIO12=c(2000,350,350,2900))
 rasterStack <- stack(list("BIO1"=raster(matrix(Data2$BIO1,nrow=1,ncol=4),xmn=0,xmx=4,ymn=0,ymx=1),"BIO12"=raster(matrix(Data2$BIO12,nrow=1,ncol=4),xmn=0,xmx=4,ymn=0,ymx=1)))
 
 ###### Genetic parameters :
-N=2
+N=1.5
 mutation_rate=1E-4
 initial_genetic_value=200
 
 ##### Niche Function :
 
+# Concave quadratic skewed distribution parameters
 # Shapes of the reaction norms for demographic variables (r and K) :
 shapesK=c(BIO1="conquadraticskewed",BIO12="conquadraticskewed")
 shapesr=c(BIO1="conquadraticskewed",BIO12="conquadraticskewed")
@@ -30,12 +31,18 @@ shapesr=c(BIO1="conquadraticskewed",BIO12="conquadraticskewed")
 pK = matrix(c(100,500,300,0,N,N,300,3000,2500,0,N,N),nrow=6,ncol=2,dimnames=list(c("Xmin","Xmax","Xopt","Yxmin","Yxmax","Yopt"),c("BIO1","BIO12")))
 pr = matrix(c(100,500,300,0,N,N,300,3000,2500,0,N,N),nrow=6,ncol=2,dimnames=list(c("Xmin","Xmax","Xopt","Yxmin","Yxmax","Yopt"),c("BIO1","BIO12")))
 
+# Linear model + constant model parameters
+shapesK=c(BIO1="linearPositive",BIO12="linearPositive")
+shapesr=c(BIO1="constant",BIO12="constant")
+pK = matrix(c(100,0.01,300,0.001),nrow=2,ncol=2,dimnames=list(c("X0","slope"),c("BIO1","BIO12")))
+pr = matrix(c(N,N),nrow=1,ncol=2,dimnames=list(c("Y"),c("BIO1","BIO12")))
+
 ##### Dispersion Function :
 
 # Shape of the dispersion function :
 shapeDisp="fat_tail1"
 # Dispersion parameters of the dispersion function
-pDisp = c(1/19,1)
+pDisp = c(alpha=1/19,beta=1)
 
 ######################### end of parameters initialisation <<<<<<
 
@@ -58,19 +65,21 @@ dim(geneticData)
 ##### Get the migration Matrix
 migrationMatrix(rasterStack=rasK, shapeDisp=shapeDisp, pDisp=pDisp)
 
-##### Simulate the coalescent
-system.time(
-  coalescent_simulated <- simul_coalescent(geneticData=geneticData,
-                                           rasterStack=rasterStack,
-                                           pK=pK, pr=pr,
-                                           shapesK=shapesK, shapesr=shapesr,
-                                           shapeDisp=shapeDisp, pDisp=pDisp,
-                                           mutation_rate=1E-1, 
-                                           initial_genetic_value=initial_genetic_value, 
-                                           mutation_model="bigeometric",stepvalue=2,
-                                           mut_param=c(p=.5,sigma2=4))
-  )
+##### create a data and model lists to run simulations
 
+data = list(geneticData=geneticData,
+            rasterStack=rasterStack)
+
+model = list(pK=pK, pr=pr,
+             shapesK=shapesK, shapesr=shapesr,
+             shapeDisp=shapeDisp, pDisp=pDisp,
+             mutation_rate=1E-1, 
+             initial_genetic_value=initial_genetic_value, 
+             mutation_model="bigeometric",stepvalue=2,
+             mut_param=c(p=.5,sigma2=4))
+
+##### Simulate the coalescent
+system.time(coalescent_simulated <- simul_coalescent(data,model))
 coalescent_simulated
 phylog_tree <- coalescent_2_phylog(coalescent=coalescent_simulated$coalescent)
 
@@ -78,8 +87,12 @@ phylog_tree <- coalescent_2_phylog(coalescent=coalescent_simulated$coalescent)
 plot_coalescent(coalescent=coalescent_simulated$coalescent,genetic_table=coalescent_simulated$genetic_values,with_landscape=TRUE, rasK=rasK, legend_right_move=-.3)
 plot_coalescent(coalescent=coalescent_simulated$coalescent,genetic_table=coalescent_simulated$genetic_values,rasK=rasK,legend_right_move=-.5)
 
+##### New instance of class reaction norm
+
+
 ##### Appending summary stats reference table
 new_reference_table(geneticData,Distance="Goldstein")
+variables=c("pK.Xmin","pK.Xmax","pK.Xopt","pK.Yopt")
 fill_reference_table <- function(geneticData=geneticData,Distance=Distance,
                                  rasterStack=rasterStack,
                                  pK=pK, pr=pr,

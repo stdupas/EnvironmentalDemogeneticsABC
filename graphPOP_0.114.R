@@ -171,7 +171,7 @@ conquadraticsq <- function(X,p)
 
 enveloppe <- function(X,p)
 {
-  # simple envelope function, which affects a single value of Yopt to all cells in which the value of the environmental variable is between Xmin and Xmax
+  # simple enveloppe function, which affects a single value of Yopt to all cells in which the value of the environmental variable is between Xmin and Xmax
   #
   # Args:
   #   X : matrix or data frame providing the values of independent variable to calculate reaction norm
@@ -185,7 +185,7 @@ enveloppe <- function(X,p)
 
 envelinear <- function(X,p,log=FALSE)
 {
-  # Compute a linear response within an envelope
+  # Compute a linear response within an enveloppe
   #
   # Args:
   #   X : matrix or data frame providing the values of independent variable to calculate reaction norm
@@ -204,7 +204,7 @@ envelinear <- function(X,p,log=FALSE)
   
 envelin0 <- function(X,p,log=FALSE)
 {
-  # Compute a linear response within an envelope # ?????
+  # Compute a linear response within an enveloppe # ?????
   #
   # Args:
   #   X : matrix or data frame providing the values of independent variable to calculate reaction norm
@@ -223,8 +223,25 @@ envelin0 <- function(X,p,log=FALSE)
 
 linear <- function(X,p,Log)
 {
-  # Compute a linear response within an envelope ?????
+  # Compute a linear response or a log linear response
   #
+  # Args:
+  #   X : matrix or data frame providing the values of independent variable to calculate reaction norm
+  #   p : matrix parameter values for the reaction norm, 
+  #       line names: c("X0","slope"), X0 value of X at Y=0, slope
+  #       column names: names of the independent variables of X used for the reaction norm calculation
+  # 
+  # Returns: 
+  #   A matrix of Yopt the value of the function for each cell, for each environmental variable
+  X0 = p[rep("X0",dim(X)[1]),colnames(X)]
+  slope = p[rep("slope",dim(X)[1]),colnames(X)]
+  if (Log) {log(slope*X-slope*X0)} else {slope*X-slope*X0}
+}
+
+linearPositive <- function(X,p,Log)
+{
+  # Compute a linear response or a log linear response
+  # If response is negative, response is given value 0
   # Args:
   #   X : matrix or data frame providing the values of independent variable to calculate reaction norm
   #   p : matrix parameter values for the reaction norm, 
@@ -235,7 +252,22 @@ linear <- function(X,p,Log)
   #   A matrix of Yopt the value of the function for each cell, for each environmental variable
   X0 = p[rep("X0",dim(X)[1]),colnames(X)]
   slope = p[rep("slope",dim(X)[1]),colnames(X)]
-  if (Log) {log(slope*X-slope*X0)} else {slope*X-slope*X0}
+  if (Log) {log((slope*X-slope*X0)*(slope*X-slope*X0>1)+(slope*X-slope*X0<=1))} else {((slope*X-slope*X0)*(slope*X-slope*X0>0))}
+}
+
+constant <- function(X,p,Log)
+{
+  # Compute a linear response or a log linear response
+  # If response is negative, response is given value 0
+  # Args:
+  #   X : matrix or data frame providing the values of independent variable to calculate reaction norm
+  #   p : matrix parameter values for the reaction norm, 
+  #       line names: c("X0","slope"), 
+  #       column names: names of the independent variables of X used for the reaction norm calculation
+  # 
+  # Returns: 
+  #   A matrix of Yopt the value of the function for each cell, for each environmental variable
+  p[rep("Y",dim(X)[1]),colnames(X)]
 }
 
 #inc=(X-xmin)/(Xmax-xmin)*p["Ymax",]*(X>xmin)*(X<xmax),
@@ -268,10 +300,12 @@ ReactNorm <- function(X,p,shapes)
            envloglin=envelinear(X=subset(X,select=variables),p=p,log=TRUE),
            loG = log(x=subset(X,select=variables)),
            linear = linear(X=subset(X,select=variables),p=p),
+           linearPositive = linearPositive(X=subset(X,select=variables),p=p,Log=FALSE),
            conquadratic=conquadratic(X=subset(X,select=variables),p=p),
            conquadraticskewed=conquadraticskewed(X=subset(X,select=variables),p=p),
            conquadraticsq=conquadraticsq(X=subset(X,select=variables),p=p),
-           conquadraticskewedsq=conquadraticskewedsq(X=subset(X,select=variables),p=p)
+           conquadraticskewedsq=conquadraticskewedsq(X=subset(X,select=variables),p=p),
+           constant=constant(X=subset(X,select=variables),p=p)
     )
   }
   Y=cbind(Y,Y=apply(Y, 1, prod)^(1/dim(p)[2])) # geometric mean
@@ -279,42 +313,38 @@ ReactNorm <- function(X,p,shapes)
 }
 
 
-Show_Niche <- function(Data,p,shapes=c(BIO1="conquadraticskewed",BIO12="conquadraticskewed")) # non terminé
+Show_Niche <- function(BBox,nb_points,p,shapes=c(BIO1="conquadraticskewed",BIO12="conquadraticskewed")) # non terminé
 {
   # Allow to visualize two dimensional niche function 
   #
   # Args:
-  #   Data:
-  #   p:
-  #   shapes:
+  #   BBox: pounding box of variable values (two variables) data.frame columns as variable names, lines as c("Min","Max") 
+  #   nb_points: number of points to draw between min and max for each variable
+  #   p: parameter values of the reaction norm for each variable as column
+  #   shapes: shapes of the reaction norms for each variable in a vector
   #
   # Returns:
   #
   # Example
-  # Data <- data.frame(BIO12=(2:32)*100,BIO1=(10:40)*10)
-  pairs = NULL;i=0
-  while (i < dim(p)[2])
+  # BB = matrix(c(100,400,200,3200),nrow=2,ncol=2,dimnames=list(c("Min","Max"),c("BIO1","BIO12")))
+  # p = matrix(c(100,500,300,0,10,10,300,3000,2500,0,20,20),nrow=6,ncol=2,dimnames=list(c("Xmin","Xmax","Xopt","Yxmin","Yxmax","Yopt"),c("BIO1","BIO12")))
+  # Shapes=c(BIO1="conquadraticskewed",BIO12="conquadraticskewed")
+  # Show_Niche(BB,nb_points=c(12,18),p,shapes=Shapes)
+  
+  Data = as.data.frame(matrix(NA,nrow=1,ncol=length(shapes)));colnames(Data)=colnames(p);Data=Data[-1,]
+  n=rep(1,length(shapes))
+  Var1=NULL
+  for(i in 1:nb_points[1])
   {
-    i=i+1;j=i+1
-    first= colnames(p)[i]
-    while (j <= dim(p)[2])
-    {
-      second = colnames(p)[j]
-      j=j+1
-      pairs=rbind(pairs,c(first,second))
-    }
+    Var1=append(Var1,rep(i,nb_points[2]))
   }
-  pairs
-  dev.off()
-  par(mfrow=c(1,1))
-  Data= as.data.frame(Data)
-  for (i in 1:dim(pairs)[1])
-  {
-    print(i)
-    form = as.formula(paste("z~",paste(pairs[i,],collapse="*"),sep=""))
-    Data[,"z"]=ReactNorm(Data,p,shapes)[,"Y"]
-    wireframe(form,data=Data,scales=list(arrows=FALSE)) # requires library lattice
-  }
+  Var2 = rep(1:nb_points[2],nb_points[1])
+  Data = as.matrix(data.frame(Var1=Var1,Var2=Var2));colnames(Data)=colnames(p)
+  Data = BB[rep("Min",dim(Data)[1]),]+(Data-1)*(BB[rep("Max",dim(Data)[1]),]-BB[rep("Min",dim(Data)[1]),])/matrix(nb_points-1,nrow=dim(Data)[1],ncol=dim(Data)[2],byrow=TRUE)
+  rownames(Data)=1:dim(Data)[1];Data=as.data.frame(Data)
+  form = as.formula(paste("z~",paste(names(shapes),collapse="*"),sep=""))
+  Data[,"z"]=ReactNorm(Data,p,shapes)[,"Y"]
+  wireframe(form,data=Data,scales=list(arrows=FALSE)) # requires library lattice
 }
 
 # populationSize: uses K_Function to obtain the populationsize landscape raster
@@ -345,7 +375,6 @@ distanceMatrix <- function(rasterStack){
 }
 
 
-
 migrationMatrix <- function(rasterStack,shapeDisp, pDisp){
   # migrationMatrix computes a matrix of distance between cells, apply a model of dispersion and returns a matrix of migration.
   # 
@@ -364,7 +393,7 @@ migrationMatrix <- function(rasterStack,shapeDisp, pDisp){
   migration = apply(distanceMatrix, c(1,2), 
                     function(x)(switch(shapeDisp,
                                        # 1: alphaDisp   2: betaDisp ; note: esperance = 1/alphaDisp
-                                       fat_tail1 = 1/(1+x^pDisp[2]/pDisp[1]), # Molainen et al 2004
+                                       fat_tail1 = 1/(1+1/pDisp[1]*x^pDisp[2]), # Molainen et al 2004
                                        # 1: sigmaDisp
                                        gaussian = (dnorm(x, mean = 0, sd = pDisp[1], log = FALSE)),
                                        # 1: sigma Disp
@@ -374,7 +403,8 @@ migrationMatrix <- function(rasterStack,shapeDisp, pDisp){
                                        #island = (x==0)*(1-pDisp[1])+(x>0)*(pDisp[1]/(nCell-1)),
                                        island = (x==0)*(1-pDisp[1])+(x>0)*(pDisp[1]),
                                        #1: sigmaDisp    2: gammaDisp
-                                       fat_tail2 = x^pDisp[2]*exp(-2*x/(pDisp[1]^0.5))
+                                       fat_tail2 = x^pDisp[2]*exp(-2*x/(pDisp[1]^0.5)),
+                                       gaussian_island_mix = (pDisp[2]+(1-pDisp[2])*dnorm(x, mean = 0, sd = pDisp[1], log = FALSE))/prod(dim(migration))
                     )))
   return(migration/max(c(colSums(migration),rowSums(migration))))
 }
@@ -712,46 +742,130 @@ simul_coocur <- function(cells=c(1,2),transitionmatrice)
 t
 }
 
-
-is_subset <- function(sub_char,char)
+set_model <- function(pK, pr, shapesK, shapesr, shapeDisp, pDisp,
+                      mutation_rate, initial_genetic_value,
+                      mutation_model,stepvalue,
+                      mut_param)
 {
-  is_subset=NA
-  for (i in 1:length(sub_char)) {
-    is_subset[i] = any(vect==sub_char[i])
+model = list(pK=pK, pr=pr,
+             shapesK=shapesK, shapesr=shapesr,
+             shapeDisp=shapeDisp, pDisp=pDisp,
+             mutation_rate=mutation_rate, 
+             initial_genetic_value=initial_genetic_value, 
+             mutation_model=mutation_model,stepvalue=stepvalue,
+             mut_param=mut_param)
+check_model(model)
+}
+
+check_dispersion_model <- function(shapedisp,pDisp)
+{
+  compatible = switch(shapeDisp,
+                      fat_tail1 =  c("alpha","beta")%in%names(pDisp),
+                      gaussian = c("sd")%in%names(pDisp),
+                      gaussian = c("sd")%in%names(pDisp),
+                      exponential = c("mean")%in%names(pDisp),
+                      contiguous = c("m")%in%names(pDisp),
+                      island = c("m")%in%names(pDisp),
+                      fat_tail2 = c("alpha","beta")%in%names(pDisp),
+                      gaussian_island_mix = c("sd","m")%in%names(pDisp)
+  )
+  if (!all(compatible)) {
+    Message = switch(shapeDisp,
+                     fat_tail1 =  "fat_tail1 : pDisp=c(alpha=..,beta=..)",
+                     gaussian = "gaussian : pDisp=c(sd=..)",
+                     exponential = "exponential: pDisp=c(mean=..)",
+                     contiguous = "contiguous: pDisp=c(m=..)",
+                     island = "island: pDisp=c(m=..)",
+                     fat_tail2 = "fat_tail2: pDisp=c(alpha=..,beta=..)",
+                     gaussian_island_mix = "gaussian_island_mix: pDisp=c(sd=..,m=..)"
+    )
+                     stop (paste("check dispersion model. For",Message))
   }
-all(is_subset)
+"Dispersion model OK"
 }
 
-check_ReactionNorm <- function(object)
+check_reaction_norm <- function(shapes,p)
 {
-  if (!is_subset(object@shapes, c("enveloppe", "envelin", "envloglin","loG","linear",
-    "conquadratic","conquadraticskewed","conquadraticsq",
-    "conquadraticskewedsq")))
-  return("unknown shape name for reaction norm, 
-         please chose among 'enveloppe', 'envelin', 'envloglin','loG','linear',
+  # Checks whether shapes and parameter matrix of reaction norms
+  # corresponds for all the variables
+  #
+  if (!all(shapes %in% c("enveloppe", "envelin", "envloglin","loG","linear",
+                         "conquadratic","conquadraticskewed","conquadraticsq",
+                         "conquadraticskewedsq","constant","linearPositive")))
+    stop("shape of reaction norm is unknown, 
+         please chose among 'constant', 'enveloppe', 'linearPositive' 'envelin', 'envloglin','loG','linear',
          'conquadratic','conquadraticskewed','conquadraticsq' or 'conquadraticskewedsq'
-         ") else if (length(object@shapes)!=dim(object@p)[2])
-           return("number of layers incompatible between shapes and parameters") else {
-             compatible=NA
-             for (i in 1:length(object@shapes))
-             {compatible[i] <- switch(object@shapes,
-                                   envelope = is_subset(c("Xmin","Xmax"),row.names(object@p)),
-                                   envelin = is_subset(c("Yxmin","Yxmax","Xmin","Xmax"),row.names(object@p)),
-                                   envloglin = is_subset(c("Yxmin","Yxmax","Xmin","Xmax"),row.names(object@p)),
-                                   linear = is_subset(c("X0","slope"),row.names(object@p)),
-                                   conquadratic = is_subset(c("Xmin","Xmax","Xopt"),row.names(object@p)),
-                                   conquadraticsq = is_subset(c("Xmin","Xmax","Xopt"),row.names(object@p)),
-                                   conquadraticskewed = is_subset(c("Xmin","Xmax","Xopt","Yopt"),row.names(object@p)),
-                                   conquadraticskewedsq = is_subset(c("Xmin","Xmax","Xopt","Yopt"),row.names(object@p)))
-             } 
-             if (!all(compatible)) return(paste(compatible[2],"bad row names in variable number", which(!compatible),sep=" "))
-           }
-  return(TRUE)
+         ") else if (length(shapes)!=dim(p)[2])
+           stop(paste("reaction norm shapes and parameters do not use the same number of
+                       environemental variables.")) else {
+                        compatible=NA
+                        for (i in 1:length(shapes))
+                        {
+                          compatible[i] <- switch(shapes[i],
+                                                  constant = all(c("Y")%in%row.names(p)),
+                                                  enveloppe = all(c("Xmin","Xmax","Yopt")%in%row.names(p)),
+                                                  envelin = all(c("Yxmin","Yxmax","Xmin","Xmax")%in%row.names(p)),
+                                                  envloglin = all(c("Yxmin","Yxmax","Xmin","Xmax")%in%row.names(p)),
+                                                  linear = all(c("X0","slope")%in%row.names(p)),
+                                                  linearPositive = all(c("X0","slope")%in%row.names(p)),
+                                                  conquadratic = all(c("Xmin","Xmax","Xopt")%in%row.names(p)),
+                                                  conquadraticsq = all(c("Xmin","Xmax","Xopt")%in%row.names(p)),
+                                                  conquadraticskewed = all(c("Xmin","Xmax","Xopt","Yopt")%in%row.names(p)),
+                                                  conquadraticskewedsq = all(c("Xmin","Xmax","Xopt","Yopt")%in%row.names(p)))
+                        } 
+                        if (!all(compatible)) 
+                        {
+                        Message=NA
+                        for (i in which(!compatible))
+                          {
+                          Message = switch(shapes[i],
+                                           constant = "rownames of pDisp matrix parameter for constant shape is 'Y'. ",
+                                           enveloppe = "rownames of pDisp matrix parameter for enveloppe shape are 'Xmin', 'Xmax' and 'Xopt'. ",
+                                           envelin = "rownames of pDisp matrix parameter for envelin shape are 'Yxmin', 'Yxmax', 'Xmin', and 'Xmax'. ",
+                                           envloglin = "rownames of pDisp matrix parameter for enveloglin shape are 'Yxmin', 'Yxmax', 'Xmin', and 'Xmax'. ",
+                                           linear = "rownames of pDisp matrix parameter for linear shape are 'X0' and 'slope'. ",
+                                           linearPositive = "rownames of pDisp matrix parameter for linearPositive shape are 'X0' and 'slope'. ",
+                                           conquadratic = "rownames of pDisp matrix parameter for conquadratic shape are 'Xmin', 'Xmax' and Xopt. ",
+                                           conquadraticsq = "rownames of pDisp matrix parameter for conquadraticsq shape are 'Xmin', 'Xmax' and Xopt. ",
+                                           conquadraticskewed = "rownames of pDisp matrix parameter for conquadraticskewed shape are 'Xmin', 'Xmax', Xopt and Yxopt. ",
+                                           conquadraticskewed = "rownames of pDisp matrix parameter for conquadraticskewed shape are 'Xmin', 'Xmax', Xopt and Yxopt. "
+                          )
+                          }
+                        stop(paste("Error in reaction norm model settings:", 
+                                   "for environmental variable(s) number",
+                                   paste(which(!compatible),collapse=" and "),
+                                   ", parameters corresponding to the shape annouced are not provided as rownames. Note that",
+                                   paste(Message,collapse=" ")))
+                        }
+                      }
+"reaction norm parameters OK"
 }
 
+check_mutation_model<-function(mutation_model,mutation_parameter)
+{
+  compatible = 
+  switch(mutation_model,
+         bigeometric = c("sigma2")%in%names(mutation_parameter),
+         tmp = c("p","sigma2")%in%names(mutation_parameter)
+         )
+  if (!all(compatible)) {
+    Message = switch(shapeDisp,
+                     bigeometric =  "bigeometric : mut_param=c(sigma2=..)",
+                     tmp = "tmp : mut_param=c(p=.., sigma2=..)"
+                     )
+    stop(paste("check mutation parameter(s) names for",Message))
+  }
+"mutation model OK"
+}
 
-setClass("ReactionNorm",representation(shapes = "character",
-                                       p="matrix"),validity = check_ReactNorm)
+check_model <- function(model)
+{
+check_reaction_norm(model$shapesr,model$pr)
+check_reaction_norm(model$shapesK,model$pK)
+check_mutation_model(model$mutation_model,model$mut_param)
+check_dispersion_model(model$shapeDisp,model$pDisp)
+}
+
 
 setClass("DispersionModel", representation(ID="numeric",
                                            shapeDisp="character",
@@ -768,7 +882,9 @@ setClass("EnvDemogenetModel",representation(ID = "numeric",
                                               Dispersion = "DispersionModel"
                                               ))
 
-simul_coalescent <- function(geneticData, rasterStack, pK, pr, shapesK, shapesr, shapeDisp, pDisp,
+
+
+simul_coalescent2 <- function(geneticData, rasterStack, pK, pr, shapesK, shapesr, shapeDisp, pDisp,
                              mutation_rate, initial_genetic_value, mutation_model, stepvalue, mut_param)
 {
   # Simulates a coalescent in a lansdcape characterized by an environmental variable raster stack, for a species with a given niche function. 
@@ -907,6 +1023,152 @@ simul_coalescent <- function(geneticData, rasterStack, pK, pr, shapesK, shapesr,
   # forward_log_prob is the average per generation of the log probability of the forward movements of the genes in the landscape
 }
 
+simul_coalescent <- function(data, model)
+{
+  # Simulates a coalescent in a lansdcape characterized by an environmental variable raster stack, for a species with a given niche function. 
+  #
+  # Args :
+  #   data : a list of 
+  #     $geneticData : genetic data table : with coordinates
+  #     $rasterStack : environmental variables raster stack
+  #   model : a list of
+  #     $pK : parameters values of K (Xmin, Xmax, Xopt, YXmin, Yxmax, Yopt) for each environmental variable
+  #     $pr : parameters values of r (Xmin, Xmax, Xopt, YXmin, Yxmax, Yopt) for each environmental variables
+  #     $shapesK : shapes of niche function (reaction norm) for the carrying capacity K
+  #     $shapesr : shapes of niche function (reaction norm) for the growth rate r
+  #     $pDisp : parameters of dispersion
+  #     $mutation rate
+  #     $initial_genetic_value : genetic value attributed to the common ancestor
+  #     $mutation_model : specify a model of mutation : "step_wise" (Stepwise Mutation Model),"tmp" (Two Phases Mutation Model)
+  #     $stepvalue : size of the microsatellite motif
+  #     $mut_param : mutation parameters (for bigeometric model, sigma2, for 
+  #                  tmp a vector with p and sigma2)
+  # Returns :
+  #   A list with all coalescence informations :
+  #   List of 4
+  #    $ coalescent      :List of "i" (with "i" the number of coalescence events, coalescence involving multiple individuals counts for 1 event.)
+  #      ..$ :List of 5
+  #      ..  ..$ time           : time of coalescence
+  #      ..  ..$ coalescing     : coalescing nodes
+  #      ..  ..$ new_node       : "new" in a backward sense, ie the node resulting of the coalescence of the coalescing nodes
+  #      ..  ..$ br_length      : the length of the branches
+  #      ..  ..$ mutations      : the number of mutations which occured along the branch
+  #    $ mutation_rate          : 
+  #    $ forward_log_prob       : the logarithm of the forward probability of this coalescent
+  #    $ genetic_values         : a data frame with : time, coalescing, new_node, br_length, mutations (0 or NA), genetic_value (initial), resultant (0 or NA)
+  
+  ### Computes Niche Function variables :
+  K = ReactNorm(values(data$rasterStack),model$pK,model$shapesK)[,"Y"]
+  r = ReactNorm(values(data$rasterStack),model$pr,model$shapesr)[,"Y"]
+  
+  ### Computes stochastic matrix :
+  migrationM <- migrationMatrix(data$rasterStack,model$shapeDisp, model$pDisp)
+  transitionmatrice = transitionMatrixBackward(r, K, migration= migrationM);
+  transition_forward = transitionMatrixForward(r, K, migration= migrationM)
+  
+  #### Initialize variables needed for the coalescent simulation process :
+  time=0
+  prob_forward=NA
+  number_of_nodes_over_generations=0
+  N <- round(K)
+  coalescent = list() 
+  # Nodes are initialized : 1 individual <=> 1 node
+  nodes = as.numeric(rownames(data$geneticData))
+  names(nodes)=as.character(nodes)
+  # Cells in which were the genes sampled in the landscape :
+  cell_number_of_nodes <- data$geneticData[,"Cell_numbers"]
+  names(cell_number_of_nodes) <- nodes
+  # Cells in which the previous generation genes were in the landscape :
+  parent_cell_number_of_nodes <- cell_number_of_nodes 
+  # A list of cells with all the genes remaining in each cell. Initialized and optimized.
+  nodes_remaining_by_cell = list()
+  cell <- as.array(seq(from=1,to=ncell(data$rasterStack),by=1))
+  nodes_remaining_by_cell <- lapply(X=cell, FUN=remainingNodes, cell_number_of_nodes)
+  
+  # Number of coalescence events :
+  single_coalescence_events=0 
+  single_and_multiple_coalescence_events=0
+  
+  ### Simulating the coalescent process :
+  while (length(unlist(nodes_remaining_by_cell))>1) 
+  {
+    
+    ## Migration
+    # we localize the parents in the landscape by sampling in the backward transition matrix. Optimized.
+    names_node <- names(parent_cell_number_of_nodes)
+    parent_cell_number_of_nodes <- apply(X=as.array(1:length(parent_cell_number_of_nodes)), MARGIN=1, FUN=backwardParentsLocalizationSampling, data$rasterStack, transitionmatrice, cell_number_of_nodes) 
+    names(parent_cell_number_of_nodes) <- names_node
+    # once we know the parent cell numbers, we calculate the forward dispersion probability of the event
+    prob_forward[time] = sum(log(transition_forward[parent_cell_number_of_nodes,cell_number_of_nodes]))
+    number_of_nodes_over_generations = number_of_nodes_over_generations + length(cell_number_of_nodes)
+    
+    ## Coalescence
+    time=time+1; if (round(time/10)*10==time) {print(time)}
+    
+    # we now perform coalescence within each cell of the landscape for the parents
+    for (cell in 1:ncell(data$rasterStack))#cell=1;cell=2;cell=3;cell=4;cell=5;cell=26;cell=10
+    {
+      # add a local variable, easier to manipulate than the reference to a list...
+      nodes_remaining_in_the_cell = nodes_remaining_by_cell[[cell]] <- as.numeric(names(which(parent_cell_number_of_nodes==cell)))
+      
+      # we obtain the identities in the geneticData table (line) of the nodes remaining in the cell
+      if (length(nodes_remaining_in_the_cell)>1)
+      {
+        # Create a function for parentality attribution within a cell :
+        parentoffspringmatrix <- parentalityAttributationWithinACell(nodes_remaining_in_the_cell=nodes_remaining_in_the_cell, N=N, cell=cell)
+        
+        # Columns of parentoffspringmatrix with more than one TRUE allow to identify coalescing individuals :
+        if (any(colSums(parentoffspringmatrix)>1) )
+        {
+          #  Loop over all the parents in which coalescence event occur
+          for (multiple in which(colSums(parentoffspringmatrix)>1)) # multiple<-which(colSums(parentoffspringmatrix)>1)[1]
+          {
+            # Record the coalescence event : 
+            single_coalescence_events = single_coalescence_events +1
+            
+            # which(parentoffspringmatrix[,multiple]) identifies which node in the column coalesce
+            nodes_that_coalesce = names(which(parentoffspringmatrix[,multiple]))
+            
+            # attibutes new node number to the ancestor
+            new_node <- max(nodes)+1
+            # removes the nodes that coalesced from the node vector
+            nodes=nodes[!(names(nodes)%in%nodes_that_coalesce)]
+            # adds them to the nodes vector
+            nodes=append(nodes,new_node)
+            names(nodes)[length(nodes)]=new_node
+            
+            # updating of vector parent_cell_number_of_nodes (adding the cell number of the new node and removing the nodes that disapeared)
+            parent_cell_number_of_nodes <- append(parent_cell_number_of_nodes[!(names(parent_cell_number_of_nodes)%in%nodes_that_coalesce)],cell)
+            names(parent_cell_number_of_nodes)[length(parent_cell_number_of_nodes)]<-new_node
+            # adds the event to the list coalescent: time, which node coalesced, and the number of the new node
+            coalescent[[single_coalescence_events]] <- list(time=time,coalescing=as.numeric(nodes_that_coalesce),new_node=new_node)
+            # updating the nodes vector for the cell
+            nodes_remaining_in_the_cell = nodes_remaining_by_cell[[cell]] <- append(nodes_remaining_in_the_cell[!nodes_remaining_in_the_cell %in% nodes_that_coalesce],new_node)
+            # updates the number of coalescent events 
+            single_and_multiple_coalescence_events = single_and_multiple_coalescence_events + length(nodes_that_coalesce) - 1
+            
+          } #  end of loop over all the parents in which coalescence event occur
+        } # end of the if condition "there are coalescing events"
+      } # end of the condition "there are more than 1 individual in the cell
+    } # end of the loop across the cells
+    
+    cell_number_of_nodes = parent_cell_number_of_nodes
+  } # end of the backward generation while coalescence loop
+  
+  # Inform historical and mutational processes
+  coalescent=add_br_length_and_mutation(coalescent,model$mutation_rate,model$initial_genetic_value)
+  # Formatting the output
+  list(coalescent=coalescent,mutation_rate=data$mutation_rate,
+       forward_log_prob=sum(prob_forward)/number_of_nodes_over_generations,
+       genetic_values=genetics_of_coaltable(coalist_2_coaltable(coalescent),
+                                            initial_genetic_value=data$initial_genetic_value,
+                                            mutation_model=model$mutation_model,
+                                            stepvalue=model$stepvalue,
+                                            mut_param=model$mut_param))
+  # forward_log_prob is the average per generation of the log probability of the forward movements of the genes in the landscape
+}
+
+
 parentalityAttributationWithinACell <- function(nodes_remaining_in_the_cell, N, cell)
 {
   # Create a function for parentality attribution within a cell used in simul_coalescent
@@ -963,7 +1225,6 @@ genetics_of_coaltable <- function(coaltable,initial_genetic_value,mutation_model
         tpm = tpm(coaltable,initial_genetic_value,stepvalue,mut_param),
         bigeometric = bigeometric(coaltable,initial_genetic_value,stepvalue,mut_param)
         ) 
- stepwise(coaltable,initial_genetic_value,stepvalue)
 }
 
 stepwise <- function(coaltable,initial_genetic_value,stepvalue)
@@ -1133,6 +1394,15 @@ pID <- function(geneticData)
   geneticData=geneticData[,grep("Locus",colnames(geneticData))]
   geneticDataArray <- array(unlist(c(geneticData)), dim=c(dim(geneticData),dim(geneticData)[1]))
   mean(na.omit(geneticDataArray==aperm(geneticDataArray,c(3,2,1))))
+}
+
+set_priors <- function(variables,Min,Max,nb_lines)
+{
+  df = data.frame(matrix(NA,nrow=1,ncol=length(variables)))
+  for (i in variables)
+  {
+    
+  }
 }
 
 new_reference_table <- function(geneticData,Distance,priors)

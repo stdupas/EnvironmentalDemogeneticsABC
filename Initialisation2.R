@@ -83,6 +83,13 @@ system.time(coalescent_simulated <- simul_coalescent(data,model))
 coalescent_simulated
 phylog_tree <- coalescent_2_phylog(coalescent=coalescent_simulated$coalescent)
 
+system.time(coalescent_simulated <- simul_coalescent_old(
+  data$geneticData, data$rasterStack, 
+  model$pK, model$pr, model$shapesK, model$shapesr, model$shapeDisp, model$pDisp,
+  mutation_rate, model$initial_genetic_value, model$mutation_model, model$stepvalue, model$mut_param
+  ))
+
+
 ##### Plot the coalescent
 plot_coalescent(coalescent=coalescent_simulated$coalescent,genetic_table=coalescent_simulated$genetic_values,with_landscape=TRUE, rasK=rasK, legend_right_move=-.3)
 plot_coalescent(coalescent=coalescent_simulated$coalescent,genetic_table=coalescent_simulated$genetic_values,rasK=rasK,legend_right_move=-.5)

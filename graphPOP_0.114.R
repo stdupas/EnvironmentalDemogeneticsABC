@@ -742,12 +742,58 @@ simul_coocur <- function(cells=c(1,2),transitionmatrice)
 t
 }
 
+
+input_priors <- function()
+{
+  # function to create prior values for reference table and average model
+  # arg: none
+  # value: reference table and average model 
+  #
+  nb_simul <- as.numeric(readline("Number of simulations: "))
+  ok=FALSE
+  while (!ok) {shape_model <- readline("Enter mutation model or 'h' for help : ") # prompt
+               ok = (shape_model %in% c("tpm","bigeometric","stepwise"))
+               if (!ok) {
+                 cat("\n","models implemented are :",
+                     "\n","'stepwise'",
+                     "\n","'bigeometric'",
+                     "\n","'tpm': two phase mutation model")
+               }
+  } 
+  if (mutation_model=="bigeometric")
+  {
+    sigma2Dist <- readline("Enter distribution of variance maximum of geometric distribution (1/p): ")
+    if (sigmaDist=="uniform")
+    {
+      sigma2Max <- readline("Enter variance maximum of geometric distribution (1/p): ")
+      sigma2Min <- readline("Enter variance minimum of geometric distribution (1/p): ")
+      sigma2 <- runif(n=nb_simul,min=sigma2Min,max=sigma2Max)
+    }
+  }
+  if (mutation_model=="tpm")
+  {
+    sigma2Dist <- readline("Enter prior distribution shape for variance of geometric distribution (1/p): ")
+    if (sigma2Dist=="uniform")
+    {
+      sigma2Max <- as.numeric(readline("Enter maximum of variance of geometric distribution: "))
+      sigma2Min <- as.numeric(readline("Enter minimum of variance of geometric distribution: "))
+      sigma2 <- runif(nb_simul,sigma2Min,sigma2Max)
+      pMax <- readline("Enter stepwise maximum proportion: ")
+      pMin <- readline("Enter stepwise minimum proportion: ")
+      p <- runif(nb_simul,pMin,pMax)
+    }
+  }
+}
+
 set_model <- function(pK, pr, shapesK, shapesr, shapeDisp, pDisp,
                       mutation_rate, initial_genetic_value,
                       mutation_model,stepvalue,
                       mut_param)
 {
-model = list(pK=pK, pr=pr,
+  # sets a genetic and environemental demographic model as a list 
+  # arg: parameters
+  # value : list describing the models (shapes of distribution and parameters)
+  model = list(pK=pK, pr=pr,
              shapesK=shapesK, shapesr=shapesr,
              shapeDisp=shapeDisp, pDisp=pDisp,
              mutation_rate=mutation_rate, 
@@ -757,8 +803,11 @@ model = list(pK=pK, pr=pr,
 check_model(model)
 }
 
-check_dispersion_model <- function(shapedisp,pDisp)
+check_dispersion_model <- function(shapeDisp,pDisp)
 {
+  # checks that shapeDisp and pDisp are compatible
+  # arg: 
+  # value:
   compatible = switch(shapeDisp,
                       fat_tail1 =  c("alpha","beta")%in%names(pDisp),
                       gaussian = c("sd")%in%names(pDisp),
@@ -884,7 +933,7 @@ setClass("EnvDemogenetModel",representation(ID = "numeric",
 
 
 
-simul_coalescent2 <- function(geneticData, rasterStack, pK, pr, shapesK, shapesr, shapeDisp, pDisp,
+simul_coalescent_old <- function(geneticData, rasterStack, pK, pr, shapesK, shapesr, shapeDisp, pDisp,
                              mutation_rate, initial_genetic_value, mutation_model, stepvalue, mut_param)
 {
   # Simulates a coalescent in a lansdcape characterized by an environmental variable raster stack, for a species with a given niche function. 

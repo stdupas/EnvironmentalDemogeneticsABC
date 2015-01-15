@@ -742,7 +742,183 @@ simul_coocur <- function(cells=c(1,2),transitionmatrice)
 t
 }
 
+combine.names = function(names1,names2)
+{
+  combination=NULL
+  for (name1 in names1)
+  {
+    for (name2 in names2)
+    {
+      combination=append(combination,paste(name1,name2,sep="."))
+    }
+  }
+combination
+}
 
+
+react_norm_param <- function(shapes)
+{
+  params = NULL
+  for (shape in shapes)
+  {
+  params = append(params, switch(shape,
+           constant = paste(names(rasterStack),".Y",sep=""),
+           enveloppe = combine.names(names(rasterStack),c("Xmin","Xmax","Yopt")),
+           envelin = combine.names(names(rasterStack),c("Yxmin","Yxmax","Xmin","Xmax")),
+           envloglin = combine.names(names(rasterStack),c("Yxmin","Yxmax","Xmin","Xmax")),
+           linear = combine.names(names(rasterStack),c("X0","slope")),
+           linearPositive = combine.names(names(rasterStack),c("X0","slope")),
+           conquadratic = combine.names(names(rasterStack),c("Xmin","Xmax","Yopt")),
+           conquadraticsq = combine.names(names(rasterStack),c("Xmin","Xmax","Yopt")),
+           conquadraticskewed = combine.names(names(rasterStack),c("Xmin","Xmax","Xopt","Yopt")),
+           conquadraticskewedsq = combine.names(names(rasterStack),c("Xmin","Xmax","Xopt","Yopt"))
+                                )
+           )
+  }
+params
+}
+
+input_reaction_norm_shape_model <- function(demographic_parameter,names_envir_variables)
+{
+allshapes=  c("constant", "enveloppe", "envelin", "envloglin", "linear", "linearPositive", "conquadratic", "conquadraticsq", "conquadraticskewed", "conquadraticskewedsq")
+shape=NULL
+for (envir in names_envir_variables)
+  {
+    ok=FALSE
+    while (!ok) {
+      cat("Enter reaction norm model for variable",envir,"\n",
+          "and demographic parameter", demographic_parameter,"\n",
+          "(or 'h' for help) : ")
+      shape <- append(shape,readline("Enter: ")) # prompt
+      ok = (shape %in% allshapes)
+      if (!ok) {cat("Please chose among: ","\n",
+                   paste(allshapes,collapse="\n"))
+                shape=shape[-length(shape)]
+      }
+    }
+  }
+shape
+}
+
+set_prior_vector_from_keyb <- function(name,n)
+{
+  # sets a vector of priors from keyboard
+  # args: 
+  # name of the vector to create
+  # n: length of the vector
+  #
+ok = FALSE
+while(!ok)
+  {
+  prior_dist <- readline(paste("Enter prior distribution for",
+                 name,"(enter h for help): "))
+  ok = prior_dist%in%c("uniform","log_uniform","normal","log_normal")
+  if (!ok) cat("\n","models implemented are :",
+               "\n","'uniform'",
+               "\n","'log_uniform'",
+               "\n","'normal'",
+               "\n","'log_normal'"
+               )  
+  }
+parameters_names_prior_dist=switch(prior_dist,
+                           uniform = c("min","max"),
+                           log_uniform = c("min","max"),
+                           normal = c("mean","sd"),
+                           log_normal = c("mean","sd"))
+params = NULL
+if (prior_dist=="log_normal") {cat("for log-normal, note that: ",
+                                "\n"," mean and sd are on the log scale")}
+if (prior_dist=="log_uniform") {cat("for log-uniform, note that: ",
+                                 "\n","min and max are not on the log scale",
+                                 "\n","but on the variable scale")}
+for (paramname in parameters_names_prior_dist)
+  {
+  params = append(params,
+                  readline(
+                    paste("Enter ",paramname,
+                        " for ",prior_dist," distribution: ")
+                    )
+                  )
+  }
+params=as.numeric(params)
+names(params) = parameters_names_prior_dist
+switch(prior_dist,
+       uniform=runif(n,params["min"],params["max"]),
+       log_uniform=exp(runif(n,log(params["min"]),log(params["max"]))),
+       normal=rnorm(n,params["mean"],params["sd"]),
+       log_normal=rlnorm(n,params["mean"],params["sd"])
+         )
+}
+
+set_ref_table_from_keyb <- function(rasterStack,n)
+{
+  # function to create model parameter names of reference table
+  # arg: none
+  # value: reference table and average model 
+  #
+  # reaction norm models
+  shapesK = input_reaction_norm_shape_model("K",names(rasterStack))
+  pKnames = react_norm_param(shapesK)
+  shapesr = input_reaction_norm_shape_model("r",names(rasterStack))
+  prnames = react_norm_param(shapesr)
+  # mutation model
+  ok=FALSE
+  while (!ok) {mutation_model <- readline("Enter mutation model (or 'h' for help) : ") # prompt
+               ok = (mutation_model %in% c("tpm","bigeometric","stepwise"))
+               if (!ok) {
+                 cat("\n","models implemented are :",
+                     "\n","'stepwise'",
+                     "\n","'bigeometric'",
+                     "\n","'tpm': two phase mutation model")
+               }
+  } 
+  mut_param_names = switch(mutation_model,
+                       bigeometric = "sigma2",
+                       tmp = c("p","sigma2"),
+                       stepwise = NULL
+                       )
+  # Dispersion
+  ok=FALSE
+  while (!ok) {shapeDisp <- readline("Enter dispersion model (or 'h' for help) : ") # prompt
+               ok = (shapeDisp %in% c("fat_tail1","gaussian",
+                                           "exponential","contiguous",
+                                           "island", "fat_tail2",
+                                           "gaussian_island_mix"))
+               if (!ok) {
+                 cat("\n","models implemented are :",
+                     "\n","'fat_tail1' (Chapman et al)",
+                     "\n","'gaussian'",
+                     "\n","'exponential'",
+                     "\n","'contiguous'",
+                     "\n","'island'",
+                     "\n","'fat_tail2' (Moilanen et al)",
+                     "\n","'gaussian_island_mix'")
+               }
+  } 
+  Dispersion_parameter_names = switch(shapeDisp,
+                                      fat_tail1 =  c("alpha","beta"),
+                                      gaussian = c("sd"),
+                                      gaussian = c("sd"),
+                                      exponential = c("mean"),
+                                      contiguous = c("m"),
+                                      island = c("m"),
+                                      fat_tail2 = c("alpha","beta"),
+                                      gaussian_island_mix = c("sd","m")
+                                      )
+# set priors
+priors = list()
+priors$shapesK = shapesK
+priors$pK = rep(NA,length(pKnames));names(priors$pK)=pKnames
+priors_names <- c(prnames,pKnames,mut_param_names,Dispersion_parameter_names)
+df = as.data.frame(matrix(NA,nrow=n,ncol=length(priors_names)))
+colnames(df)=priors_names
+for (name in priors_names)
+{
+  df[,name] <- set_prior_vector_from_keyb(name,n)
+}
+df
+}
+  
 input_priors <- function()
 {
   # function to create prior values for reference table and average model
@@ -933,7 +1109,7 @@ setClass("EnvDemogenetModel",representation(ID = "numeric",
 
 
 
-simul_coalescent_old <- function(geneticData, rasterStack, pK, pr, shapesK, shapesr, shapeDisp, pDisp,
+simul_coalescent <- function(geneticData, rasterStack, pK, pr, shapesK, shapesr, shapeDisp, pDisp,
                              mutation_rate, initial_genetic_value, mutation_model, stepvalue, mut_param)
 {
   # Simulates a coalescent in a lansdcape characterized by an environmental variable raster stack, for a species with a given niche function. 
@@ -1072,7 +1248,7 @@ simul_coalescent_old <- function(geneticData, rasterStack, pK, pr, shapesK, shap
   # forward_log_prob is the average per generation of the log probability of the forward movements of the genes in the landscape
 }
 
-simul_coalescent <- function(data, model)
+simul_coalescent_old <- function(data, model)
 {
   # Simulates a coalescent in a lansdcape characterized by an environmental variable raster stack, for a species with a given niche function. 
   #

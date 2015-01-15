@@ -26,10 +26,11 @@ initial_genetic_value=200
 # Concave quadratic skewed distribution parameters
 # Shapes of the reaction norms for demographic variables (r and K) :
 shapesK=c(BIO1="conquadraticskewed",BIO12="conquadraticskewed")
-shapesr=c(BIO1="conquadraticskewed",BIO12="conquadraticskewed")
+shapesr=c(BIO1="linearPositive",BIO12="conquadraticskewed")
 # Parameters of the reaction norm are given by pK and pr
 pK = matrix(c(100,500,300,0,N,N,300,3000,2500,0,N,N),nrow=6,ncol=2,dimnames=list(c("Xmin","Xmax","Xopt","Yxmin","Yxmax","Yopt"),c("BIO1","BIO12")))
-pr = matrix(c(100,500,300,0,N,N,300,3000,2500,0,N,N),nrow=6,ncol=2,dimnames=list(c("Xmin","Xmax","Xopt","Yxmin","Yxmax","Yopt"),c("BIO1","BIO12")))
+#pr = matrix(c(100,500,300,0,N,N,300,3000,2500,0,N,N),nrow=6,ncol=2,dimnames=list(c("Xmin","Xmax","Xopt","Yxmin","Yxmax","Yopt"),c("BIO1","BIO12")))
+pr = matrix(c(100,0.01,NA,NA,NA,NA,NA,NA,NA,NA,300,3000,2500,0,N,N),nrow=8,ncol=2,dimnames=list(c("X0","slope","Xmin","Xmax","Xopt","Yxmin","Yxmax","Yopt"),c("BIO1","BIO12")))
 
 # Linear model + constant model parameters
 shapesK=c(BIO1="linearPositive",BIO12="linearPositive")
@@ -79,11 +80,8 @@ model = list(pK=pK, pr=pr,
              mut_param=c(p=.5,sigma2=4))
 
 ##### Simulate the coalescent
-system.time(coalescent_simulated <- simul_coalescent(data,model))
-coalescent_simulated
-phylog_tree <- coalescent_2_phylog(coalescent=coalescent_simulated$coalescent)
 
-system.time(coalescent_simulated <- simul_coalescent_old(
+system.time(coalescent_simulated <- simul_coalescent(
   data$geneticData, data$rasterStack, 
   model$pK, model$pr, model$shapesK, model$shapesr, model$shapeDisp, model$pDisp,
   mutation_rate, model$initial_genetic_value, model$mutation_model, model$stepvalue, model$mut_param
@@ -94,7 +92,8 @@ system.time(coalescent_simulated <- simul_coalescent_old(
 plot_coalescent(coalescent=coalescent_simulated$coalescent,genetic_table=coalescent_simulated$genetic_values,with_landscape=TRUE, rasK=rasK, legend_right_move=-.3)
 plot_coalescent(coalescent=coalescent_simulated$coalescent,genetic_table=coalescent_simulated$genetic_values,rasK=rasK,legend_right_move=-.5)
 
-##### New instance of class reaction norm
+##### Set a priors of referenc table
+ref_tab <- set_ref_table_from_keyb(rasterStack,300)
 
 
 ##### Appending summary stats reference table

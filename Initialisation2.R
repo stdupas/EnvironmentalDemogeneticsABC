@@ -4,6 +4,7 @@ wd="/media/dupas/1To/IRD/ARTICLES/Dupas/NicheCoal/Graph_Pop" # fixe
 wd="/home/legs/GraphPOP/" # portable
 wd="/home/dupas/GraphPOP/" # fixe
 wd="/home/arno/These/GraphPOP" # portable arno
+wd="/home/Documents/GraphPOP" # labo arno
 setwd(wd)
 source("graphPOP_0.114.R")
 

@@ -205,14 +205,16 @@ nicheFunctionForValue <- function(nicheFunction, x, args){
   #
   # Args:
   #   nicheFunction: the name of the niche function which is called
-  #   rasterStack: the rasterStack of environmental values used to compute niche function.
+  #   x: the value of the environemental variable
   #   args : a list of the arguments of the niche function
   # 
   # Returns:
-  #   The value corresponding to the norm reaction
+  #   The value corresponding to the norm reaction for x
   args <- c(list(x), args)
   return(do.call(nicheFunction, args))
-  #Ex : nicheFunctionForValue(conquadraticSkewed1, x=4, args=list(Xmin=0, Xmax=10, Xopt=5, Yopt=1))
+  
+  # Ex : 
+  # nicheFunctionForValue(conquadraticSkewed1, x=4, args=list(Xmin=0, Xmax=10, Xopt=5, Yopt=1))
 }
 
 nicheFunctionForArray <- function(nicheFunction, array, args){ 
@@ -226,34 +228,32 @@ nicheFunctionForArray <- function(nicheFunction, array, args){
   # Returns:
   #   An array corresponding to the norm reaction
   
-  # raster <- raster(matrix(Data2$BIO1,nrow=1,ncol=4),xmn=0,xmx=4,ymn=0,ymx=1)
-  # nicheFunction <- conquadraticSkewed1
-  
   return(apply(X=array, MARGIN=1, FUN=nicheFunctionForValue, nicheFunction=nicheFunction, args=args))
+  # Ex:
   # nicheFunctionForArray(nicheFunction=conquadraticSkewed1, 
   #                      array=array(data= 1:10, dim =10), 
   #                      args=list(Xmin=0, Xmax=10, Xopt=5, Yopt=1))
 }
 
 
-nicheFunctionForRasterLayer <- function(nicheFunction, raster, args){ 
+nicheFunctionForRasterLayer <- function(nicheFunction, rasterLayer, args){ 
   # Function to apply a niche function over a raster layer
   #
   # Args:
   #   nicheFunction: the name of the niche function which is called
-  #   rasterStack: the rasterStack of environmental values used to compute niche function.
+  #   rasterLayer: the rasterLayer of environmental values used to compute niche function.
   #   args : a list of the arguments of the niche function
   # 
   # Returns:
   #   A raster with values corresponding to the norm reaction
-  values(raster) <- apply(X=as.array(getValues(raster)), MARGIN=1, FUN=nicheFunctionForValue, 
+  values(rasterLayer) <- apply(X=as.array(getValues(rasterLayer)), MARGIN=1, FUN=nicheFunctionForValue, 
                       nicheFunction=nicheFunction, 
                       args=args)
-  return(raster)
+  return(rasterLayer)
   # Ex :
   # raster <- raster(matrix(Data2$BIO1,nrow=1,ncol=4),xmn=0,xmx=4,ymn=0,ymx=1)
   # nicheFunctionForRasterLayer(nicheFunction=conquadraticSkewed1, 
-  #                            raster=raster, 
+  #                            rasterLayer=raster, 
   #                            args=list(Xmin=0, Xmax=10, Xopt=5, Yopt=1))
   
 }

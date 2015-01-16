@@ -1,4 +1,4 @@
-################### Formating Niche Functions >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+################### Formated Niche Functions >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 conquadraticSkewed1 <- function(x, Xmin, Xmax, Xopt, Yopt)
 {
   # Asymetric concave conquadratic function within an enveloppe, else returns 0.
@@ -195,13 +195,13 @@ constant <- function(x,Y)
   return(y)
 }
 
-################# End of formatted Niche Functions <<<<<<<<<<<<<<<<<<<<
+################# End of formated Niche Functions <<<<<<<<<<<<<<<<<<<<
 
 
 ################# Applying Niche Functions to Objects >>>>>>>>>>>>>>>>>>
 
 nicheFunctionForValue <- function(nicheFunction, x, args){
-  # Function to apply a niche function to a single value
+  # Function to apply a niche function over a single value
   #
   # Args:
   #   nicheFunction: the name of the niche function which is called
@@ -211,12 +211,12 @@ nicheFunctionForValue <- function(nicheFunction, x, args){
   # Returns:
   #   The value corresponding to the norm reaction
   args <- c(list(x), args)
-  do.call(nicheFunction, args)
+  return(do.call(nicheFunction, args))
   #Ex : nicheFunctionForValue(conquadraticSkewed1, x=4, args=list(Xmin=0, Xmax=10, Xopt=5, Yopt=1))
 }
 
 nicheFunctionForArray <- function(nicheFunction, array, args){ 
-  # Function to apply a niche function to an array
+  # Function to apply a niche function over an array
   #
   # Args:
   #   nicheFunction: the name of the niche function which is called
@@ -229,101 +229,33 @@ nicheFunctionForArray <- function(nicheFunction, array, args){
   # raster <- raster(matrix(Data2$BIO1,nrow=1,ncol=4),xmn=0,xmx=4,ymn=0,ymx=1)
   # nicheFunction <- conquadraticSkewed1
   
-  apply(X=array, MARGIN=1, FUN=nicheFunctionForValue, nicheFunction=nicheFunction, args=args)
+  return(apply(X=array, MARGIN=1, FUN=nicheFunctionForValue, nicheFunction=nicheFunction, args=args))
   # nicheFunctionForArray(nicheFunction=conquadraticSkewed1, 
   #                      array=array(data= 1:10, dim =10), 
   #                      args=list(Xmin=0, Xmax=10, Xopt=5, Yopt=1))
 }
 
 
-# Applying to rasterStacks
-nicheFunctionForRaster <- function(nicheFunction, raster, ...){ 
-  # Function to apply a niche function to a rasterStack.
+nicheFunctionForRasterLayer <- function(nicheFunction, raster, args){ 
+  # Function to apply a niche function over a raster layer
   #
   # Args:
   #   nicheFunction: the name of the niche function which is called
   #   rasterStack: the rasterStack of environmental values used to compute niche function.
-  #   ... : the arguments of the niche function
+  #   args : a list of the arguments of the niche function
   # 
   # Returns:
-  #   The raster corresponding to the norm reaction
-  
+  #   A raster with values corresponding to the norm reaction
+  values(raster) <- apply(X=as.array(getValues(raster)), MARGIN=1, FUN=nicheFunctionForValue, 
+                      nicheFunction=nicheFunction, 
+                      args=args)
+  return(raster)
+  # Ex :
   # raster <- raster(matrix(Data2$BIO1,nrow=1,ncol=4),xmn=0,xmx=4,ymn=0,ymx=1)
-  # nicheFunction <- conquadraticSkewed1
+  # nicheFunctionForRasterLayer(nicheFunction=conquadraticSkewed1, 
+  #                            raster=raster, 
+  #                            args=list(Xmin=0, Xmax=10, Xopt=5, Yopt=1))
   
-  apply(X=as.array(values(raster), MARGIN=1, FUN=nicheFunctionForValue, nicheFunction=nicheFunction, ...))
 }
 
 ################# End of Applying Niche Functions to Objects <<<<<<<<<<<<<<<<<<<<<<<
-
-# Non function stepwise model, has to be a bit modified cause od "coaltable" missing in arguments
-stepwise <- function(initial_genetic_value,stepvalue)
-{
-  coaltable$genetic_value=NA
-  # we calculate the oritattion of the mutations in the different branches using binomial rules
-  coaltable$resultant = 2*(rbinom(dim(coaltable)[1],coaltable[,"mutations"],.5)-coaltable[,"mutations"]/2)
-  coaltable[dim(coaltable)[1]+1,] <- c(NA,max(unlist(coaltable$new_node)),NA,NA,NA,initial_genetic_value,NA)
-  for(branch in rev(rownames(coaltable)[-dim(coaltable)[1]]))
-  {
-    coaltable[branch,"genetic_value"] <- coaltable[branch,"resultant"]*stepvalue + coaltable[which(coaltable$coalescing==coaltable[branch,"new_node"]),"genetic_value"]
-  }
-  coaltable
-}
-
-#1: sigmaDisp    2: gammaDisp
-fat_tail2 <- function(x,sigma,gamma){ x^gamma*exp(-2*x/(sigma^0.5)) }
-
-# prior function to call to get its parameters (with uniform it's not really interesting, but with others...)
-uniform <- function(n, min, max){runif(n=n, min=min,max=max)}
-
-
-###### Create and append list
-simulations <-list(Niche=list(), Dispersion=list(), Mutation=list())
-
-# Append "Niche" part of the list
-for(envrt_variable in names(rasterStack)) # envrt_variable <- "BIO1"
-{
-  # add a box "BIO1" in simulation$Niche
-  simulations[["Niche"]][[envrt_variable]] <- list()
-  
-  # Ask to the user which niche model to apply (it has to be a function name !!!)
-  niche_model <- readline(paste("Which niche model do you want for",envrt_variable,"? ")) # TODO : conquadraticsquewed
-  
-  for(niche_parameter in names(formals(niche_model))) # niche_parameter="X"
-  {
-    # add a box "X in simulations$Niche$BIO1
-    simulations[["Niche"]][[envrt_variable]][[niche_parameter]] <- list()
-    
-    # Ask user for prior distribution (it has to be a function name !!!)
-    prior_distribution <- readline(paste("Which prior model do you want for",niche_parameter,"? ")) # TODO : uniform
-    
-    for(prior_parameter in names(formals(prior_distribution))) # prior_parameter = "n"
-    {
-      # add a box "n" in simulation$Niche$BIO1$X
-      simulations[["Niche"]][[envrt_variable]][[niche_parameter]][[prior_parameter]] <- numeric()
-      
-    }
-  }
-}
-
-# Append "Dispersion" part of the list
-dispersion_model <- readline(paste("Which dispersion model do you want ?"))
-for(dispersion_parameter in names(formals(dispersion_model))){
-  simulations[["Dispersion"]][[dispersion_parameter]] <- list()
-  prior_distribution <- readline(paste("Which prior model do you want for",dispersion_parameter,"? ")) # TODO : uniform
-  
-  for(prior_parameter in names(formals(prior_distribution))){
-    simulations[["Dispersion"]][[prior_parameter]] <- numeric()
-  }
-}
-
-# Append "Mutation" part of the list
-mutation_model <- readline(paste("Which mutation model do you want ? "))
-for(mutation_parameter in names(formals(mutation_model))){
-  simulations[["Mutation"]][[mutation_parameter]] <- list()
-  prior_distribution <- readline(paste("Which prior model do you want for",mutation_parameter,"? ")) # TODO : uniform
-  
-  for(prior_parameter in names(formals(prior_distribution))){
-    simulations[["Mutation"]][[prior_parameter]] <- numeric()
-  }
-}

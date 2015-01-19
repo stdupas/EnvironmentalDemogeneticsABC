@@ -192,7 +192,7 @@ constant <- function(x,Y)
   #
   # Returns:
   #   The value of the reaction norm
-  return(y)
+  return(Y)
 }
 
 ################# End of formated Niche Functions <<<<<<<<<<<<<<<<<<<<

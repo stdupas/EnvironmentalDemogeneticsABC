@@ -14,10 +14,7 @@
 #### Library to download ####
 #############################
 
-library(rgdal)
 library(raster)
-library(MASS)
-library(Geneland)
 library(ape)
 library(stringr)
 library(lattice)

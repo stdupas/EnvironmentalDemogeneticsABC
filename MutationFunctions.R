@@ -1,3 +1,6 @@
+stepWiseMutationModel <- function(){
+  
+}
 
 stepWiseMutationModel <- function(coaltable,initial_genetic_value,stepvalue)
 {

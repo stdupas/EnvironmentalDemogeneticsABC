@@ -258,4 +258,57 @@ nicheFunctionForRasterLayer <- function(nicheFunction, rasterLayer, args){
   
 }
 
+geometricMean = function(x, na.rm=TRUE){
+  #  A vectorized, zero- and NA-tolerant function for calculating geometric mean in R. The verbose mean calculation involving length(x) is necessary for the cases where x contains non-positive values.
+  #
+  # Args:
+  #   x: an array
+  #
+  # Returns:
+  #   the geometric mean of the array
+  exp(sum(log(x[x > 0]), na.rm=na.rm) / length(x))
+}
+
+nicheFunctionForRasterStack <- function(functionList, rasterStack, args){
+  # Function to apply various niche functions to each layer of a rasterStack, combining them with a geometric mean. 
+  #
+  # Args:
+  #   nichesFunctions: an ordered list containing the names of the niche functions which are called. Must be in the same order as rasterLayer and args
+  #   rasterStack: the rasterstack of environmental values used to compute niche function.
+  #   args : an ordered list containing  the lists of arguments necessary to call each niche function. 
+  # 
+  # Returns:
+  #   A raster with values corresponding to the norm reaction
+  
+  # rearrange the list to get each element to be applied in an apply in the same index level
+  X <- list(r1=list(rasterStack[[1]], functionList[[1]], args[[1]]),
+            r2=list(rasterStack[[2]], functionList[[2]], args[[2]]))
+  
+  # Apply over each layer
+  reactionNorm <- lapply(X, function(x){do.call(x[[2]], c(x[[1]], x[[3]]))})
+  
+  # Transform rasters to matrix
+  unroll <- sapply(X=reactionNorm, FUN=getValues)
+  
+  # Combine the response with a geometric mean : gives a vector
+  response <- apply(X=unroll, FUN=geometricMean, MARGIN=1)
+  
+  # Format the output
+  rasterModel <- rasterStack[[1]]
+  names(rasterModel) <- "Response"
+  values(rasterModel) <- response
+
+  return(rasterModel)
+  
+  # Ex:*
+  # functionList <- list(conquadraticSkewed1, linearPositiveTwoParameters)
+  # rasterStack <- stack(list("BIO1"=raster(matrix(Data2$BIO1,nrow=1,ncol=4),xmn=0,xmx=4,ymn=0,ymx=1),
+  #                                         "BIO12"=raster(matrix(Data2$BIO12,nrow=1,ncol=4),xmn=0,xmx=4,ymn=0,ymx=1)))
+  # args <- list(list(Xmin=0, Xmax=10, Xopt=5, Yopt=1),list(X0=0, slope=1/2))
+  # nicheFunctionForRasterStack(functionList, rasterStack, args)
+  
+}
+
+
 ################# End of Applying Niche Functions to Objects <<<<<<<<<<<<<<<<<<<<<<<
+

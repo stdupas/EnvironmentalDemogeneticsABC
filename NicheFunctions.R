@@ -281,8 +281,9 @@ nicheFunctionForRasterStack <- function(functionList, rasterStack, args){
   #   A raster with values corresponding to the norm reaction
   
   # rearrange the list to get each element to be applied in an apply in the same index level
-  X <- list(r1=list(rasterStack[[1]], functionList[[1]], args[[1]]),
-            r2=list(rasterStack[[2]], functionList[[2]], args[[2]]))
+  X <- lapply(X=1:length(names(rasterStack)), 
+              FUN=function(i, rasterStack){assign(paste("r",i), list(rasterStack[[i]], functionList[[i]], args[[i]])) },
+              rasterStack)
   
   # Apply over each layer
   reactionNorm <- lapply(X, function(x){do.call(x[[2]], c(x[[1]], x[[3]]))})
@@ -302,6 +303,7 @@ nicheFunctionForRasterStack <- function(functionList, rasterStack, args){
   
   # Ex:*
   # functionList <- list(conquadraticSkewed1, linearPositiveTwoParameters)
+  # Data2 <- data.frame(BIO1=c(300,120,120,400),BIO12=c(2000,350,350,2900)) 
   # rasterStack <- stack(list("BIO1"=raster(matrix(Data2$BIO1,nrow=1,ncol=4),xmn=0,xmx=4,ymn=0,ymx=1),
   #                                         "BIO12"=raster(matrix(Data2$BIO12,nrow=1,ncol=4),xmn=0,xmx=4,ymn=0,ymx=1)))
   # args <- list(list(Xmin=0, Xmax=10, Xopt=5, Yopt=1),list(X0=0, slope=1/2))

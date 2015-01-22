@@ -149,5 +149,5 @@ askListOfParameters <- function(rasterStack, nb_simulations){
   Niche <- listOfNicheParameters(rasterStack=rasterStack, nb_simulations = nb_simulations)
   Dispersion <- listOfDispersionParameters(nb_simulations = nb_simulations)
   Mutation <- listOfMutationParameters(nb_simulations = nb_simulations)
-  return(c(Niche,Dispersion,Mutation))
+  return(list("Niche" = Niche, "Dispersion" = Dispersion, "Mutation" = Mutation))
 }

@@ -151,3 +151,62 @@ askListOfParameters <- function(rasterStack, nb_simulations){
   Mutation <- listOfMutationParameters(nb_simulations = nb_simulations)
   return(list("Niche" = Niche, "Dispersion" = Dispersion, "Mutation" = Mutation))
 }
+
+referenceTableFromList <- function(ParamList){
+  # Makes a reference table for abc inference, with all values of parameters sampled from their prior distribution.
+  # 
+  # Args :
+  #   ParamList : the list constructed when asking user with askListOfParameters function
+  #
+  # Returns :
+  #   The reference table
+  
+  ### Find niche informations and prior sampling values :
+  niche <- c()
+  nicheNames <- c()
+  
+  # Loop over the layers of rasterStack
+  for(bioLayer in names(ParamList[["Niche"]])){
+    foo <- ParamList[["Niche"]][[bioLayer]][1]
+    # Loop over the parameters of the model, omitting the first case (containing the name of the model used)
+    for(parameter in names(ParamList[["Niche"]][[bioLayer]][-1])){
+      # construct the full name of the parameter
+      toto <- paste("Niche",bioLayer, foo, parameter, sep=".")
+      
+      niche <- rbind(niche, ParamList[["Niche"]][[bioLayer]][[parameter]][["Values"]])
+      nicheNames <- c(nicheNames, toto)
+    }
+  }
+  rownames(niche) <- nicheNames
+  
+  ### Find dispersion informations and prior sampling values :
+  dispersion <- c()
+  dispersionNames <- c()
+  
+  # Loop over the parameters of the model, omitting the first case (containing the name of the model used)
+  for(parameter in names(ParamList[["Dispersion"]][-1])){
+    # construct the full name of the parameter
+    toto <- paste("Dispersion", ParamList[["Dispersion"]][[1]], parameter, sep=".")
+    
+    dispersion <- rbind(dispersion, ParamList[["Dispersion"]][[parameter]][["Values"]])
+    dispersionNames <- c(dispersionNames, toto)
+  }
+  rownames(dispersion) <- dispersionNames
+  
+  ### Find mutation informations and prior sampling values :
+  mutation <- c()
+  mutationNames <- c()
+  
+  # Loop over the parameters of the model, omitting the first case (containing the name of the model used)
+  for(parameter in names(ParamList[["Mutation"]][-1])){
+    # construct the full name of the parameter
+    toto <- paste("Mutation", ParamList[["Mutation"]][[1]], parameter, sep=".")
+    
+    mutation <- rbind(mutation, ParamList[["Mutation"]][[parameter]][["Values"]])
+    mutationNames <- c(mutationNames, toto)
+  }
+  rownames(mutation) <- mutationNames
+  
+  ### Concatenate all
+  return(rbind(niche, dispersion, mutation))
+}

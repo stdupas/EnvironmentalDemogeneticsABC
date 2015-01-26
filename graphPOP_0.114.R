@@ -14,13 +14,11 @@
 #### Library to download ####
 #############################
 
-#library(rgdal)
+
 library(raster)
-#library(MASS)
-#library(Geneland)
 library(ape)
-#library(stringr)
-#library(lattice)
+library(stringr)
+library(lattice)
 #library(RNetCDF)
 
 ####################################################
@@ -65,39 +63,6 @@ Aggregate_and_adjust_raster_to_data <- function(Envir_raster_stack,release,recov
   }
   Envir_raster_stack
 }
-
-ReactNorm <- function(X,p,shapes)
-{
-  # ReactNorm computes reaction norm value and geometric mean of the reaction norms for each variable in a data frame
-  #
-  # Args: 
-  #   X: matrix of environemental variables values (rows: cell number, columns: variable name)
-  #   p: parameter values of the reaction norm for each environmental variable
-  #   shapes: is the shape of the reaction norm
-  # Returns: 
-  #  The reaction norm vector corresponding to the environmental variables
-  Y=X
-  for (shape in as.character(levels(as.factor(shapes))))
-  {
-    variables = colnames(p)[which(shapes==shape)]
-    Y[,variables]=switch(shape,
-           enveloppe=enveloppe(X=subset(X,select=variables),p=p),
-           envelin=envelinear(X=subset(X,select=variables),p=p),
-           envloglin=envelinear(X=subset(X,select=variables),p=p,log=TRUE),
-           loG = log(x=subset(X,select=variables)),
-           linear = linear(X=subset(X,select=variables),p=p),
-           linearPositive = linearPositive(X=subset(X,select=variables),p=p,Log=FALSE),
-           conquadratic=conquadratic(X=subset(X,select=variables),p=p),
-           conquadraticskewed=conquadraticskewed(X=subset(X,select=variables),p=p),
-           conquadraticsq=conquadraticsq(X=subset(X,select=variables),p=p),
-           conquadraticskewedsq=conquadraticskewedsq(X=subset(X,select=variables),p=p),
-           constant=constant(X=subset(X,select=variables),p=p)
-    )
-  }
-  Y=cbind(Y,Y=apply(Y, 1, prod)^(1/dim(p)[2])) # geometric mean
-  Y
-}
-
 
 Show_Niche <- function(BBox,nb_points,p,shapes=c(BIO1="conquadraticskewed",BIO12="conquadraticskewed")) # non terminé
 {

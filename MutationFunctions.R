@@ -1,4 +1,3 @@
-
 stepWiseMutationModel <- function(coaltable,initial_genetic_value,stepvalue)
 {
   # Compute a change in the genetic value along a branch a a coalescent 

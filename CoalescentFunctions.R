@@ -187,3 +187,11 @@ remainingNodes <- function(cell, cellIdOfNodes)
   #   cellIdOfNodes: gives the nodes localization
   return(which(cellIdOfNodes==cell))
 }
+
+coalist_2_coaltable <- function(coalist)
+{
+  coaldf <- data.frame(Reduce(rbind,coalist))
+  coaltable <- coaldf[rep(1:dim(coaldf)[1],unlist(lapply(coaldf$coalescing, length))),]
+  coaltable[,c("coalescing","br_length","mutations")] <- unlist(coaldf[,c("coalescing","br_length","mutations")])
+  coaltable
+}

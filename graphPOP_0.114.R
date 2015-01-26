@@ -14,13 +14,13 @@
 #### Library to download ####
 #############################
 
-library(rgdal)
+#library(rgdal)
 library(raster)
-library(MASS)
-library(Geneland)
+#library(MASS)
+#library(Geneland)
 library(ape)
-library(stringr)
-library(lattice)
+#library(stringr)
+#library(lattice)
 #library(RNetCDF)
 
 ####################################################

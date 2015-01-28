@@ -39,6 +39,7 @@ mutation_rate=1E-4
 ###### Asking List to the user
 # ParamList <- askListOfParameters(rasterStack=rasterStack, nb_simulations=10)
 # save(ParamList, file = "ParamList.RData")
+
 # Or load it from working directory
 ParamList <- load("ParamList.RData")
 
@@ -46,25 +47,16 @@ ParamList <- load("ParamList.RData")
 
 
 
-######################### Using Functions >>>>>
+######################### Using Functions >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# get the reference table
+referenceTable <- referenceTableFromList(ParamList)
+# just imagine you pass the reference table into an apply function :
+parameters <- referenceTable[,1]
+
 
 ##### Get the carrying capacity map :
-# get the function List
-functionList <- lapply(X = names(ParamList[["Niche"]]), 
-                       FUN = function(x, ParamList){ParamList[["Niche"]][[x]][[1]]}, 
-                       ParamList=ParamList)
-
-# get the list of arguments :
-
-
-response <-nicheFunctionForRasterStack(functionList=list(conquadraticSkewed1, linearPositiveTwoParameters), 
-                                       rasterStack=stack(list("BIO1"=raster(matrix(Data2$BIO1,nrow=1,ncol=4),xmn=0,xmx=4,ymn=0,ymx=1), 
-                                                              "BIO12"=raster(matrix(Data2$BIO12,nrow=1,ncol=4),xmn=0,xmx=4,ymn=0,ymx=1)))
-                                       , args=list(list(Xmin=0, Xmax=10, Xopt=5, Yopt=1),list(X0=0, slope=1/2)))
-
-response <-nicheFunctionForRasterStack(functionList=list(conquadraticSkewed1, linearPositiveTwoParameters), 
-                            rasterStack=stack(list("BIO1"=raster(matrix(Data2$BIO1,nrow=1,ncol=4),xmn=0,xmx=4,ymn=0,ymx=1), 
-                                                   "BIO12"=raster(matrix(Data2$BIO12,nrow=1,ncol=4),xmn=0,xmx=4,ymn=0,ymx=1)))
-                            , args=list(list(Xmin=0, Xmax=10, Xopt=5, Yopt=1),list(X0=0, slope=1/2)))
+response <- nicheFunctionForRasterStack(functionList = getFunctionList(ParamList = ParamList), 
+                                        rasterStack = rasterStack,
+                                        args = getArgsList(simulation=1, ParamList = ParamList))
 
 values(rasK)= as.matrix(ReactNorm(X=values(rasterStack),p=pK,shapes=shapesK)[,"Y"])

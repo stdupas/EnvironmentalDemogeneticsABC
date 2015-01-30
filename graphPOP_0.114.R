@@ -740,7 +740,7 @@ check_ReactionNorm <- function(object)
 
 
 setClass("ReactionNorm",representation(shapes = "character",
-                                       p="matrix"),validity = check_ReactNorm)
+                                       p="matrix"),validity = check_ReactionNorm)
 
 setClass("DispersionModel", representation(ID="numeric",
                                            shapeDisp="character",

@@ -16,6 +16,7 @@ source("DispersionFunctions.R")
 source("MutationFunctions.R")
 source("CoalescentFunctions.R")
 source("PriorFunctions.R")
+source("MarkovProcess.R")
 
 ### Sourcing Libraries
 library(raster)
@@ -41,7 +42,7 @@ mutation_rate=1E-4
 # save(ParamList, file = "ParamList.RData")
 
 # Or load it from working directory
-ParamList <- load("ParamList.RData")
+load("ParamList.RData")
 
 ########## end of parameters initialisation <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -53,10 +54,27 @@ referenceTable <- referenceTableFromList(ParamList)
 # just imagine you pass the reference table into an apply function :
 parameters <- referenceTable[,1]
 
+#### Imagine we are looping over simulations of coalescent :
+simulation <- 1
 
-##### Get the carrying capacity map :
-response <- nicheFunctionForRasterStack(functionList = getFunctionList(ParamList = ParamList), 
+# Get the carrying capacity map :
+K <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = ParamList), 
                                         rasterStack = rasterStack,
-                                        args = getArgsList(simulation=1, ParamList = ParamList))
+                                        args = getArgsListNiche(simulation=1, ParamList = ParamList))
 
-values(rasK)= as.matrix(ReactNorm(X=values(rasterStack),p=pK,shapes=shapesK)[,"Y"])
+# Get growth rate /!\ For the moment r is strictely equal to K ! TODO : add a box in ParamList when asking to the user
+r <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = ParamList), 
+                                 rasterStack = rasterStack,
+                                 args = getArgsListNiche(simulation=1, ParamList = ParamList))
+
+# Get migration matrix :
+kernelMatrix <- dispersionFunctionForRasterLayer(dispersionFunction=getFunctionDispersion(ParamList),
+                                           rasterLayer=rasterStack[[1]], 
+                                           args=getArgsListDispersion(simulation=simulation, ParamList=ParamList))
+
+migrationMatrix <- migrationRateMatrix(kernelMatrix)
+
+# Get transition matrix :
+transitionmatrice <- transitionMatrixBackward(r=values(r), K=values(K), migration= migrationMatrix)
+transition_forward <- transitionMatrixForward(r=values(r), K=values(K), migration= migrationMatrix, meth="non_overlap")
+

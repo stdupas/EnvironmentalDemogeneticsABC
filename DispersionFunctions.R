@@ -152,11 +152,11 @@ dispersionFunctionForRasterLayer <- function(dispersionFunction, rasterLayer, ar
   return(dispersion)
 }
 
-migrationRateMatrix <- function(dispersionKernelMatrix){
+migrationRateMatrix <- function(dispersion){
   # Normalizes a matrix of dispersion kernel between cells to get a migration rate matrix between cells.
   #
   # Args:
-  #   dispersionKernelMatrix: a matrix representing the values of a specified kernel (function of distances between cells)
+  #   dispersion: a matrix representing the values of a specified kernel (function of distances between cells)
   #
   # Returns:
   #   A migration rate matrix (note that rowSums and colSums are not 1: cause of bordure effect, individuals go "out of the world")

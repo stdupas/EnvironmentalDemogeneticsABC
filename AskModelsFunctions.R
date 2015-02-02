@@ -146,10 +146,13 @@ askListOfParameters <- function(rasterStack, nb_simulations){
   #
   # Returns : 
   # A list representing the decision tree for parameters.
-  Niche <- listOfNicheParameters(rasterStack=rasterStack, nb_simulations = nb_simulations)
+  print("Please answer the questions for the carrying capacity niche model")
+  NicheK <- listOfNicheParameters(rasterStack=rasterStack, nb_simulations = nb_simulations)
+  print("Please answer the questions for the growth rate niche model")
+  NicheR <- listOfNicheParameters(rasterStack=rasterStack, nb_simulations = nb_simulations)
   Dispersion <- listOfDispersionParameters(nb_simulations = nb_simulations)
   Mutation <- listOfMutationParameters(nb_simulations = nb_simulations)
-  return(list("Niche" = Niche, "Dispersion" = Dispersion, "Mutation" = Mutation))
+  return(list("NicheK" = NicheK, "NicheR" = NicheR, "Dispersion" = Dispersion, "Mutation" = Mutation))
 }
 
 referenceTableFromList <- function(ParamList){

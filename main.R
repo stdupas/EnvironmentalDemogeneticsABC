@@ -58,14 +58,14 @@ parameters <- referenceTable[,1]
 simulation <- 1
 
 # Get the carrying capacity map :
-K <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = ParamList), 
+K <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = ParamList, sublist="NicheK"), 
                                         rasterStack = rasterStack,
-                                        args = getArgsListNiche(simulation=simulation, ParamList = ParamList))
+                                        args = getArgsListNiche(simulation=simulation, ParamList = ParamList, sublist="NicheK"))
 
-# Get growth rate /!\ For the moment r is strictely equal to K ! TODO : add a box in ParamList when asking to the user
-r <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = ParamList), 
+# Get growth rate map :
+r <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = ParamList, sublist="NicheR"), 
                                  rasterStack = rasterStack,
-                                 args = getArgsListNiche(simulation=simulation, ParamList = ParamList))
+                                 args = getArgsListNiche(simulation=simulation, ParamList = ParamList, sublist="NicheR"))
 
 # Get migration matrix :
 kernelMatrix <- dispersionFunctionForRasterLayer(dispersionFunction=getFunctionDispersion(ParamList),

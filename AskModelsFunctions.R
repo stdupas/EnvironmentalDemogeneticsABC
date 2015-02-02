@@ -215,15 +215,16 @@ referenceTableFromList <- function(ParamList){
 }
 
 
-getFunctionListNiche <- function(ParamList){
+getFunctionListNiche <- function(ParamList, sublist){
   # Get a list of niche models functions stored in ParamList
   #
   # Args:
   #   ParamList: the list of model parameters created using askListOfParameters function
+  #   sub: caracetr vector, the sublist (NicheR or NicheK) to explore
   #
   # Returns:
   #   the list of niche model functions used
-  lapply(X = names(ParamList[["Niche"]]), FUN = function(x, ParamList){ParamList[["Niche"]][[x]][[1]]}, ParamList=ParamList)
+  lapply(X = names(ParamList[[sublist]]), FUN = function(x, ParamList){ParamList[[sublist]][[x]][[1]]}, ParamList=ParamList)
 }
 
 getFunctionDispersion <- function(ParamList){
@@ -238,7 +239,7 @@ getFunctionDispersion <- function(ParamList){
 }
 
 
-getArgsListNiche <- function(simulation, ParamList){
+getArgsListNiche <- function(simulation, ParamList, sublist){
   # Get a list of parameters of niche models functions and their values stored in ParamList
   #
   # Args:
@@ -252,15 +253,15 @@ getArgsListNiche <- function(simulation, ParamList){
   argsList <- list()
   
   # Loop over the layers of environmental variables
-  for(layer in names(ParamList[["Niche"]])){
+  for(layer in names(ParamList[[sublist]])){
     # initialize the vectors
     argsValues <- c()
     argsNames <- c()
     
     # Loop over the parameters (omitting the first element of the list, containing the name of the model)
-    for(param in names(ParamList[["Niche"]][[layer]])[-1]){
+    for(param in names(ParamList[[sublist]][[layer]])[-1]){
       argsNames <- c(argsNames, as.character(param))
-      argsValues <- c(argsValues, value=ParamList[["Niche"]][[layer]][[param]][["Values"]][simulation])
+      argsValues <- c(argsValues, value=ParamList[[sublist]][[layer]][[param]][["Values"]][simulation])
     }
     names(argsValues)<- argsNames
     argsList[[length(argsList)+1]] <- as.list(argsValues)

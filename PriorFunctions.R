@@ -21,7 +21,7 @@ beta <- function(n, shape1, shape2){
   #
   # Returns:
   #   A random sample
-  return(rbeta(n, shape1, shap2))
+  return(rbeta(n, shape1, shape2))
 }
 
 normal <- function(n, mean, sd){
@@ -46,5 +46,6 @@ gamma <- function(n, shape){
   #
   # Returns:
   #   A random sample
+  return(rgamma(n, shape))
 }
 

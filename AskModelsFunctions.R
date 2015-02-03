@@ -146,10 +146,13 @@ askListOfParameters <- function(rasterStack, nb_simulations){
   #
   # Returns : 
   # A list representing the decision tree for parameters.
-  Niche <- listOfNicheParameters(rasterStack=rasterStack, nb_simulations = nb_simulations)
+  print("Please answer the questions for the carrying capacity niche model")
+  NicheK <- listOfNicheParameters(rasterStack=rasterStack, nb_simulations = nb_simulations)
+  print("Please answer the questions for the growth rate niche model")
+  NicheR <- listOfNicheParameters(rasterStack=rasterStack, nb_simulations = nb_simulations)
   Dispersion <- listOfDispersionParameters(nb_simulations = nb_simulations)
   Mutation <- listOfMutationParameters(nb_simulations = nb_simulations)
-  return(list("Niche" = Niche, "Dispersion" = Dispersion, "Mutation" = Mutation))
+  return(list("NicheK" = NicheK, "NicheR" = NicheR, "Dispersion" = Dispersion, "Mutation" = Mutation))
 }
 
 referenceTableFromList <- function(ParamList){
@@ -212,19 +215,31 @@ referenceTableFromList <- function(ParamList){
 }
 
 
-getFunctionList <- function(ParamList){
+getFunctionListNiche <- function(ParamList, sublist){
   # Get a list of niche models functions stored in ParamList
+  #
+  # Args:
+  #   ParamList: the list of model parameters created using askListOfParameters function
+  #   sub: caracetr vector, the sublist (NicheR or NicheK) to explore
+  #
+  # Returns:
+  #   the list of niche model functions used
+  lapply(X = names(ParamList[[sublist]]), FUN = function(x, ParamList){ParamList[[sublist]][[x]][[1]]}, ParamList=ParamList)
+}
+
+getFunctionDispersion <- function(ParamList){
+  # Get a list of dispersion models functions stored in ParamList
   #
   # Args:
   #   ParamList: the list of model parameters created using askListOfParameters function
   #
   # Returns:
   #   the list of niche model functions used
-  lapply(X = names(ParamList[["Niche"]]), FUN = function(x, ParamList){ParamList[["Niche"]][[x]][[1]]}, ParamList=ParamList)
+  return(ParamList[["Dispersion"]][[1]])
 }
 
 
-getArgsList <- function(simulation, ParamList){
+getArgsListNiche <- function(simulation, ParamList, sublist){
   # Get a list of parameters of niche models functions and their values stored in ParamList
   #
   # Args:
@@ -238,18 +253,44 @@ getArgsList <- function(simulation, ParamList){
   argsList <- list()
   
   # Loop over the layers of environmental variables
-  for(layer in names(ParamList[["Niche"]])){
+  for(layer in names(ParamList[[sublist]])){
     # initialize the vectors
     argsValues <- c()
     argsNames <- c()
     
     # Loop over the parameters (omitting the first element of the list, containing the name of the model)
-    for(param in names(ParamList[["Niche"]][[layer]])[-1]){
+    for(param in names(ParamList[[sublist]][[layer]])[-1]){
       argsNames <- c(argsNames, as.character(param))
-      argsValues <- c(argsValues, value=ParamList[["Niche"]][[layer]][[param]][["Values"]][simulation])
+      argsValues <- c(argsValues, value=ParamList[[sublist]][[layer]][[param]][["Values"]][simulation])
     }
     names(argsValues)<- argsNames
     argsList[[length(argsList)+1]] <- as.list(argsValues)
   }
   return(argsList)
+}
+
+getArgsListDispersion <- function(simulation, ParamList){
+  # Get a list of parameters of dispersion models functions and their values stored in ParamList
+  #
+  # Args:
+  #   simulations : the index in which to get the value stored in the vector Values (by prior sampling) in ParamList.
+  #   ParamList: the list of model parameters created using askListOfParameters function
+  #
+  # Returns:
+  #   the list of niche model functions parameters 
+  
+  # initialize the list of parameters
+  argsList <- list()
+  
+  # initialize the vectors
+  argsValues <- c()
+  argsNames <- c()
+  
+  # Loop over the parameters (omitting the first element of the list, containing the name of the model)
+  for(param in names(ParamList[["Dispersion"]])[-1]){
+    argsNames <- c(argsNames, as.character(param))
+    argsValues <- c(argsValues, value=ParamList[["Dispersion"]][[param]][["Values"]][simulation])
+  }
+  names(argsValues)<- argsNames
+  return(as.list(argsValues))
 }

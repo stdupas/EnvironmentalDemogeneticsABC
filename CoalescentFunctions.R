@@ -138,12 +138,12 @@ simul_coalescent <- function(geneticData, rasterStack, pK, pr, shapesK, shapesr,
   # forward_log_prob is the average per generation of the log probability of the forward movements of the genes in the landscape
 }
 
-simul_coalescent_only <- function(tipsDemeNumbers,transitionForward, transitionBackward, K)
+simul_coalescent_only <- function(tipDemes,transitionForward, transitionBackward, K)
 {
   # Simulates a coalescent in a lansdcape characterized by an environmental variable rasterStack, for a species with a given niche function. 
   #
   # Args:
-  #   tipsDemeNumbers : deme number in the lanscape  of the individuals we study the coalescence
+  #   tipDemes : deme number in the lanscape  of the individuals we study the coalescence
   #                       (corresponds to lines and columns in the transition matrixes)
   #   K : vector of carrying capacity for coalescence probability calculation
   #   transitionForward : forward transtion probability matrix among demes to calculate forward likelihood
@@ -163,7 +163,7 @@ simul_coalescent_only <- function(tipsDemeNumbers,transitionForward, transitionB
   # trF = matrix(c(1/4,1/2,1/2,1/8,1/3,1/3,1/6,1/6,1/2,1/4,1/8,1/8,0,0,2/5,0),nrow=4,ncol=4,byrow=TRUE)
   # K=c(4,3,1,5)
   # tipsDemes = c(1,4,2,2,1,1,2,3);names(tipsDemes)=1:8
-  # simul_coalescent_only(tipsDemeNumbers=tipsDemes,transitionForward=trF,transitionBackward=trB,K=K)
+  # simul_coalescent_only(tipDemes=tipsDemes,transitionForward=trF,transitionBackward=trB,K=K)
 
   #### Initialize variables needed for the coalescent simulation process :
   
@@ -173,14 +173,14 @@ simul_coalescent_only <- function(tipsDemeNumbers,transitionForward, transitionB
   N <- round(K)
   coalescent = list() 
   # Nodes are initialized : 1 individual <=> 1 node
-  nodes = as.numeric(names(tipsDemeNumbers))
+  nodes = as.numeric(names(tipDemes))
   names(nodes)=as.character(nodes)
   # initiation of vectors hosting the deme number of descendents and ancestors in the coalescing loop :
-  ancestorsDemeNumbers <- descendentsDemeNumbers <- tipsDemeNumbers 
+  ancestorsDemes <- descendentDemes <- tipDemes 
   # A list of demes with all the genes remaining in each deme. Initialized and optimized.
   nodes_remaining_by_deme = list()
   deme <- as.array(seq(from=1,to=length(K),by=1))
-  nodes_remaining_by_deme <- lapply(X=deme, FUN=remainingNodes, descendentsDemeNumbers)
+  nodes_remaining_by_deme <- lapply(X=deme, FUN=remainingNodes, descendentDemes)
   
   # Number of coalescence events :
   single_coalescence_events=0 
@@ -192,13 +192,13 @@ simul_coalescent_only <- function(tipsDemeNumbers,transitionForward, transitionB
     
     ## Migration
     # we localize the ancestors in the landscape by sampling in the backward transition matrix. Optimized.
-    names_node <- names(ancestorsDemeNumbers)
-    ancestorsDemeNumbers <- apply(X=as.array(1:length(ancestorsDemeNumbers)), MARGIN=1, FUN=backwardParentsLocalizationSampling, rasterStack, transitionBackward, descendentsDemeNumbers) 
-    names(ancestorsDemeNumbers) <- names_node
+    names_node <- names(ancestorsDemes)
+    ancestorsDemes <- apply(X=as.array(1:length(ancestorsDemes)), MARGIN=1, FUN=backwardParentsLocalizationSampling, rasterStack, transitionBackward, descendentDemes) 
+    names(ancestorsDemes) <- names_node
     # once we know the ancestor deme numbers, we calculate the forward dispersion probability of the event
     time=time+1; if (round(time/10)*10==time) {print(time)}
-    prob_forward[time] = sum(log(transitionForward[ancestorsDemeNumbers,descendentsDemeNumbers]))
-    number_of_nodes_over_generations = number_of_nodes_over_generations + length(descendentsDemeNumbers)
+    prob_forward[time] = sum(log(transitionForward[ancestorsDemes,descendentDemes]))
+    number_of_nodes_over_generations = number_of_nodes_over_generations + length(descendentDemes)
     
     ## Coalescence
     
@@ -206,7 +206,7 @@ simul_coalescent_only <- function(tipsDemeNumbers,transitionForward, transitionB
     for (deme in 1:length(K))#deme=1;deme=2;deme=3;deme=4;deme=5;deme=26;deme=10
     {
       # add a local variable, easier to manipulate than the reference to a list...
-      nodes_remaining_in_the_deme = nodes_remaining_by_deme[[deme]] <- names(which(ancestorsDemeNumbers==deme))
+      nodes_remaining_in_the_deme = nodes_remaining_by_deme[[deme]] <- names(which(ancestorsDemes==deme))
       
       # we obtain the identities in the geneticData table (line) of the nodes remaining in the deme
       if (length(nodes_remaining_in_the_deme)>1)
@@ -234,9 +234,9 @@ simul_coalescent_only <- function(tipsDemeNumbers,transitionForward, transitionB
             nodes=append(nodes,new_node)
             names(nodes)[length(nodes)]=new_node
             
-            # updating of vector ancestorsDemeNumbers (adding the deme number of the new node and removing the nodes that disapeared)
-            ancestorsDemeNumbers <- append(ancestorsDemeNumbers[!(names(ancestorsDemeNumbers)%in%nodes_that_coalesce)],deme)
-            names(ancestorsDemeNumbers)[length(ancestorsDemeNumbers)]<-new_node
+            # updating of vector ancestorsDemes (adding the deme number of the new node and removing the nodes that disapeared)
+            ancestorsDemes <- append(ancestorsDemes[!(names(ancestorsDemes)%in%nodes_that_coalesce)],deme)
+            names(ancestorsDemes)[length(ancestorsDemes)]<-new_node
             # adds the event to the list coalescent: time, which node coalesced, and the number of the new node
             coalescent[[single_coalescence_events]] <- list(time=time,coalescing=as.numeric(nodes_that_coalesce),new_node=new_node)
             # updating the nodes vector for the deme
@@ -249,7 +249,7 @@ simul_coalescent_only <- function(tipsDemeNumbers,transitionForward, transitionB
       } # end of the condition "there are more than 1 individual in the deme
     } # end of the loop across the demes
     
-    descendentsDemeNumbers = ancestorsDemeNumbers
+    descendentDemes = ancestorsDemes
   } # end of the backward generation while coalescence loop
   list(coalescent=coalescent,forward_log_prob=sum(prob_forward)/number_of_nodes_over_generations)
   # forward_log_prob is the average per generation of the log probability of the forward movements of the genes in the landscape

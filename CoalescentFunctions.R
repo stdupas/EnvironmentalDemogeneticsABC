@@ -56,7 +56,7 @@ simul_coalescent <- function(geneticData, rasterStack, pK, pr, shapesK, shapesr,
   parent_cell_number_of_nodes <- cell_number_of_nodes 
   # A list of cells with all the genes remaining in each cell. Initialized and optimized.
   nodes_remaining_by_cell = list()
-  cell <- as.array(seq(from=1,to=ncell(rasterStack),by=1))
+  cell <- as.array(seq(from=1,to=length(K),by=1))
   nodes_remaining_by_cell <- lapply(X=cell, FUN=remainingNodes, cell_number_of_nodes)
   
   # Number of coalescence events :
@@ -138,52 +138,170 @@ simul_coalescent <- function(geneticData, rasterStack, pK, pr, shapesK, shapesr,
   # forward_log_prob is the average per generation of the log probability of the forward movements of the genes in the landscape
 }
 
-parentalityAttributationWithinACell <- function(nodesRemainingInCell, N, cell)
+simul_coalescent_only <- function(tipsDemeNumbers,transitionForward, transitionBackward, K)
 {
-  # Create a function for parentality attribution within a cell used in simul_coalescent
+  # Simulates a coalescent in a lansdcape characterized by an environmental variable rasterStack, for a species with a given niche function. 
   #
   # Args:
-  #   nodesRemainingInCell:
-  #   N: a vector giving the population size in each cell
-  #   cell: numeric giving the cell we want to analyse
+  #   tipsDemeNumbers : deme number in the lanscape  of the individuals we study the coalescence
+  #                       (corresponds to lines and columns in the transition matrixes)
+  #   K : vector of carrying capacity for coalescence probability calculation
+  #   transitionForward : forward transtion probability matrix among demes to calculate forward likelihood
+  #   transitionBackward : backward transition probability matrix among demes to simulate backard movements
+  # Returns :
+  #   A list with all coalescence informations :
+  #   List of 4
+  #    $ coalescent      :List of "i" (with "i" the number of coalescence events, coalescence involving multiple individuals counts for 1 event.)
+  #      ..$ :List of 5
+  #      ..  ..$ time           : time of coalescence
+  #      ..  ..$ coalescing     : coalescing nodes
+  #      ..  ..$ new_node       : "new" in a backward sense, ie the node resulting of the coalescence of the coalescing nodes
+  #      ..  ..$ br_length      : the length of the branches
+  #      ..  ..$ mutations      : the number of mutations which occured along the branch
+  # Example
+  # trB = matrix(c(1/4,1/2,1/4,0,1/3,1/3,1/6,1/6,1/2,1/4,1/8,1/8,1/5,2/5,2/5,0),nrow=4,ncol=4,byrow=TRUE)
+  # trF = matrix(c(1/4,1/2,1/2,1/8,1/3,1/3,1/6,1/6,1/2,1/4,1/8,1/8,0,0,2/5,0),nrow=4,ncol=4,byrow=TRUE)
+  # K=c(4,3,1,5)
+  # tipsDemes = c(1,4,2,2,1,1,2,3);names(tipsDemes)=1:8
+  # simul_coalescent_only(tipsDemeNumbers=tipsDemes,transitionForward=trF,transitionBackward=trB,K=K)
+
+  #### Initialize variables needed for the coalescent simulation process :
+  
+  time=0
+  prob_forward=NA
+  number_of_nodes_over_generations=0
+  N <- round(K)
+  coalescent = list() 
+  # Nodes are initialized : 1 individual <=> 1 node
+  nodes = as.numeric(names(tipsDemeNumbers))
+  names(nodes)=as.character(nodes)
+  # initiation of vectors hosting the deme number of descendents and ancestors in the coalescing loop :
+  ancestorsDemeNumbers <- descendentsDemeNumbers <- tipsDemeNumbers 
+  # A list of demes with all the genes remaining in each deme. Initialized and optimized.
+  nodes_remaining_by_deme = list()
+  deme <- as.array(seq(from=1,to=length(K),by=1))
+  nodes_remaining_by_deme <- lapply(X=deme, FUN=remainingNodes, descendentsDemeNumbers)
+  
+  # Number of coalescence events :
+  single_coalescence_events=0 
+  single_and_multiple_coalescence_events=0
+  
+  ### Simulating the coalescent process :
+  while (length(unlist(nodes_remaining_by_deme))>1) 
+  {
+    
+    ## Migration
+    # we localize the ancestors in the landscape by sampling in the backward transition matrix. Optimized.
+    names_node <- names(ancestorsDemeNumbers)
+    ancestorsDemeNumbers <- apply(X=as.array(1:length(ancestorsDemeNumbers)), MARGIN=1, FUN=backwardParentsLocalizationSampling, rasterStack, transitionBackward, descendentsDemeNumbers) 
+    names(ancestorsDemeNumbers) <- names_node
+    # once we know the ancestor deme numbers, we calculate the forward dispersion probability of the event
+    time=time+1; if (round(time/10)*10==time) {print(time)}
+    prob_forward[time] = sum(log(transitionForward[ancestorsDemeNumbers,descendentsDemeNumbers]))
+    number_of_nodes_over_generations = number_of_nodes_over_generations + length(descendentsDemeNumbers)
+    
+    ## Coalescence
+    
+    # we now perform coalescence within each deme of the landscape for the ancestors
+    for (deme in 1:length(K))#deme=1;deme=2;deme=3;deme=4;deme=5;deme=26;deme=10
+    {
+      # add a local variable, easier to manipulate than the reference to a list...
+      nodes_remaining_in_the_deme = nodes_remaining_by_deme[[deme]] <- names(which(ancestorsDemeNumbers==deme))
+      
+      # we obtain the identities in the geneticData table (line) of the nodes remaining in the deme
+      if (length(nodes_remaining_in_the_deme)>1)
+      {
+        # Create a function for ancestor attribution within a deme :
+        ancestorDescendentmatrix <- parentalityAttributationWithinADeme(nodesRemainingInDeme=nodes_remaining_in_the_deme, N=N, deme=deme)
+        
+        # Columns of ancestorDescendentmatrix with more than one TRUE allow to identify coalescing individuals :
+        if (any(colSums(ancestorDescendentmatrix)>1) )
+        {
+          #  Loop over all the ancestors in which coalescence event occur
+          for (multiple in which(colSums(ancestorDescendentmatrix)>1)) # multiple<-which(colSums(ancestorDescendentmatrix)>1)[1]
+          {
+            # Record the coalescence event : 
+            single_coalescence_events = single_coalescence_events +1
+            
+            # which(ancestorDescendentmatrix[,multiple]) identifies which node in the column coalesce
+            nodes_that_coalesce = names(which(ancestorDescendentmatrix[,multiple]))
+            
+            # attibutes new node number to the ancestor
+            new_node <- max(nodes)+1
+            # removes the nodes that coalesced from the node vector
+            nodes=nodes[!(names(nodes)%in%nodes_that_coalesce)]
+            # adds them to the nodes vector
+            nodes=append(nodes,new_node)
+            names(nodes)[length(nodes)]=new_node
+            
+            # updating of vector ancestorsDemeNumbers (adding the deme number of the new node and removing the nodes that disapeared)
+            ancestorsDemeNumbers <- append(ancestorsDemeNumbers[!(names(ancestorsDemeNumbers)%in%nodes_that_coalesce)],deme)
+            names(ancestorsDemeNumbers)[length(ancestorsDemeNumbers)]<-new_node
+            # adds the event to the list coalescent: time, which node coalesced, and the number of the new node
+            coalescent[[single_coalescence_events]] <- list(time=time,coalescing=as.numeric(nodes_that_coalesce),new_node=new_node)
+            # updating the nodes vector for the deme
+            nodes_remaining_in_the_deme = nodes_remaining_by_deme[[deme]] <- append(nodes_remaining_in_the_deme[!nodes_remaining_in_the_deme %in% nodes_that_coalesce],new_node)
+            # updates the number of coalescent events 
+            single_and_multiple_coalescence_events = single_and_multiple_coalescence_events + length(nodes_that_coalesce) - 1
+            
+          } #  end of loop over all the ancestors in which coalescence event occur
+        } # end of the if condition "there are coalescing events"
+      } # end of the condition "there are more than 1 individual in the deme
+    } # end of the loop across the demes
+    
+    descendentsDemeNumbers = ancestorsDemeNumbers
+  } # end of the backward generation while coalescence loop
+  list(coalescent=coalescent,forward_log_prob=sum(prob_forward)/number_of_nodes_over_generations)
+  # forward_log_prob is the average per generation of the log probability of the forward movements of the genes in the landscape
+}
+
+
+parentalityAttributationWithinADeme <- function(nodesRemainingInDeme, N, deme)
+{
+  # Create a function for parentality attribution within a deme used in simul_coalescent
+  #
+  # Args:
+  #   nodesRemainingInDeme:
+  #   N: a vector giving the population size in each deme
+  #   deme: numeric giving the deme we want to analyse
   #
   # Returns:
   #   A matrix of parentality attribution. Two nodes coalesce if they have TRUE for the same parent (parents are in columns)
   
-  nbGenesRemaining=length(nodesRemainingInCell)
+  nbGenesRemaining=length(nodesRemainingInDeme)
   
-  # Attribute parents (among K possible parents) to each node present in the cell
-  smp = sample(N[cell],length(nodesRemainingInCell),replace=TRUE)
+  # Attribute parents (among K possible parents) to each node present in the deme
+  smp = sample(N[deme],length(nodesRemainingInDeme),replace=TRUE)
   
-  # A logical matrix in which lines represent the nodes in the cell and column represent their parent :
+  # A logical matrix in which lines represent the nodes in the deme and column represent their parent :
   # (actually, this line is a simple test to transform the parentality info under a TRUE/FALSE form)
-  parentoffspringmatrix <- matrix(smp, nrow=nbGenesRemaining, ncol=N[cell]) == matrix(1:N[cell], nrow=nbGenesRemaining, ncol=N[cell], byrow=TRUE)
-  rownames(parentoffspringmatrix) <- nodesRemainingInCell
+  parentDescendentmatrix <- matrix(smp, nrow=nbGenesRemaining, ncol=N[deme]) == matrix(1:N[deme], nrow=nbGenesRemaining, ncol=N[deme], byrow=TRUE)
+  rownames(parentDescendentmatrix) <- nodesRemainingInDeme
   
-  return(parentoffspringmatrix)
+  return(parentDescendentmatrix)
 }
 
-backwardParentsLocalizationSampling <- function(node, rasterStack, transitionMatrice, CellIdOfNodes)
+backwardParentsLocalizationSampling <- function(node, rasterStack, transitionBackward, DemeIdOfNodes)
 {
   # Localizes the parents in the landscape by sampling in the backward transition matrix.
   #
   # Args:
   #   node: the node from which to set parents localization
-  #   rasterStack: the rasterStack used to define landscape structure (cells)
-  #   transitionMatrice: the transition matrice giving the probability the migrate between cells of the landscape
-  #   CellIdOfNodes: the vector giving nodes localization (giving the number of the cell where each node sits)
+  #   rasterStack: the rasterStack used to define landscape structure (demes)
+  #   transitionBackward: the transition matrice giving the probability the migrate between demes of the landscape
+  #   DemeIdOfNodes: the vector giving nodes localization (giving the number of the deme where each node sits)
   #
   # Returns:
-  #   The number of the cell where the parents are likely to be found
-  return(sample(ncell(rasterStack),size=1,prob=c(transitionMatrice[CellIdOfNodes[node],])))
+  #   The number of the deme where the parents are likely to be found
+  return(sample(length(K),size=1,prob=c(transitionBackward[DemeIdOfNodes[node],])))
 }
 
-remainingNodes <- function(cell, cellIdOfNodes)
+remainingNodes <- function(deme, demeIdOfNodes)
 {
-  # Finds all the nodes remaining a specified cell
+  # Finds all the nodes remaining a specified deme
   #
   # Args:
-  #   cell: a numerci giving the cell in which we want to find the remaining nodes
-  #   cellIdOfNodes: gives the nodes localization
-  return(which(cellIdOfNodes==cell))
+  #   deme: a numerci giving the deme in which we want to find the remaining nodes
+  #   demeIdOfNodes: gives the nodes localization
+  return(which(demeIdOfNodes==deme))
 }

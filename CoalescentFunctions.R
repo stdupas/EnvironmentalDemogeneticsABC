@@ -148,6 +148,7 @@ simul_coalescent_only <- function(tipDemes,transitionForward, transitionBackward
   #   K : vector of carrying capacity for coalescence probability calculation
   #   transitionForward : forward transtion probability matrix among demes to calculate forward likelihood
   #   transitionBackward : backward transition probability matrix among demes to simulate backard movements
+  #
   # Returns :
   #   A list with all coalescence informations :
   #   List of 4

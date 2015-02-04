@@ -156,8 +156,6 @@ simul_coalescent_only <- function(tipDemes,transitionForward, transitionBackward
   #      ..  ..$ time           : time of coalescence
   #      ..  ..$ coalescing     : coalescing nodes
   #      ..  ..$ new_node       : "new" in a backward sense, ie the node resulting of the coalescence of the coalescing nodes
-  #      ..  ..$ br_length      : the length of the branches
-  #      ..  ..$ mutations      : the number of mutations which occured along the branch
   # Example
   # trB = matrix(c(1/4,1/2,1/4,0,1/3,1/3,1/6,1/6,1/2,1/4,1/8,1/8,1/5,2/5,2/5,0),nrow=4,ncol=4,byrow=TRUE)
   # trF = matrix(c(1/4,1/2,1/2,1/8,1/3,1/3,1/6,1/6,1/2,1/4,1/8,1/8,0,0,2/5,0),nrow=4,ncol=4,byrow=TRUE)
@@ -305,3 +303,102 @@ remainingNodes <- function(deme, demeIdOfNodes)
   #   demeIdOfNodes: gives the nodes localization
   return(which(demeIdOfNodes==deme))
 }
+
+coalescent_2_newick <- function(coalescent)
+{
+  # coalescent_2_newick
+  # function that converts coalescent to newick format tree
+  # argument: coalescent list 
+  # value : newwick foramt tree
+  # 
+  # Example
+  # trB = matrix(c(1/4,1/2,1/4,0,1/3,1/3,1/6,1/6,1/2,1/4,1/8,1/8,1/5,2/5,2/5,0),nrow=4,ncol=4,byrow=TRUE)
+  # trF = matrix(c(1/4,1/2,1/2,1/8,1/3,1/3,1/6,1/6,1/2,1/4,1/8,1/8,0,0,2/5,0),nrow=4,ncol=4,byrow=TRUE)
+  # K=c(4,3,1,5)
+  # tipsDemes = c(1,4,2,2,1,1,2,3);names(tipsDemes)=1:8
+  # Coalescent = simul_coalescent_only(tipDemes=tipsDemes,transitionForward=trF,transitionBackward=trB,K=K)
+  # coalescent_2_newick(Coalescent)
+
+  tree=paste(" ",coalescent[[1]][[length(coalescent)]]$new_node," ",sep="")
+  for (i in length(coalescent):1)
+  {
+    Time = coalescent[[1]][[i]]$time
+    coalesc <- as.character(coalescent[[1]][[i]]$coalescing)
+    tree <- str_replace(tree,paste(" ",as.character(coalescent[[1]][[i]]$new_node)," ",sep=""),paste(" ( ",paste(" ",coalesc," :",coalescent[[1]][[i]]$br_length,collapse=" ,",sep=""),") ",sep=""))
+  }
+  tree <- gsub(" ","",paste(tree,";",sep=""))
+  tree
+}
+
+
+plotCoalescentGenetics <- function(coalescent,genetic_table,with_landscape=FALSE,legend_right_move=-.2)
+{
+  # function that plots a coalecent, with tips demes as specific color
+  # argument: coalescent list 
+  #
+  # 
+  # Example
+  # trB = matrix(c(1/4,1/2,1/4,0,1/3,1/3,1/6,1/6,1/2,1/4,1/8,1/8,1/5,2/5,2/5,0),nrow=4,ncol=4,byrow=TRUE)
+  # trF = matrix(c(1/4,1/2,1/2,1/8,1/3,1/3,1/6,1/6,1/2,1/4,1/8,1/8,0,0,2/5,0),nrow=4,ncol=4,byrow=TRUE)
+  # K=c(4,3,1,5)
+  # tipsDemes = c(1,4,2,2,1,1,2,3);names(tipsDemes)=1:8
+  # Coalescent = simul_coalescent_only(tipDemes=tipsDemes,transitionForward=trF,transitionBackward=trB,K=K)
+  # plotCoalesentGenetics(coalescent_2_newick(Coalescent),tipDemes,legend_right_move=.2)
+  
+  par(mfrow=c(1,1),oma=c(0,0,0,4),xpd=TRUE)
+  tipcells <- tipDemes[as.numeric(read.tree(text=coalescent_2_newick(coalescent))$tip.label)]
+   #tipcells <- geneticData$Cell_numbers[as.numeric(coalescent_2_phylog(coalescent)$tip.label)]
+  tipcols = rainbow(ncell(rasK))[tipcells]
+  phylog_format_tree <- coalescent_2_phylog(coalescent)
+  phylog_format_tree$tip.label <- paste(phylog_format_tree$tip.label,genetic_table[order(genetic_table$coalescing)[as.numeric(phylog_format_tree$tip.label)],"genetic_value"],sep=":")
+  plot(phylog_format_tree,direction="downward",tip.color=tipcols)
+  legend("topright", title="demes", cex=0.75, pch=16, col=tipcols[!duplicated(tipcols)], legend=tipcells[!duplicated(tipcols)], ncol=2, inset=c(legend_right_move,0))
+  if (with_landscape) {plot(rasK)}
+}
+
+
+add_br_length_and_mutation <- function(coalescent,mutation_rate)
+{
+  # Adds br_length and mutation to coalescent list
+  # arguments : 
+  # - coalescent: the coalescent list (ordered from present to past)
+  # - mutation_rate: the number of mutation events per generation
+  # - initial_genetic_value
+  # value : the coalescent list with branch lengt and number of mutation events
+  # 
+  # Example
+  # trB = matrix(c(1/4,1/2,1/4,0,1/3,1/3,1/6,1/6,1/2,1/4,1/8,1/8,1/5,2/5,2/5,0),nrow=4,ncol=4,byrow=TRUE)
+  # trF = matrix(c(1/4,1/2,1/2,1/8,1/3,1/3,1/6,1/6,1/2,1/4,1/8,1/8,0,0,2/5,0),nrow=4,ncol=4,byrow=TRUE)
+  # K=c(4,3,1,5)
+  # tipsDemes = c(1,4,2,2,1,1,2,3);names(tipsDemes)=1:8
+  # Coalescent = simul_coalescent_only(tipDemes=tipsDemes,transitionForward=trF,transitionBackward=trB,K=K)
+  # Coalescent_genetics <- add_br_length_and_mutation(Coalescent,mutation_rate=.1)
+  #
+  #
+  tips = NULL
+  internals = NULL
+  nodes = NULL
+  times = NULL
+  for (i in 1:length(coalescent[[1]]))#i=1;i=2
+  {
+    nodes = append(nodes,c(coalescent[[1]][[i]]$coalescing,coalescent[[1]][[i]]$new_node))
+    internals = append(internals,coalescent[[1]][[i]]$new_node)
+    times = append(times,coalescent[[1]][[i]]$time)
+  }
+  nodes = as.numeric(levels(as.factor(c(nodes,internals))));nodes = nodes[order(nodes)]
+  tips = nodes[!((nodes)%in%(internals))]
+  # getting the branch length of each coalescing node
+  for (i in 1:length(coalescent[[1]]))#i=1
+  {
+    for (coalescing in coalescent[[1]][[i]]$coalescing)# coalescing = coalescent[[1]][[i]]$coalescing[1]
+    {
+      if (coalescing %in% tips) {coalescent[[1]][[i]]$br_length <- append(coalescent[[1]][[i]]$br_length,coalescent[[1]][[i]]$time)
+      } else {
+        coalescent[[1]][[i]]$br_length <- append(coalescent[[1]][[i]]$br_length,coalescent[[1]][[i]]$time-times[which(internals==coalescing)]) 
+      } 
+      coalescent[[1]][[i]]$mutations <- rpois(rep(1,length(coalescent[[1]][[i]]$br_length)),coalescent[[1]][[i]]$br_length*mutation_rate)
+    }
+  }
+coalescent
+}
+

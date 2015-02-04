@@ -57,3 +57,74 @@ bigeometricModel <- function(coaltable,initial_genetic_value,stepvalue,mut_param
   }
   coaltable  
 }
+
+#
+#
+#
+## separate resultant and genetic value calculation
+##
+#
+#
+#
+stepWiseMutationModel <- function(mutations)
+{
+  # Simulates a change in the genetic value depending on number of mutations
+  # assuming stepwise mutation model
+  # Args: 
+  #   mutations= number of mutations
+  #
+  # Value
+  #   The resultant in microsatellite repetition number using binomial rules
+  # 
+  # Example:
+  # stepWiseMutationModel(5)
+  #
+  2*(rbinom(dim(coaltable)[1],coaltable[,"mutations"],.5)-coaltable[,"mutations"]/2)
+}
+
+twoPhasesModel <- function(mutations=3,p=.5,sigma2=4)
+{
+  # Simulates a change in the genetic value depending on number of mutations
+  # assuming two phases mutation model
+  #
+  # Args: 
+  #   mutations= number of mutations
+  #
+  # Value
+  #   The resultant in microsatellite repetition number using binomial rules
+  # 
+  # Example:
+  # twoPhasesModel(5)
+  #
+  p_loi_geometrique = ((1+4*sigma2)^.5-1)/(2*sigma2)
+  n_stepwN_geomN_geom_neg <- t(rmultinom(1,mutations,c(p,(1-p)/2,(1-p)/2)))
+  resultant_stepw <- 2*(rbinom(1,n_stepwN_geomN_geom_neg[,1],.5)-n_stepwN_geomN_geom_neg[1]/2)
+  resultant_geom <- rnbinom(c(1,1),size=c(n_stepwN_geomN_geom_neg[,2],n_stepwN_geomN_geom_neg[,3]),c(p_loi_geometrique,p_loi_geometrique))  
+  resultant_geom[is.na(resultant_geom)] <- 0
+  resultant_stepw+diff(resultant_geom)
+}
+
+
+bigeometricModel <- function(coaltable,initial_genetic_value,stepvalue,mut_param=c(sigma2=4))
+{
+  # Simulates a change in the genetic value depending on number of mutations
+  # assuming geopetric model
+  #
+  # Args: 
+  #   mutations= number of mutations
+  #
+  # Value
+  #   The resultant in microsatellite repetition number using binomial rules
+  # 
+  # Example:
+  # bigeometricModel(5)
+  #
+  p_loi_geometrique = ((1+4*sigma2)^.5-1)/(2*sigma2)
+  N_geom_pos <- rbinom(1,mutations,.5)
+  resultant_geom <- rnbinom(c(1,1),size=c(N_geom_pos,mutations-N_geom_pos),c(p_loi_geometrique,p_loi_geometrique))  
+  # note: warnings due to size=0 in rnbinom parameters
+  resultant_geom[is.na(resultant_geom)] <- 0
+  diff(resultant_geom)
+}
+
+

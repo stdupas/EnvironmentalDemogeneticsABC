@@ -3,7 +3,7 @@
 rm(list=ls())
 wd="/media/1To/IRD/ARTICLES/Dupas/NicheCoal/Graph_Pop" # portable
 wd="/media/dupas/1To/IRD/ARTICLES/Dupas/NicheCoal/Graph_Pop" # fixe
-wd="/home/legs/GraphPOP/" # portable
+wd="/home/legs/GraphPOP/" # portable steph
 wd="/home/dupas/GraphPOP/" # fixe
 wd="/home/arno/These/GraphPOP" # portable arno
 wd="/home/arnaudb/Documents/GraphPOP" # labo arno
@@ -39,7 +39,6 @@ localizationData <- c(1,4,2,2,1,1,2,3);
 names(localizationData)=1:length(localizationData)
 
 ###### Genetic parameters :
-N=1.5
 mutation_rate=1E-4
 
 ###### Asking List to the user
@@ -84,4 +83,10 @@ transitionBackward <- transitionMatrixBackward(r=values(r), K=values(K), migrati
 transitionForward <- transitionMatrixForward(r=values(r), K=values(K), migration= migrationMatrix, meth="non_overlap")
 
 # launch the coalescent
-coalescentList <- simul_coalescent_only(tipDemes=localizationData,transitionForward=transitionForward, transitionBackward=transitionBackward, K=K)
+coalescentList <- simul_coalescent_only(tipDemes=localizationData,transitionForward=transitionForward, transitionBackward=transitionBackward, K= values(K))
+
+# adding branch length and genetic data
+Coalescent_genetics <- add_br_length_and_mutation(coalescentList,mutation_rate=.1)
+coaltable <- coalist_2_coaltable(Coalescent_genetics[[1]])
+
+

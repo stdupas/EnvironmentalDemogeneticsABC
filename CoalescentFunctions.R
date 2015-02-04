@@ -403,3 +403,21 @@ add_br_length_and_mutation <- function(coalescent,mutation_rate)
 coalescent
 }
 
+coalist_2_coaltable <- function(coalist)
+{
+  # Conversion from coalist to coalecent table
+  # Argument:
+  # coalist : a list of coalescent events from present to past
+  # with sublist "coalescing"= descendents nodes numbers, "new_node" = ancestor node number, br_length, mutations
+  # Values:
+  # coaltable : a table with the same information on coalescent events from present to past as lines
+  #
+  # example:
+  # coalescent=list(list(time=1,coalescing=1:2,new_node=4,br_length=c(1,1),mutations = c(1,0)),list(time=4,coalescing=c(3:4),new_node=5,br_length=c(4,3),mutations = c(2,0)))
+  # coalist_2_coaltable(coalescent)
+  coaldf <- data.frame(Reduce(rbind,coalist))
+  # note: warnings due to repeated lines names here
+  coaltable <- coaldf[rep(1:dim(coaldf)[1],unlist(lapply(coaldf$coalescing, length))),]
+  coaltable[,c("coalescing","br_length","mutations")] <- unlist(coaldf[,c("coalescing","br_length","mutations")])
+  coaltable
+}

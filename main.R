@@ -17,6 +17,7 @@ source("MutationFunctions.R")
 source("CoalescentFunctions.R")
 source("PriorFunctions.R")
 source("MarkovProcess.R")
+source("GeneticDataSimulation.R")
 
 ### Sourcing Libraries
 library(raster)
@@ -32,11 +33,6 @@ Data2 <- data.frame(BIO1=c(300,120,120,400),BIO12=c(2000,350,350,2900))
 # Make raster stack with two layers according to the environmental variables of the dataframe
 rasterStack <- stack(list("BIO1"=raster(matrix(Data2$BIO1,nrow=1,ncol=4),xmn=0,xmx=4,ymn=0,ymx=1),
                           "BIO12"=raster(matrix(Data2$BIO12,nrow=1,ncol=4),xmn=0,xmx=4,ymn=0,ymx=1)))
-
-
-# where are the sampled data ?
-localizationData <- c(1,4,2,2,1,1,2,3);
-names(localizationData)=1:length(localizationData)
 
 ###### Genetic parameters :
 mutation_rate=1E-4

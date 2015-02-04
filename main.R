@@ -82,6 +82,12 @@ migrationMatrix <- migrationRateMatrix(kernelMatrix)
 transitionBackward <- transitionMatrixBackward(r=values(r), K=values(K), migration= migrationMatrix)
 transitionForward <- transitionMatrixForward(r=values(r), K=values(K), migration= migrationMatrix, meth="non_overlap")
 
+GeneticData <- CreateGenetArray(rasK=round(K), nb_locus=3, initial_locus_value = 200, Option ="sample_haploid", nind = 10)
+
+# where are the sampled data ?
+localizationData <- cellFromXY(object = K, xy = GeneticData[, c("x", "y")])
+names(localizationData)=1:length(localizationData)
+
 # launch the coalescent
 coalescentList <- simul_coalescent_only(tipDemes=localizationData,transitionForward=transitionForward, transitionBackward=transitionBackward, K= values(K))
 

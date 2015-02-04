@@ -96,17 +96,29 @@ listOfDispersionParameters <- function(nb_simulations){
 
 
 
-listOfMutationParameters <- function(nb_simulations){
+listOfMutationParameters <- function(nb_simulations){ # nb_simulations <- 10
   # Ask to user for mutation function to be applied, then append a list according to its parameters
   # 
   # Args:
   #   nb_simulations: a numeric, the number of samples in the prior distribution of parameters
   #
   # Returns : 
-  # A list representing the decision tree for parameters.
+  #    A list representing the decision tree for parameters.
   Mutation <- list()
-
-  # Ask for mutation model :
+  
+  ##### Ask for mutation rate
+  mutationRate <- list()
+  mutationRatePrior <-  readline("Which prior for mutation rate do you want ? ")
+  mutationRate[["priorLaw"]] <- mutationRatePrior
+  for(prior_parameter in names(formals(mutationRate[["priorLaw"]]))[-1]){ # prior_parameter <- "min" prior_parameter <- "max"
+    # Ask user the values of prior parameters he wants and use it to fill the box
+    parameter_value <- readline(paste("Which value for prior parameter", prior_parameter, "do you want ? ", sep=" "))
+    mutationRate[[prior_parameter]] <- as.numeric(parameter_value)
+  }# end of loop over prior parameters
+  mutationRate[["Values"]] <- do.call(what = mutationRate[["priorLaw"]],
+            args = c(list(n = nb_simulations), mutationRate[-1]))
+  
+  ##### Ask for mutation model :
   mutation_model <- readline(paste("Which mutation model do you want ? "))
   # add a box for mutation model
   Mutation[["mutationModel"]] <- mutation_model
@@ -133,6 +145,9 @@ listOfMutationParameters <- function(nb_simulations){
               args = c(list(n = nb_simulations), Mutation[[mutation_parameter]][-1]))
     
   }# end of loop over mutation model parameters
+  
+  # pass the sub-list to Mutation
+  Mutation[["mutationRate"]] <- mutationRate
   return(Mutation)
 }
 

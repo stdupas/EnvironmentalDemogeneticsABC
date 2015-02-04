@@ -95,4 +95,8 @@ coalescentList <- simul_coalescent_only(tipDemes=localizationData,transitionForw
 Coalescent_genetics <- add_br_length_and_mutation(coalescentList,mutation_rate=.1)
 coaltable <- coalist_2_coaltable(Coalescent_genetics[[1]])
 
+resultantFunction <- function(coalTable, mutationModel, args){
+  coalTable[[,"Resultant"]] <- do.call(what = mutationModel, args = c(coalTable[["Mutations"]], args))
+}
 
+resultantFunction(coaltable,stepWiseMutationModel,list())

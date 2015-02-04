@@ -1,85 +1,19 @@
-stepWiseMutationModel <- function(coaltable,initial_genetic_value,stepvalue)
-{
-  # Compute a change in the genetic value along a branch a a coalescent 
-  #
-  # Args: 
-  #   coaltable: 
-  #   initial_genetic_value:
-  #   stepvalue:
-  #
-  # Returns:
-  #   The coaltable
-  coaltable$genetic_value=NA
-  # we calculate the oritattion of the mutations in the different branches using binomial rules
-  coaltable$resultant = 2*(rbinom(dim(coaltable)[1],coaltable[,"mutations"],.5)-coaltable[,"mutations"]/2)
-  coaltable[dim(coaltable)[1]+1,] <- c(NA,max(unlist(coaltable$new_node)),NA,NA,NA,initial_genetic_value,NA)
-  for(branch in rev(rownames(coaltable)[-dim(coaltable)[1]]))
-  {
-    coaltable[branch,"genetic_value"] <- coaltable[branch,"resultant"]*stepvalue + coaltable[which(coaltable$coalescing==coaltable[branch,"new_node"]),"genetic_value"]
-  }
-  coaltable
-}
-
-twoPhasesModel <- function(coaltable,initial_genetic_value,stepvalue,mut_param=c(p=.5,sigma2=4))
-{
-  p_loi_geometrique = ((1+4*mut_param["sigma2"])^.5-1)/(2*mut_param["sigma2"])
-  coaltable$genetic_value=NA
-  # we calculate the type of mutations in the different branches using binomial rules
-  # either stepwise, or geometric positive, or geopetric negative
-  coaltable[,c("n_stepw","n_geom_pos","n_geom_neg")] <- t(rmultinom(dim(coaltable)[1],coaltable[,"mutations"],c(mut_param["p"],(1-mut_param["p"])/2,(1-mut_param["p"])/2)))
-  coaltable$resultant_stepw <- 2*(rbinom(dim(coaltable)[1],coaltable[,"n_stepw"],.5)-coaltable[,"n_stepw"]/2)
-  coaltable$resultant_geom <- (rnbinom(dim(coaltable)[1],size=coaltable$n_geom_pos,p_loi_geometrique)
-                               - rnbinom(dim(coaltable)[1],size=coaltable$n_geom_neg,p_loi_geometrique))
-  coaltable$resultant_geom[is.na(coaltable$resultant_geom)]=0
-  coaltable[dim(coaltable)[1]+1,] <- c(NA,max(unlist(coaltable$new_node)),NA,NA,NA,initial_genetic_value,NA,NA,NA,NA,NA)
-  for(branch in rev(rownames(coaltable)[-dim(coaltable)[1]]))
-  {
-    coaltable[branch,"genetic_value"] <- (coaltable[branch,"resultant_stepw"]+coaltable[branch,"resultant_geom"])*stepvalue + coaltable[which(coaltable$coalescing==coaltable[branch,"new_node"]),"genetic_value"]
-  }
-  coaltable
-}
-
-
-bigeometricModel <- function(coaltable,initial_genetic_value,stepvalue,mut_param=c(sigma2=4))
-{
-  p_loi_geometrique = ((1+4*mut_param["sigma2"])^.5-1)/(2*mut_param["sigma2"])
-  coaltable$genetic_value=NA
-  # we calculate the type of mutations in the different branches using binomial rules
-  # either stepwise, or geometric positive, or geopetric negative
-  coaltable[,"n_geom_pos"] <- rbinom(dim(coaltable)[1],coaltable[,"mutations"],c(mut_param["p"],(1-mut_param["p"])/2,(1-mut_param["p"])/2))
-  coaltable$resultant_geom <- (rnbinom(dim(coaltable)[1],size=coaltable$n_geom_pos,p_loi_geometrique)
-                               - rnbinom(dim(coaltable)[1],size=coaltable$mutations-coaltable$n_geom_pos,p_loi_geometrique))
-  coaltable$resultant_geom[is.na(coaltable$resultant_geom)]=0
-  coaltable[dim(coaltable)[1]+1,] <- c(NA,max(unlist(coaltable$new_node)),NA,NA,NA,initial_genetic_value,NA,NA,NA,NA)
-  for(branch in rev(rownames(coaltable)[-dim(coaltable)[1]]))
-  {
-    coaltable[branch,"genetic_value"] <- coaltable[branch,"resultant_geom"]*stepvalue + coaltable[which(coaltable$coalescing==coaltable[branch,"new_node"]),"genetic_value"]
-  }
-  coaltable  
-}
-
-#
-#
-#
-## separate resultant and genetic value calculation
-##
-#
-#
-#
 stepWiseMutationModel <- function(mutations)
 {
-  # Simulates a change in the genetic value depending on number of mutations
-  # assuming stepwise mutation model
+  # Compute a resultant according to step wise mutation model
+  #
   # Args: 
-  #   mutations= number of mutations
+  #   mutations: number of mutations
   #
-  # Value
+  # Returns:
   #   The resultant in microsatellite repetition number using binomial rules
-  # 
+  
+  res <- 2*rbinom(n = length(mutations), size = mutations, prob = 0.5) - mutations
+  return(res)
+  
   # Example:
-  # stepWiseMutationModel(5)
-  #
-  2*(rbinom(dim(coaltable)[1],coaltable[,"mutations"],.5)-coaltable[,"mutations"]/2)
+  # stepWiseMutationModel(mutations=5)
+  # stepWiseMutationModel(mutations=c(2,3))
 }
 
 twoPhasesModel <- function(mutations=3,p=.5,sigma2=4)
@@ -97,15 +31,15 @@ twoPhasesModel <- function(mutations=3,p=.5,sigma2=4)
   # twoPhasesModel(5)
   #
   p_loi_geometrique = ((1+4*sigma2)^.5-1)/(2*sigma2)
-  n_stepwN_geomN_geom_neg <- t(rmultinom(1,mutations,c(p,(1-p)/2,(1-p)/2)))
-  resultant_stepw <- 2*(rbinom(1,n_stepwN_geomN_geom_neg[,1],.5)-n_stepwN_geomN_geom_neg[1]/2)
-  resultant_geom <- rnbinom(c(1,1),size=c(n_stepwN_geomN_geom_neg[,2],n_stepwN_geomN_geom_neg[,3]),c(p_loi_geometrique,p_loi_geometrique))  
+  n_stepwN_geomN_geom_neg <- t(rmultinom(length(mutations),mutations,c(p,(1-p)/2,(1-p)/2)))
+  resultant_geom <- rnbinom(length(mutations)*2,size=c(N_geom_pos,mutations-N_geom_pos),c(p_loi_geometrique,p_loi_geometrique))  
+  # note: warnings due to size=0 in rnbinom parameters
   resultant_geom[is.na(resultant_geom)] <- 0
-  resultant_stepw+diff(resultant_geom)
+  resultant_stepw+c(diff(t(matrix(resultant_geom,nrow=length(mutations),ncol=2))))
 }
 
 
-bigeometricModel <- function(coaltable,initial_genetic_value,stepvalue,mut_param=c(sigma2=4))
+bigeometricModel <- function(mutations=3,sigma2=4)
 {
   # Simulates a change in the genetic value depending on number of mutations
   # assuming geopetric model
@@ -120,11 +54,19 @@ bigeometricModel <- function(coaltable,initial_genetic_value,stepvalue,mut_param
   # bigeometricModel(5)
   #
   p_loi_geometrique = ((1+4*sigma2)^.5-1)/(2*sigma2)
-  N_geom_pos <- rbinom(1,mutations,.5)
-  resultant_geom <- rnbinom(c(1,1),size=c(N_geom_pos,mutations-N_geom_pos),c(p_loi_geometrique,p_loi_geometrique))  
+  N_geom_pos <- rbinom(length(mutations),mutations,.5)
+  resultant_geom <- rnbinom(length(mutations)*2,size=c(N_geom_pos,mutations-N_geom_pos),c(p_loi_geometrique,p_loi_geometrique))  
   # note: warnings due to size=0 in rnbinom parameters
   resultant_geom[is.na(resultant_geom)] <- 0
-  diff(resultant_geom)
+  c(diff(t(matrix(resultant_geom,nrow=length(mutations),ncol=2))))
 }
 
+resultant <- function(nbrMutations, mutationModel, args){
+  args <- c(nbrMutations, args)
+  return(do.call(what = mutationModel, args = args))
+}
 
+addGeneticValueToCoaltable <- function(coaltable,initialGenetValue)
+{
+  
+}

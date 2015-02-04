@@ -10,15 +10,6 @@
 #raster : ligne
 
 
-#############################
-#### Library to download ####
-#############################
-
-library(raster)
-library(ape)
-library(stringr)
-library(lattice)
-#library(RNetCDF)
 
 ####################################################
 ##### BACKWARD MODEL FUNCTIONS AND EXECUTIONS ######

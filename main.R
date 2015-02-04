@@ -38,9 +38,6 @@ rasterStack <- stack(list("BIO1"=raster(matrix(Data2$BIO1,nrow=1,ncol=4),xmn=0,x
 localizationData <- c(1,4,2,2,1,1,2,3);
 names(localizationData)=1:length(localizationData)
 
-###### Genetic parameters :
-N=1.5
-mutation_rate=1E-4
 
 ###### Asking List to the user
 # ParamList <- askListOfParameters(rasterStack=rasterStack, nb_simulations=10)

@@ -62,8 +62,9 @@ bigeometricModel <- function(mutations=3,sigma2=4)
 }
 
 
-resultantFunction <- function(coalTable, mutationModel, args){
+resultantFunction <- function(coalTable, stepValue, mutationModel, args){
   coalTable[["Resultant"]] <- do.call(what = mutationModel, args = c(list(coalTable[["mutations"]]), args))
+  coalTable[["Resultant"]] <- coalTable[["Resultant"]]*stepValue
   return(coalTable)
 }
 

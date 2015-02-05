@@ -106,6 +106,7 @@ listOfMutationParameters <- function(nb_simulations){ # nb_simulations <- 10
   #    A list representing the decision tree for parameters.
   Mutation <- list()
   
+  
   ##### Ask for mutation rate
   mutationRate <- list()
   mutationRatePrior <-  readline("Which prior for mutation rate do you want ? ")
@@ -115,8 +116,12 @@ listOfMutationParameters <- function(nb_simulations){ # nb_simulations <- 10
     parameter_value <- readline(paste("Which value for prior parameter", prior_parameter, "do you want ? ", sep=" "))
     mutationRate[[prior_parameter]] <- as.numeric(parameter_value)
   }# end of loop over prior parameters
-  mutationRate[["Values"]] <- do.call(what = mutationRate[["priorLaw"]],
-            args = c(list(n = nb_simulations), mutationRate[-1]))
+  
+  mutationRate[["Values"]] <- do.call(what = mutationRate[["priorLaw"]], args = c(list(n = nb_simulations), mutationRate[-1]))
+  
+  # pass the sub-list to Mutation
+  Mutation[["mutationRate"]] <- mutationRate
+  
   
   ##### Ask for mutation model :
   mutation_model <- readline(paste("Which mutation model do you want ? "))
@@ -146,8 +151,6 @@ listOfMutationParameters <- function(nb_simulations){ # nb_simulations <- 10
     
   }# end of loop over mutation model parameters
   
-  # pass the sub-list to Mutation
-  Mutation[["mutationRate"]] <- mutationRate
   return(Mutation)
 }
 
@@ -243,16 +246,26 @@ getFunctionListNiche <- function(ParamList, sublist){
 }
 
 getFunctionDispersion <- function(ParamList){
-  # Get a list of dispersion models functions stored in ParamList
+  # Get the dispersion model function stored in ParamList
   #
   # Args:
   #   ParamList: the list of model parameters created using askListOfParameters function
   #
   # Returns:
-  #   the list of niche model functions used
+  #   the dispersion model functions used
   return(ParamList[["Dispersion"]][[1]])
 }
 
+getFunctionMutation <- function(ParamList){
+  # Get the mutation model sotred in ParamList
+  #
+  # Args:
+  #   ParamList: the list of model parameters created using askListOfParameters function
+  #
+  # Returns:
+  #   the mutation function
+  return(ParamList[["Mutation"]][["mutationModel"]])
+}
 
 getArgsListNiche <- function(simulation, ParamList, sublist){
   # Get a list of parameters of niche models functions and their values stored in ParamList
@@ -285,14 +298,14 @@ getArgsListNiche <- function(simulation, ParamList, sublist){
 }
 
 getArgsListDispersion <- function(simulation, ParamList){
-  # Get a list of parameters of dispersion models functions and their values stored in ParamList
+  # Get a list of parameters of dispersion model function and their values stored in ParamList
   #
   # Args:
   #   simulations : the index in which to get the value stored in the vector Values (by prior sampling) in ParamList.
   #   ParamList: the list of model parameters created using askListOfParameters function
   #
   # Returns:
-  #   the list of niche model functions parameters 
+  #   the list of dispersion model functions parameters 
   
   # initialize the list of parameters
   argsList <- list()
@@ -307,5 +320,31 @@ getArgsListDispersion <- function(simulation, ParamList){
     argsValues <- c(argsValues, value=ParamList[["Dispersion"]][[param]][["Values"]][simulation])
   }
   names(argsValues)<- argsNames
+  return(as.list(argsValues))
+}
+
+getArgsListMutation <- function(simulation, ParamList){
+  # Get a list of parameters of mutation model function and their values stored in ParamList
+  #
+  # Args:
+  #   simulations: the index in which to get the value stored in the vector Values (by prior sampling) in ParamList.
+  #   ParamList: the list of model parameters created using askListOfParameters function
+  #
+  # Returns:
+  #   the list of mutation model parameters
+  
+  # initialize the list of parameters
+  argsList <- list()
+  
+  # initalize the vectors
+  argsValues <- c()
+  argsNames <- c()
+  
+  # Loop over the parameters (omitting the two first elements of teh list containing mutation rate and name of the model)
+  for(param in names(ParamList[["Mutation"]])[-c(1,2)]){
+    argsNames <- c(argsNames, as.character(param))
+    argsValues <- c(argsValues, value=ParamList[["Mutation"]][[param]][["Values"]][simulation])
+  }
+  names(argsValues) <- argsNames
   return(as.list(argsValues))
 }

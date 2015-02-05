@@ -61,9 +61,10 @@ bigeometricModel <- function(mutations=3,sigma2=4)
   c(diff(t(matrix(resultant_geom,nrow=length(mutations),ncol=2))))
 }
 
-resultant <- function(nbrMutations, mutationModel, args){
-  args <- c(nbrMutations, args)
-  return(do.call(what = mutationModel, args = args))
+
+resultantFunction <- function(coalTable, mutationModel, args){
+  coalTable[["Resultant"]] <- do.call(what = mutationModel, args = c(list(coalTable[["mutations"]]), args))
+  return(coalTable)
 }
 
 addGeneticValueToCoaltable <- function(coaltable,initialGenetValue)

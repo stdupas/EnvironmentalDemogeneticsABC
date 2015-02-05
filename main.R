@@ -90,9 +90,7 @@ coalescentList <- simul_coalescent_only(tipDemes=localizationData,transitionForw
 # adding branch length and genetic data
 Coalescent_genetics <- add_br_length_and_mutation(coalescentList,mutation_rate=.1)
 coaltable <- coalist_2_coaltable(Coalescent_genetics[[1]])
+coaltable$resultant <- bigeometricModel(coaltable$mutations,sigma2=4)
+coaltable <- addGeneticValueToCoaltable(coaltable,200)
 
-resultantFunction <- function(coalTable, mutationModel, args){
-  coalTable[[,"Resultant"]] <- do.call(what = mutationModel, args = c(coalTable[["Mutations"]], args))
-}
-
-resultantFunction(coaltable,stepWiseMutationModel,list())
+OnlyGeneticData=GeneticData[,grep("Locus",colnames(GeneticData))]

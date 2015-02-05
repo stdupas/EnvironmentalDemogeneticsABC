@@ -62,10 +62,20 @@ bigeometricModel <- function(mutations=3,sigma2=4)
 }
 
 
-resultantFunction <- function(coalTable, stepValue, mutationModel, args){
-  coalTable[["Resultant"]] <- do.call(what = mutationModel, args = c(list(coalTable[["mutations"]]), args))
-  coalTable[["Resultant"]] <- coalTable[["Resultant"]]*stepValue
-  return(coalTable)
+resultantFunction <- function(nbrMutations, stepValue, mutationModel, args){
+  # Compute a resultant giving a vector of number of mutation
+  #
+  # Args :
+  #   nbrMutations : a vector giving the number of mutations
+  #   stepValue : the stepValue of the locus
+  #   mutationModel : the mutation model to apply
+  #   args : a list containing the mutation models parameters values
+  #
+  # Returns:
+  #   a vector of resultant
+  res <- do.call(what = mutationModel, args = c(list(nbrMutations), args))
+  res <- res * stepValue
+  return(res)
 }
 
 addGeneticValueToCoaltable <- function(coaltable,initialGenetValue)

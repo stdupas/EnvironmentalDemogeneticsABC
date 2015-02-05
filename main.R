@@ -93,10 +93,14 @@ coalescentList <- simul_coalescent_only(tipDemes = localizationData,
 
 # adding branch length and genetic data
 Coalescent_genetics <- add_br_length_and_mutation(coalescentList, mutation_rate=.1)
+
+# Transforming the coalescent list into a table
 coalTable <- coalist_2_coaltable(Coalescent_genetics[[1]])
 
 # add resultant 
-resultantFunction(coalTable = coalTable,
-                  stepValue = stepValue,
-                  mutationModel = getFunctionMutation(ParamList = ParamList),
-                  args = getArgsListMutation(simulation = simulation, ParamList = ParamList ))
+coalTable[["Resultant"]] <- resultantFunction(nbrMutations = coalTable[["mutations"]],
+                                              stepValue = stepValue,
+                                              mutationModel = getFunctionMutation(ParamList = ParamList),
+                                              args = getArgsListMutation(simulation = simulation, ParamList = ParamList ))
+
+

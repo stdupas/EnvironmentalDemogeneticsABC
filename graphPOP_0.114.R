@@ -732,17 +732,6 @@ setClass("EnvDemogenetModel",representation(ID = "numeric",
 
 
 
-#
-# coalist_2_coaltable function converts a coalescent list to a coalecent table format
-#
-
-coalist_2_coaltable <- function(coalist)
-{
-  coaldf <- data.frame(Reduce(rbind,coalist))
-  coaltable <- coaldf[rep(1:dim(coaldf)[1],unlist(lapply(coaldf$coalescing, length))),]
-  coaltable[,c("coalescing","br_length","mutations")] <- unlist(coaldf[,c("coalescing","br_length","mutations")])
-  coaltable
-}
 
 #
 # add_genetic_to_coaltable function
@@ -756,68 +745,6 @@ genetics_of_coaltable <- function(coaltable,initial_genetic_value,mutation_model
         tpm = tpm(coaltable,initial_genetic_value,stepvalue,mut_param),
         bigeometric = bigeometric(coaltable,initial_genetic_value,stepvalue,mut_param)
         ) 
-}
-
-
-
-#
-# add br_length and mutation to coalescent list
-#
-#
-
-add_br_length_and_mutation <- function(coalescent,mutation_rate,initial_genetic_value)
-{
-  tips = NULL
-  internals = NULL
-  nodes = NULL
-  times = NULL
-  for (i in 1:length(coalescent))#i=1;i=2
-  {
-    nodes = append(nodes,c(coalescent[[i]]$coalescing,coalescent[[i]]$new_node))
-    internals = append(internals,coalescent[[i]]$new_node)
-    times = append(times,coalescent[[i]]$time)
-  }
-  nodes = as.numeric(levels(as.factor(c(nodes,internals))));nodes = nodes[order(nodes)]
-  tips = nodes[!((nodes)%in%(internals))]
-  # getting the branch length of each coalescing node
-  for (i in 1:length(coalescent))#i=1
-  {
-    for (coalescing in coalescent[[i]]$coalescing)# coalescing = coalescent[[i]]$coalescing[1]
-    {
-      if (coalescing %in% tips) {coalescent[[i]]$br_length <- append(coalescent[[i]]$br_length,coalescent[[i]]$time)
-                                                                    } else {
-        coalescent[[i]]$br_length <- append(coalescent[[i]]$br_length,coalescent[[i]]$time-times[which(internals==coalescing)]) 
-                                                                    } 
-      coalescent[[i]]$mutations <- rpois(rep(1,length(coalescent[[i]]$br_length)),coalescent[[i]]$br_length*mutation_rate)
-    }
-  }
-  coaltable <- coalist_2_coaltable(coalescent)
-  coaltable$genetic_value[dim(coaltable)[1]] <- initial_genetic_value
-  for (i in dim(coaltable)[1]:1) 
-  {
-    
-  }
-coalescent
-}
-
-
-
-# coalescent_2_newick
-# fuinction that converts coalescent
-# 
-
-coalescent_2_newick <- function(coalescent)
-{
-  #  tree=paste("(",coalescent[[length(coalescent)]]$new_node,")",sep="")
-  tree=paste(" ",coalescent[[length(coalescent)]]$new_node," ",sep="")
-  for (i in length(coalescent):1)
-  {
-    Time = coalescent[[i]]$time
-    coalesc <- as.character(coalescent[[i]]$coalescing)
-    tree <- str_replace(tree,paste(" ",as.character(coalescent[[i]]$new_node)," ",sep=""),paste(" ( ",paste(" ",coalesc," :",coalescent[[i]]$br_length,collapse=" ,",sep=""),") ",sep=""))
-  }
-  tree <- gsub(" ","",paste(tree,";",sep=""))
-tree
 }
 
 # coalescent_2_phylog
@@ -848,35 +775,7 @@ plot_coalescent <- function(coalescent,genetic_table,with_landscape=FALSE,rasK=N
 # summary_stat calculates summary stats for observed and simulated data and creates a reference table
 # geneticDataSimulList : a list of simulations, with sublist geneticData and sublist log_lik_forward 
 #
-shared_allele_distance <- function(geneticData)
-{
-  # calculates probability of identity between haplotypes
-  
-}
 
-PCA_rotation <- function(geneticData)
-{
-  # PCA_rotation calculates the rotation to apply to genetic data from observed genetic data
-  # argument:
-  # geneticDataObs: observed genetic data (columns x, y, Cell_numbers, Locus1 ... Locusn)
-  # value: 
-  # rotation corresponding to the PCA axis
-  GenetDist = switch(Distance,
-                     Goldstein = dist(geneticData[,grep("Locus",colnames(geneticData))])^.5,
-                     pID = pID(geneticData)
-  )
-  rotation = prcomp(GenetDist)$rotation
-  # note we may have to select majors PCi containing information
-}
-
-pID <- function(geneticData)
-{
-  # calculates probability ofidentity between individuals in a geneticData dataframe
-  # argument : geneticData (with columns as loccus named "LocusX" and lines as haplotypes)
-  geneticData=geneticData[,grep("Locus",colnames(geneticData))]
-  geneticDataArray <- array(unlist(c(geneticData)), dim=c(dim(geneticData),dim(geneticData)[1]))
-  mean(na.omit(geneticDataArray==aperm(geneticDataArray,c(3,2,1))))
-}
 
 set_priors <- function(variables,Min,Max,nb_lines)
 {

@@ -34,8 +34,17 @@ Data2 <- data.frame(BIO1=c(300,120,120,400),BIO12=c(2000,350,350,2900))
 rasterStack <- stack(list("BIO1"=raster(matrix(Data2$BIO1,nrow=1,ncol=4),xmn=0,xmx=4,ymn=0,ymx=1),
                           "BIO12"=raster(matrix(Data2$BIO12,nrow=1,ncol=4),xmn=0,xmx=4,ymn=0,ymx=1)))
 
-###### Genetic parameters :
-mutation_rate=1E-4
+###### Genetic data :
+
+# load fake GeneticData 
+load("GeneticData.RData")
+
+# assuming we have the step values for each locus
+stepValueOfLoci <- c(1,2,3,4,5)
+
+# where are the sampled data ?
+localizationData <- cellFromXY(object = K, xy = GeneticData[, c("x", "y")])
+names(localizationData)=1:length(localizationData)
 
 ###### Asking List to the user
 # ParamList <- askListOfParameters(rasterStack=rasterStack, nb_simulations=10)
@@ -49,13 +58,11 @@ load("ParamList.RData")
 
 
 ######################### Using Functions >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-# get the reference table
-referenceTable <- referenceTableFromList(ParamList)
-# just imagine you pass the reference table into an apply function :
-parameters <- referenceTable[,1]
 
 #### Imagine we are looping over simulations of coalescent :
 simulation <- 1
+#### Imagien we are looping over loci
+stepValue <- stepValueOfLoci[1]
 
 # Get the carrying capacity map :
 K <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = ParamList, sublist="NicheK"), 
@@ -70,26 +77,26 @@ r <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList =
 # Get migration matrix :
 kernelMatrix <- dispersionFunctionForRasterLayer(dispersionFunction=getFunctionDispersion(ParamList),
                                            rasterLayer=rasterStack[[1]], 
-                                           args=getArgsListDispersion(simulation=simulation, ParamList=ParamList))
+                                           args=getArgsListDispersion(simulation = simulation, ParamList = ParamList))
 
 migrationMatrix <- migrationRateMatrix(kernelMatrix)
 
 # Get transition matrix :
-transitionBackward <- transitionMatrixBackward(r=values(r), K=values(K), migration= migrationMatrix)
-transitionForward <- transitionMatrixForward(r=values(r), K=values(K), migration= migrationMatrix, meth="non_overlap")
-
-GeneticData <- CreateGenetArray(rasK=round(K), nb_locus=3, initial_locus_value = 200, Option ="sample_haploid", nind = 10)
-
-# where are the sampled data ?
-localizationData <- cellFromXY(object = K, xy = GeneticData[, c("x", "y")])
-names(localizationData)=1:length(localizationData)
+transitionBackward <- transitionMatrixBackward(r = values(r), K = values(K), migration = migrationMatrix)
+transitionForward <- transitionMatrixForward(r = values(r), K = values(K), migration = migrationMatrix, meth = "non_overlap")
 
 # launch the coalescent
-coalescentList <- simul_coalescent_only(tipDemes=localizationData,transitionForward=transitionForward, transitionBackward=transitionBackward, K= values(K))
+coalescentList <- simul_coalescent_only(tipDemes = localizationData,
+                                        transitionForward = transitionForward, 
+                                        transitionBackward = transitionBackward, 
+                                        K = values(K))
 
 # adding branch length and genetic data
-Coalescent_genetics <- add_br_length_and_mutation(coalescentList,mutation_rate=.1)
-coaltable <- coalist_2_coaltable(Coalescent_genetics[[1]])
+Coalescent_genetics <- add_br_length_and_mutation(coalescentList, mutation_rate=.1)
+coalTable <- coalist_2_coaltable(Coalescent_genetics[[1]])
 
 # add resultant 
-resultantFunction(coalTable = coaltable,mutationModel = stepWiseMutationModel,args = list())
+resultantFunction(coalTable = coalTable,
+                  stepValue = stepValue,
+                  mutationModel = getFunctionMutation(ParamList = ParamList),
+                  args = getArgsListMutation(simulation = simulation, ParamList = ParamList ))

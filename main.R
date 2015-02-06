@@ -39,13 +39,14 @@ rasterStack <- stack(list("BIO1"=raster(matrix(Data2$BIO1,nrow=1,ncol=4),xmn=0,x
 # load fake GeneticData 
 load("GeneticData.RData")
 
+# genetic value of the ancestor
+initialGenetValue <- 200
 # number of loci under study:
 numberOfLoci <- ncol(GeneticData[-c(1,2,3)])
 # assuming we have the step values for each locus
 stepValueOfLoci <- c(1,2,3,4,5)
-
 # where are the sampled data ?
-localizationData <- cellFromXY(object = K, xy = GeneticData[, c("x", "y")])
+localizationData <- cellFromXY(object = rasterStack, xy = GeneticData[, c("x", "y")])
 names(localizationData)=1:length(localizationData)
 
 
@@ -113,7 +114,7 @@ for(simulation in 1:2 ){ # simulation <- 1
                                                   args = getArgsListMutation(simulation = simulation, ParamList = ParamList ))
     
     # add genetic values
-    coalTable <- addGeneticValueToCoaltable(coalTable,200,stepValue)
+    coalTable <- addGeneticValueToCoaltable(coalTable = coalTable, initialGenetValue = initialGenetValue, stepValue = stepValue)
     
     # Record the genetic data
     geneticResults[,locus] <- coalTable[coalTable$coalescing%in%names(localizationData),"genetic_value"]

@@ -34,13 +34,18 @@ Data2 <- data.frame(BIO1=c(300,120,120,400),BIO12=c(2000,350,350,2900))
 rasterStack <- stack(list("BIO1"=raster(matrix(Data2$BIO1,nrow=1,ncol=4),xmn=0,xmx=4,ymn=0,ymx=1),
                           "BIO12"=raster(matrix(Data2$BIO12,nrow=1,ncol=4),xmn=0,xmx=4,ymn=0,ymx=1)))
 
+# distance method to be applied to genetic data
+DistanceMethod = "DeltaMuDistance"
+
 ###### Genetic data :
 
 # load fake GeneticData 
 load("GeneticData.RData")
 
 # number of loci under study:
-numberOfLoci <- ncol(GeneticData[-c(1,2,3)])
+locusNames <- colnames(GeneticData)[!(colnames(GeneticData)%in%c("x","y","Cell_numbers"))]
+numberOfLoci <- length(locusNames)
+
 # assuming we have the step values for each locus
 stepValueOfLoci <- c(1,2,3,4,5)
 
@@ -56,15 +61,20 @@ names(localizationData)=1:length(localizationData)
 # Or load it from working directory
 load("ParamList.RData")
 
+# number of simulations
+NSimul = 2
+# forward log probability vector
 
+forwardLogProb = data.frame(simulationNo=NA,logProb=NA);forwardLogProb=forwardLogProb[-1,]
 ########## end of parameters initialisation <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
 
 ######################### Using Functions >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
+
 #### LOOP ON SIMULATIONS >>>>>>>>>>>>>>>>>>>>>>
-for(simulation in 1:2 ){ # simulation <- 1
+for(simulation in 1:NSimul ){ # simulation <- 1
   geneticResults <- matrix(data=NA, nrow=nrow(GeneticData), ncol=numberOfLoci)
   
   ### LOOP ON LOCI >>>>>>>>>>>>>>>>>
@@ -117,10 +127,25 @@ for(simulation in 1:2 ){ # simulation <- 1
     
     # Record the genetic data
     geneticResults[,locus] <- coalTable[coalTable$coalescing%in%names(localizationData),"genetic_value"]
+    # Record the forward log probability
     
   } # END OF LOOP OVER LOCI <<<<<<<<<<<<<
   
   # write results of genetic data 
   write.table(t(geneticResults), file=paste(getwd(),"/SimulResults/", "Genetics_",simulation, ".txt", sep=""))
-  
+
+  forwardLogProb = data.frame(simulationNo=NA,logProb=NA);forwardLogProb=forwardLogProb[-1,]
+  forwardLogProb[simulation,] = c(simulation,coalescentList$forward_log_prob)
 } # END OF LOOP OVER SIMULATIONS <<<<<<<<<<<<<<<<<<<
+
+write.table(forwardLogProb,"SimulResults/ForwardLogProbabilities.txt")
+# Post traitement
+
+
+# Caracterizing rotation to apply to genetic simulations to get summary statistics
+#
+Rotation = PCA_rotation(GeneticData[,locusNames],DistanceMethod)
+
+for (i in 1:NSimul)
+{
+}

@@ -102,7 +102,8 @@ for(simulation in 1:2 ){ # simulation <- 1
                                             K = values(K))
     
     # adding branch length and genetic data
-    Coalescent_genetics <- add_br_length_and_mutation(coalescentList, mutation_rate=.1)
+    Coalescent_genetics <- add_br_length_and_mutation(coalescent = coalescentList, 
+                                                      mutation_rate = ParamList[["Mutation"]][["mutationRate"]][["Values"]][simulation])
     
     # Transforming the coalescent list into a table
     coalTable <- coalist_2_coaltable(Coalescent_genetics[[1]])

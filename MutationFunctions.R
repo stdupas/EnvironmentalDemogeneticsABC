@@ -82,9 +82,9 @@ addGeneticValueToCoaltable <- function(coaltable,initialGenetValue,stepvalue)
 {
   coaltable[dim(coaltable)[1]+1,"genetic_value"]=initialGenetValue
   coaltable[dim(coaltable)[1],"coalescing"]=max(unlist(coaltable[,"new_node"]))
-  for(branch in rev(rownames(coaltable)[-dim(coaltable)[1]]))
+  for(branch in rev(rownames(coaltable)[-dim(coaltable)[1]])) # branch=rev(rownames(coaltable)[-dim(coaltable)[1]])[1]
   {
-    coaltable[branch,"genetic_value"] <- coaltable[branch,"resultant"] + coaltable[which(coaltable$coalescing==coaltable[branch,"new_node"]),"genetic_value"]
+    coaltable[branch,"genetic_value"] <- coaltable[branch,"Resultant"] + coaltable[which(coaltable$coalescing==coaltable[branch,"new_node"]),"genetic_value"]
   }
 coaltable
 }

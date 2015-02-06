@@ -78,13 +78,29 @@ resultantFunction <- function(nbrMutations, stepValue, mutationModel, args){
   return(res)
 }
 
-addGeneticValueToCoaltable <- function(coaltable,initialGenetValue,stepvalue)
+addGeneticValueToCoaltable <- function(coalTable,initialGenetValue,stepValue)
 {
-  coaltable[dim(coaltable)[1]+1,"genetic_value"]=initialGenetValue
-  coaltable[dim(coaltable)[1],"coalescing"]=max(unlist(coaltable[,"new_node"]))
-  for(branch in rev(rownames(coaltable)[-dim(coaltable)[1]])) # branch=rev(rownames(coaltable)[-dim(coaltable)[1]])[1]
+  # Compute genetic value of nodes in a coalescent, starting from the ancestor
+  #
+  # Args:
+  #   coalTable: a table giving the coalescent, returned by coalist_2_coaltable function
+  #   initialGenetValue: the genetic value of the ancestor
+  #   stepValue : the step value of the mutation model
+  #
+  # Returns:
+  #   the appended coalTable, with genetic value
+  
+  # Add a row for the ancestor
+  coalTable[dim(coalTable)[1]+1,"genetic_value"] <- initialGenetValue
+  # Precise the children nodes of the ancestor to connect the genealogy to the ancestral genetic value
+  coalTable[dim(coalTable)[1],"coalescing"] <- max(unlist(coalTable[,"new_node"]))
+  
+  # Compute genetic values from ancestor to children
+  for(branch in rev(rownames(coalTable)[-dim(coalTable)[1]])) # branch <- rev(rownames(coalTable)[-dim(coalTable)[1]])[1]
   {
-    coaltable[branch,"genetic_value"] <- coaltable[branch,"Resultant"] + coaltable[which(coaltable$coalescing==coaltable[branch,"new_node"]),"genetic_value"]
+    # for the child, add parent genetic value and resultant to get child genetic value
+    coalTable[branch,"genetic_value"] <- coalTable[branch,"Resultant"] + coalTable[which(coalTable$coalescing==coalTable[branch,"new_node"]),"genetic_value"]
   }
-coaltable
+  
+return(coalTable)
 }

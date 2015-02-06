@@ -68,7 +68,7 @@ for(simulation in 1:2 ){ # simulation <- 1
   geneticResults <- matrix(data=NA, nrow=nrow(GeneticData), ncol=numberOfLoci)
   
   ### LOOP ON LOCI >>>>>>>>>>>>>>>>>
-  for(locus in 1:numberOfLoci){
+  for(locus in 1:numberOfLoci){ # locus=1
     
     # Get the stepValue of the locus under concern
     stepValue <- stepValueOfLoci[locus]
@@ -113,14 +113,14 @@ for(simulation in 1:2 ){ # simulation <- 1
                                                   args = getArgsListMutation(simulation = simulation, ParamList = ParamList ))
     
     # add genetic values
-    coalTable <- addGeneticValueToCoaltable(coalTable,200)
+    coalTable <- addGeneticValueToCoaltable(coalTable,200,stepValue)
     
     # Record the genetic data
-    geneticResults[[locus]] <- "HUM !"
+    geneticResults[,locus] <- coalTable[coalTable$coalescing%in%names(localizationData),"genetic_value"]
     
   } # END OF LOOP OVER LOCI <<<<<<<<<<<<<
   
   # write results of genetic data 
-  write.table(GeneticResults, file=paste(getwd(),"/SimulResults/", "Genetics_",simulation, ".txt", sep=""))
+  write.table(t(geneticResults), file=paste(getwd(),"/SimulResults/", "Genetics_",simulation, ".txt", sep=""))
   
 } # END OF LOOP OVER SIMULATIONS <<<<<<<<<<<<<<<<<<<

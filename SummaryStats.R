@@ -31,3 +31,7 @@ PCA_rotation <- function(geneticData,Distance)
   # note we may have to select majors PCi containing information
 }
 
+appendRefTable <- function(simulation=1,rotation)
+{
+  geneticData <- read.table(paste("SimulResults/","Genetics_",simulation,".txt",sep=""))
+}

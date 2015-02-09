@@ -18,7 +18,7 @@ source("CoalescentFunctions.R")
 source("PriorFunctions.R")
 source("MarkovProcess.R")
 source("GeneticDataSimulation.R")
-
+source("SummaryStats.R")
 ### Sourcing Libraries
 library(raster)
 library(ape)
@@ -41,16 +41,18 @@ DistanceMethod = "DeltaMuDistance"
 
 # load fake GeneticData 
 load("GeneticData.RData")
+save(ParamList,file="ParamList.RData")
 
+# genetic value of the ancestor
+initialGenetValue <- 200
 # number of loci under study:
 locusNames <- colnames(GeneticData)[!(colnames(GeneticData)%in%c("x","y","Cell_numbers"))]
 numberOfLoci <- length(locusNames)
 
 # assuming we have the step values for each locus
 stepValueOfLoci <- c(1,2,3,4,5)
-
 # where are the sampled data ?
-localizationData <- cellFromXY(object = K, xy = GeneticData[, c("x", "y")])
+localizationData <- cellFromXY(object = rasterStack, xy = GeneticData[, c("x", "y")])
 names(localizationData)=1:length(localizationData)
 
 
@@ -61,11 +63,10 @@ names(localizationData)=1:length(localizationData)
 # Or load it from working directory
 load("ParamList.RData")
 
-# number of simulations
-NSimul = 2
+# Simulations number
+Simulated = 1:2
 # forward log probability vector
 
-forwardLogProb = data.frame(simulationNo=NA,logProb=NA);forwardLogProb=forwardLogProb[-1,]
 ########## end of parameters initialisation <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
@@ -74,7 +75,7 @@ forwardLogProb = data.frame(simulationNo=NA,logProb=NA);forwardLogProb=forwardLo
 
 
 #### LOOP ON SIMULATIONS >>>>>>>>>>>>>>>>>>>>>>
-for(simulation in 1:NSimul ){ # simulation <- 1
+for(simulation in Simulated){ # simulation <- 1
   geneticResults <- matrix(data=NA, nrow=nrow(GeneticData), ncol=numberOfLoci)
   
   ### LOOP ON LOCI >>>>>>>>>>>>>>>>>
@@ -105,25 +106,27 @@ for(simulation in 1:NSimul ){ # simulation <- 1
     transitionForward <- transitionMatrixForward(r = values(r), K = values(K), migration = migrationMatrix, meth = "non_overlap")
     
     # launch the coalescent
-    coalescentList <- simul_coalescent_only(tipDemes = localizationData,
+    Coalescent_genetics <- simul_coalescent_only(tipDemes = localizationData,
                                             transitionForward = transitionForward, 
                                             transitionBackward = transitionBackward, 
                                             K = values(K))
     
     # adding branch length and genetic data
-    Coalescent_genetics <- add_br_length_and_mutation(coalescentList, mutation_rate=.1)
+    Coalescent_genetics <- add_br_length_and_mutation(coalescent = Coalescent_genetics, 
+                                                      mutation_rate = ParamList[["Mutation"]][["mutationRate"]][["Values"]][simulation])
     
     # Transforming the coalescent list into a table
     coalTable <- coalist_2_coaltable(Coalescent_genetics[[1]])
     
     # add resultant 
-    coalTable[["Resultant"]] <- resultantFunction(nbrMutations = coalTable[["mutations"]],
+    whichzero <- coalTable[["mutations"]]==0
+    coalTable[["Resultant"]] <- 0
+    coalTable[["Resultant"]][!whichzero] <- resultantFunction(nbrMutations = coalTable[["mutations"]][!whichzero],
                                                   stepValue = stepValue,
                                                   mutationModel = getFunctionMutation(ParamList = ParamList),
                                                   args = getArgsListMutation(simulation = simulation, ParamList = ParamList ))
-    
     # add genetic values
-    coalTable <- addGeneticValueToCoaltable(coalTable,200,stepValue)
+    coalTable <- addGeneticValueToCoaltable(coalTable = coalTable, initialGenetValue = initialGenetValue, stepValue = stepValue)
     
     # Record the genetic data
     geneticResults[,locus] <- coalTable[coalTable$coalescing%in%names(localizationData),"genetic_value"]
@@ -132,20 +135,41 @@ for(simulation in 1:NSimul ){ # simulation <- 1
   } # END OF LOOP OVER LOCI <<<<<<<<<<<<<
   
   # write results of genetic data 
-  write.table(t(geneticResults), file=paste(getwd(),"/SimulResults/", "Genetics_",simulation, ".txt", sep=""))
-
-  forwardLogProb = data.frame(simulationNo=NA,logProb=NA);forwardLogProb=forwardLogProb[-1,]
-  forwardLogProb[simulation,] = c(simulation,coalescentList$forward_log_prob)
+  fname = paste(getwd(),"/SimulResults/", "Genetics_",simulation, ".txt", sep="")
+  write.table(geneticResults, file=fname)
+  write(coalescentList$forward_log_prob,file=fname,append=TRUE)
 } # END OF LOOP OVER SIMULATIONS <<<<<<<<<<<<<<<<<<<
 
-write.table(forwardLogProb,"SimulResults/ForwardLogProbabilities.txt")
 # Post traitement
 
 
 # Caracterizing rotation to apply to genetic simulations to get summary statistics
 #
-Rotation = PCA_rotation(GeneticData[,locusNames],DistanceMethod)
 
-for (i in 1:NSimul)
+Rotation = PCA_rotation(GeneticData[,locusNames],DistanceMethod)
+summaryStatObsMat = as.matrix(do.call(what = DistanceMethod, args = list(GeneticData[,locusNames])))%*%Rotation
+colN <- paste(rep(colnames(summaryStatObsMat),each=length(rownames(summaryStatObsMat))),rownames(summaryStatObsMat),sep=".")
+summaryStatObsVect = c(summaryStatObsMat)
+names(summaryStatObsVect)<- colN
+summaryStatObs <- cbind(ForWLogProb=0,as.data.frame(t(summaryStatObsVect)))
+summaryStatSim=summaryStatObs[-1,]
+#summaryStatSim <- summaryStatSim[-1,]
+
+## filling summary statistics
+
+
+Simulated <- grep (pattern = "^Genetics_\\d*.txt$", x=list.files("SimulResults/"), value = TRUE)
+for (filen in Simulated)
 {
+  genetic_i <- read.table(paste("SimulResults/",filen,sep=""),nrows=nrow(GeneticData))
+  ForwLogL <- as.numeric(scan(paste("SimulResults/",filen,sep=""),
+                   what="numeric",
+                   skip=nrow(GeneticData)+1))
+  genetDist = do.call(what = DistanceMethod, 
+                      args = list(genetic_i))
+  rotatedGenetDist = as.matrix(genetDist)%*%Rotation
+  i <- grep(pattern="\\d", x=filen, value=TRUE)
+  summaryStatSim[i,] <- c(ForwLogL,rotatedGenetDist)
 }
+
+

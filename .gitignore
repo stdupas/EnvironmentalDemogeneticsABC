@@ -1,3 +1,5 @@
 # Untracked files
 
-.Rhistory
+*.Rhistory
+*.RData
+Genetic_*.txt

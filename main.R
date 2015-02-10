@@ -18,7 +18,7 @@ source("CoalescentFunctions.R")
 source("PriorFunctions.R")
 source("MarkovProcess.R")
 source("GeneticDataSimulation.R")
-source("SummaryStats.R")
+
 ### Sourcing Libraries
 library(raster)
 library(ape)
@@ -34,38 +34,36 @@ Data2 <- data.frame(BIO1=c(300,120,120,400),BIO12=c(2000,350,350,2900))
 rasterStack <- stack(list("BIO1"=raster(matrix(Data2$BIO1,nrow=1,ncol=4),xmn=0,xmx=4,ymn=0,ymx=1),
                           "BIO12"=raster(matrix(Data2$BIO12,nrow=1,ncol=4),xmn=0,xmx=4,ymn=0,ymx=1)))
 
-# distance method to be applied to genetic data
-DistanceMethod = "DeltaMuDistance"
-
 ###### Genetic data :
 
 # load fake GeneticData 
 load("GeneticData.RData")
-save(ParamList,file="ParamList.RData")
 
 # genetic value of the ancestor
 initialGenetValue <- 200
+
 # number of loci under study:
 locusNames <- colnames(GeneticData)[!(colnames(GeneticData)%in%c("x","y","Cell_numbers"))]
 numberOfLoci <- length(locusNames)
 
 # assuming we have the step values for each locus
 stepValueOfLoci <- c(1,2,3,4,5)
+
 # where are the sampled data ?
 localizationData <- cellFromXY(object = rasterStack, xy = GeneticData[, c("x", "y")])
 names(localizationData)=1:length(localizationData)
 
 
 ###### Asking List to the user
+
+# Simulations number
+nbSimul <- 2
+
 # ParamList <- askListOfParameters(rasterStack=rasterStack, nb_simulations=10)
 # save(ParamList, file = "ParamList.RData")
 
 # Or load it from working directory
 load("ParamList.RData")
-
-# Simulations number
-Simulated = 1:2
-# forward log probability vector
 
 ########## end of parameters initialisation <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -75,7 +73,7 @@ Simulated = 1:2
 
 
 #### LOOP ON SIMULATIONS >>>>>>>>>>>>>>>>>>>>>>
-for(simulation in Simulated){ # simulation <- 1
+for(simulation in 1:nbSimul){ # simulation <- 1
   geneticResults <- matrix(data=NA, nrow=nrow(GeneticData), ncol=numberOfLoci)
   
   ### LOOP ON LOCI >>>>>>>>>>>>>>>>>
@@ -125,6 +123,7 @@ for(simulation in Simulated){ # simulation <- 1
                                                   stepValue = stepValue,
                                                   mutationModel = getFunctionMutation(ParamList = ParamList),
                                                   args = getArgsListMutation(simulation = simulation, ParamList = ParamList ))
+    
     # add genetic values
     coalTable <- addGeneticValueToCoaltable(coalTable = coalTable, initialGenetValue = initialGenetValue, stepValue = stepValue)
     
@@ -137,39 +136,6 @@ for(simulation in Simulated){ # simulation <- 1
   # write results of genetic data 
   fname = paste(getwd(),"/SimulResults/", "Genetics_",simulation, ".txt", sep="")
   write.table(geneticResults, file=fname)
-  write(coalescentList$forward_log_prob,file=fname,append=TRUE)
+  write(Coalescent_genetics$forward_log_prob,file=fname,append=TRUE)
+  
 } # END OF LOOP OVER SIMULATIONS <<<<<<<<<<<<<<<<<<<
-
-# Post traitement
-
-
-# Caracterizing rotation to apply to genetic simulations to get summary statistics
-#
-
-Rotation = PCA_rotation(GeneticData[,locusNames],DistanceMethod)
-summaryStatObsMat = as.matrix(do.call(what = DistanceMethod, args = list(GeneticData[,locusNames])))%*%Rotation
-colN <- paste(rep(colnames(summaryStatObsMat),each=length(rownames(summaryStatObsMat))),rownames(summaryStatObsMat),sep=".")
-summaryStatObsVect = c(summaryStatObsMat)
-names(summaryStatObsVect)<- colN
-summaryStatObs <- cbind(ForWLogProb=0,as.data.frame(t(summaryStatObsVect)))
-summaryStatSim=summaryStatObs[-1,]
-#summaryStatSim <- summaryStatSim[-1,]
-
-## filling summary statistics
-
-
-Simulated <- grep (pattern = "^Genetics_\\d*.txt$", x=list.files("SimulResults/"), value = TRUE)
-for (filen in Simulated)
-{
-  genetic_i <- read.table(paste("SimulResults/",filen,sep=""),nrows=nrow(GeneticData))
-  ForwLogL <- as.numeric(scan(paste("SimulResults/",filen,sep=""),
-                   what="numeric",
-                   skip=nrow(GeneticData)+1))
-  genetDist = do.call(what = DistanceMethod, 
-                      args = list(genetic_i))
-  rotatedGenetDist = as.matrix(genetDist)%*%Rotation
-  i <- grep(pattern="\\d", x=filen, value=TRUE)
-  summaryStatSim[i,] <- c(ForwLogL,rotatedGenetDist)
-}
-
-

@@ -169,7 +169,6 @@ simul_coalescent_only <- function(tipDemes,transitionForward, transitionBackward
   time=0
   prob_forward=NA
   number_of_nodes_over_generations=0
-  N <- round(K)
   coalescent = list() 
   # Nodes are initialized : 1 individual <=> 1 node
   nodes = as.numeric(names(tipDemes))
@@ -192,7 +191,14 @@ simul_coalescent_only <- function(tipDemes,transitionForward, transitionBackward
     ## Migration
     # we localize the ancestors in the landscape by sampling in the backward transition matrix. Optimized.
     names_node <- names(ancestorsDemes)
-    ancestorsDemes <- apply(X=as.array(1:length(ancestorsDemes)), MARGIN=1, FUN=backwardParentsLocalizationSampling, rasterStack, transitionBackward, descendentDemes) 
+    ancestorsDemes <- apply(X = as.array(1:length(ancestorsDemes)), 
+                            MARGIN=1, 
+                            FUN = backwardParentsLocalizationSampling, 
+                            rasterStack = rasterStack, 
+                            transitionBackward = transitionBackward, 
+                            DemeIdOfNodes = descendentDemes, 
+                            K = K) 
+    
     names(ancestorsDemes) <- names_node
     # once we know the ancestor deme numbers, we calculate the forward dispersion probability of the event
     time=time+1; if (round(time/10)*10==time) {print(time)}
@@ -211,7 +217,7 @@ simul_coalescent_only <- function(tipDemes,transitionForward, transitionBackward
       if (length(nodes_remaining_in_the_deme)>1)
       {
         # Create a function for ancestor attribution within a deme :
-        ancestorDescendentmatrix <- parentalityAttributationWithinADeme(nodesRemainingInDeme=nodes_remaining_in_the_deme, N=N, deme=deme)
+        ancestorDescendentmatrix <- parentalityAttributationWithinADeme(nodesRemainingInDeme = nodes_remaining_in_the_deme, N = round(K), deme=deme)
         
         # Columns of ancestorDescendentmatrix with more than one TRUE allow to identify coalescing individuals :
         if (any(colSums(ancestorDescendentmatrix)>1) )
@@ -280,7 +286,7 @@ parentalityAttributationWithinADeme <- function(nodesRemainingInDeme, N, deme)
   return(parentDescendentmatrix)
 }
 
-backwardParentsLocalizationSampling <- function(node, rasterStack, transitionBackward, DemeIdOfNodes)
+backwardParentsLocalizationSampling <- function(node, rasterStack, transitionBackward, DemeIdOfNodes, K)
 {
   # Localizes the parents in the landscape by sampling in the backward transition matrix.
   #
@@ -289,6 +295,7 @@ backwardParentsLocalizationSampling <- function(node, rasterStack, transitionBac
   #   rasterStack: the rasterStack used to define landscape structure (demes)
   #   transitionBackward: the transition matrice giving the probability the migrate between demes of the landscape
   #   DemeIdOfNodes: the vector giving nodes localization (giving the number of the deme where each node sits)
+  #   K: the vector giving the values of carrying capacities
   #
   # Returns:
   #   The number of the deme where the parents are likely to be found

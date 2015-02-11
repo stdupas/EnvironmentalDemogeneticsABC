@@ -74,7 +74,7 @@ load("ParamList.RData")
 
 
 #### LOOP ON SIMULATIONS >>>>>>>>>>>>>>>>>>>>>>
-mclapply(X = 1:nbSimul, FUN = function(x, 
+lapply(X = 1:nbSimul, FUN = function(x, 
                                        ParamList, 
                                        rasterStack, 
                                        GeneticData, 
@@ -92,12 +92,12 @@ mclapply(X = 1:nbSimul, FUN = function(x,
     stepValue <- stepValueOfLoci[locus]
     
     # Get the carrying capacity map :
-    K <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = ParamList, sublist="NicheK"), 
+    rasK <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = ParamList, sublist="NicheK"), 
                                      rasterStack = rasterStack,
                                      args = getArgsListNiche(simulation = x, ParamList = ParamList, sublist="NicheK"))
     
     # Get growth rate map :
-    r <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = ParamList, sublist="NicheR"), 
+    rasR <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = ParamList, sublist="NicheR"), 
                                      rasterStack = rasterStack,
                                      args = getArgsListNiche(simulation = x, ParamList = ParamList, sublist="NicheR"))
     
@@ -109,14 +109,14 @@ mclapply(X = 1:nbSimul, FUN = function(x,
     migrationMatrix <- migrationRateMatrix(kernelMatrix)
     
     # Get transition matrix :
-    transitionBackward <- transitionMatrixBackward(r = values(r), K = values(K), migration = migrationMatrix)
-    transitionForward <- transitionMatrixForward(r = values(r), K = values(K), migration = migrationMatrix, meth = "non_overlap")
+    transitionBackward <- transitionMatrixBackward(r = values(rasR), K = values(rasK), migration = migrationMatrix)
+    transitionForward <- transitionMatrixForward(r = values(rasR), K = values(rasK), migration = migrationMatrix, meth = "non_overlap")
     
     # launch the coalescent
     Coalescent_genetics <- simul_coalescent_only(tipDemes = localizationData,
                                             transitionForward = transitionForward, 
                                             transitionBackward = transitionBackward, 
-                                            K = values(K))
+                                            K = values(rasK))
     
     # adding branch length and genetic data
     Coalescent_genetics <- add_br_length_and_mutation(coalescent = Coalescent_genetics, 
@@ -155,5 +155,4 @@ GeneticData = GeneticData,
 initialGenetValue = initialGenetValue, 
 numberOfLoci = numberOfLoci,
 stepValueOfLoci = stepValueOfLoci,
-localizationData = localizationData,
-mc.cores = 2)
+localizationData = localizationData)

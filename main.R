@@ -24,6 +24,7 @@ library(raster)
 library(ape)
 library(stringr)
 library(lattice)
+library(parallel)
 
 ########### Parameters initialisation  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
@@ -37,7 +38,7 @@ rasterStack <- stack(list("BIO1"=raster(matrix(Data2$BIO1,nrow=1,ncol=4),xmn=0,x
 ###### Genetic data :
 
 # load fake GeneticData 
-load("GeneticData.RData")
+GeneticData <- read.table("GeneticData.txt", header=TRUE)
 
 # genetic value of the ancestor
 initialGenetValue <- 200
@@ -57,7 +58,7 @@ names(localizationData)=1:length(localizationData)
 ###### Asking List to the user
 
 # Simulations number
-nbSimul <- 2
+nbSimul <- 10
 
 # ParamList <- askListOfParameters(rasterStack=rasterStack, nb_simulations=10)
 # save(ParamList, file = "ParamList.RData")
@@ -73,7 +74,15 @@ load("ParamList.RData")
 
 
 #### LOOP ON SIMULATIONS >>>>>>>>>>>>>>>>>>>>>>
-for(simulation in 1:nbSimul){ # simulation <- 1
+mclapply(X = 1:nbSimul, FUN = function(x, 
+                                       ParamList, 
+                                       rasterStack, 
+                                       GeneticData, 
+                                       initialGenetValue, 
+                                       numberOfLoci, 
+                                       stepValueOfLoci,
+                                       localizationData){
+  
   geneticResults <- matrix(data=NA, nrow=nrow(GeneticData), ncol=numberOfLoci)
   
   ### LOOP ON LOCI >>>>>>>>>>>>>>>>>
@@ -85,17 +94,17 @@ for(simulation in 1:nbSimul){ # simulation <- 1
     # Get the carrying capacity map :
     K <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = ParamList, sublist="NicheK"), 
                                      rasterStack = rasterStack,
-                                     args = getArgsListNiche(simulation=simulation, ParamList = ParamList, sublist="NicheK"))
+                                     args = getArgsListNiche(simulation = x, ParamList = ParamList, sublist="NicheK"))
     
     # Get growth rate map :
     r <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = ParamList, sublist="NicheR"), 
                                      rasterStack = rasterStack,
-                                     args = getArgsListNiche(simulation=simulation, ParamList = ParamList, sublist="NicheR"))
+                                     args = getArgsListNiche(simulation = x, ParamList = ParamList, sublist="NicheR"))
     
     # Get migration matrix :
     kernelMatrix <- dispersionFunctionForRasterLayer(dispersionFunction=getFunctionDispersion(ParamList),
                                                      rasterLayer=rasterStack[[1]], 
-                                                     args=getArgsListDispersion(simulation = simulation, ParamList = ParamList))
+                                                     args=getArgsListDispersion(simulation = x, ParamList = ParamList))
     
     migrationMatrix <- migrationRateMatrix(kernelMatrix)
     
@@ -111,7 +120,7 @@ for(simulation in 1:nbSimul){ # simulation <- 1
     
     # adding branch length and genetic data
     Coalescent_genetics <- add_br_length_and_mutation(coalescent = Coalescent_genetics, 
-                                                      mutation_rate = ParamList[["Mutation"]][["mutationRate"]][["Values"]][simulation])
+                                                      mutation_rate = ParamList[["Mutation"]][["mutationRate"]][["Values"]][x])
     
     # Transforming the coalescent list into a table
     coalTable <- coalist_2_coaltable(Coalescent_genetics[[1]])
@@ -122,7 +131,7 @@ for(simulation in 1:nbSimul){ # simulation <- 1
     coalTable[["Resultant"]][!whichzero] <- resultantFunction(nbrMutations = coalTable[["mutations"]][!whichzero],
                                                   stepValue = stepValue,
                                                   mutationModel = getFunctionMutation(ParamList = ParamList),
-                                                  args = getArgsListMutation(simulation = simulation, ParamList = ParamList ))
+                                                  args = getArgsListMutation(simulation = x, ParamList = ParamList ))
     
     # add genetic values
     coalTable <- addGeneticValueToCoaltable(coalTable = coalTable, initialGenetValue = initialGenetValue, stepValue = stepValue)
@@ -134,8 +143,17 @@ for(simulation in 1:nbSimul){ # simulation <- 1
   } # END OF LOOP OVER LOCI <<<<<<<<<<<<<
   
   # write results of genetic data 
-  fname = paste(getwd(),"/SimulResults/", "Genetics_",simulation, ".txt", sep="")
+  fname = paste(getwd(),"/SimulResults/", "Genetics_", x , ".txt", sep="")
   write.table(geneticResults, file=fname)
   write(Coalescent_genetics$forward_log_prob,file=fname,append=TRUE)
   
-} # END OF LOOP OVER SIMULATIONS <<<<<<<<<<<<<<<<<<<
+} # END OF FUNCTION IN MCLAPPLY
+,
+ParamList = ParamList, 
+rasterStack = rasterStack, 
+GeneticData = GeneticData, 
+initialGenetValue = initialGenetValue, 
+numberOfLoci = numberOfLoci,
+stepValueOfLoci = stepValueOfLoci,
+localizationData = localizationData,
+mc.cores = 2)

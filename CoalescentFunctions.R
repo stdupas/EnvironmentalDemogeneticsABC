@@ -77,7 +77,7 @@ simul_coalescent <- function(geneticData, rasterStack, pK, pr, shapesK, shapesr,
     number_of_nodes_over_generations = number_of_nodes_over_generations + length(cell_number_of_nodes)
     
     ## Coalescence
-    time=time+1; if (round(time/10)*10==time) {print(time)}
+    time=time+1; 
     
     # we now perform coalescence within each cell of the landscape for the parents
     for (cell in 1:ncell(rasterStack))#cell=1;cell=2;cell=3;cell=4;cell=5;cell=26;cell=10
@@ -201,7 +201,7 @@ simul_coalescent_only <- function(tipDemes,transitionForward, transitionBackward
     
     names(ancestorsDemes) <- names_node
     # once we know the ancestor deme numbers, we calculate the forward dispersion probability of the event
-    time=time+1; if (round(time/10)*10==time) {print(time)}
+    time=time+1; 
     prob_forward[time] = sum(log(transitionForward[ancestorsDemes,descendentDemes]))
     number_of_nodes_over_generations = number_of_nodes_over_generations + length(descendentDemes)
     

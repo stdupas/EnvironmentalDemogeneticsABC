@@ -1,4 +1,3 @@
-
 ### Setting working directories
 rm(list=ls())
 wd="/media/1To/IRD/ARTICLES/Dupas/NicheCoal/Graph_Pop" # portable
@@ -57,9 +56,6 @@ names(localizationData)=1:length(localizationData)
 
 ###### Asking List to the user
 
-# Simulations number
-nbSimul <- 10
-
 # ParamList <- askListOfParameters(rasterStack=rasterStack, nb_simulations=10)
 # save(ParamList, file = "ParamList.RData")
 
@@ -68,91 +64,117 @@ load("ParamList.RData")
 
 ########## end of parameters initialisation <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-
-
-######################### Using Functions >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
-
-#### LOOP ON SIMULATIONS >>>>>>>>>>>>>>>>>>>>>>
-mclapply(X = 1:nbSimul, FUN = function(x, 
-                                       ParamList, 
-                                       rasterStack, 
-                                       GeneticData, 
-                                       initialGenetValue, 
-                                       numberOfLoci, 
-                                       stepValueOfLoci,
-                                       localizationData){
+local({
   
-  geneticResults <- matrix(data=NA, nrow=nrow(GeneticData), ncol=numberOfLoci)
+  # open a connection to a temporary file : pipe between master process and child
+  f <- fifo(tempfile(), open="w+b", blocking=T)
   
-  ### LOOP ON LOCI >>>>>>>>>>>>>>>>>
-  for(locus in 1:numberOfLoci){ # locus=1
+  if (inherits(parallel:::mcfork(), "masterProcess")) {
+    # Child
+    progress <- 0.0
     
-    # Get the stepValue of the locus under concern
-    stepValue <- stepValueOfLoci[locus]
+    while (progress < 1 && !isIncomplete(f)) {
+      msg <- readBin(f, "double")
+      progress <- progress + as.numeric(msg)
+      # send a message in C-style
+      cat(sprintf("Progress: %.2f%%\n", progress * 100))
+    } 
     
-    # Get the carrying capacity map :
-    rasK <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = ParamList, sublist="NicheK"), 
-                                     rasterStack = rasterStack,
-                                     args = getArgsListNiche(simulation = x, ParamList = ParamList, sublist="NicheK"))
+    # close the current child process, informing master process
+    parallel:::mcexit()
+  }
     
-    # Get growth rate map :
-    rasR <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = ParamList, sublist="NicheR"), 
-                                     rasterStack = rasterStack,
-                                     args = getArgsListNiche(simulation = x, ParamList = ParamList, sublist="NicheR"))
-    
-    # Get migration matrix :
-    kernelMatrix <- dispersionFunctionForRasterLayer(dispersionFunction=getFunctionDispersion(ParamList),
-                                                     rasterLayer=rasterStack[[1]], 
-                                                     args=getArgsListDispersion(simulation = x, ParamList = ParamList))
-    
-    migrationMatrix <- migrationRateMatrix(kernelMatrix)
-    
-    # Get transition matrix :
-    transitionBackward <- transitionMatrixBackward(r = values(rasR), K = values(rasK), migration = migrationMatrix)
-    transitionForward <- transitionMatrixForward(r = values(rasR), K = values(rasK), migration = migrationMatrix, meth = "non_overlap")
-    
-    # launch the coalescent
-    Coalescent_genetics <- simul_coalescent_only(tipDemes = localizationData,
-                                            transitionForward = transitionForward, 
-                                            transitionBackward = transitionBackward, 
-                                            K = values(rasK))
-    
-    # adding branch length and genetic data
-    Coalescent_genetics <- add_br_length_and_mutation(coalescent = Coalescent_genetics, 
-                                                      mutation_rate = ParamList[["Mutation"]][["mutationRate"]][["Values"]][x])
-    
-    # Transforming the coalescent list into a table
-    coalTable <- coalist_2_coaltable(Coalescent_genetics[[1]])
-    
-    # add resultant 
-    whichzero <- coalTable[["mutations"]]==0
-    coalTable[["Resultant"]] <- 0
-    coalTable[["Resultant"]][!whichzero] <- resultantFunction(nbrMutations = coalTable[["mutations"]][!whichzero],
-                                                  stepValue = stepValue,
-                                                  mutationModel = getFunctionMutation(ParamList = ParamList),
-                                                  args = getArgsListMutation(simulation = x, ParamList = ParamList ))
-    
-    # add genetic values
-    coalTable <- addGeneticValueToCoaltable(coalTable = coalTable, initialGenetValue = initialGenetValue, stepValue = stepValue)
-    
-    # Record the genetic data
-    geneticResults[,locus] <- coalTable[coalTable$coalescing%in%names(localizationData),"genetic_value"]
-    # Record the forward log probability
-    
-  } # END OF LOOP OVER LOCI <<<<<<<<<<<<<
+  numJobs <- 10
   
-  # write results of genetic data 
-  fname = paste(getwd(),"/SimulResults/", "Genetics_", x , ".txt", sep="")
-  write.table(geneticResults, file=fname)
-  write(Coalescent_genetics$forward_log_prob,file=fname,append=TRUE)
+  mclapply(X = 1:numJobs, FUN = function(x, 
+                                                   ParamList, 
+                                                   rasterStack, 
+                                                   GeneticData, 
+                                                   initialGenetValue, 
+                                                   numberOfLoci, 
+                                                   stepValueOfLoci,
+                                                   localizationData){
+    
+    geneticResults <- matrix(data=NA, nrow=nrow(GeneticData), ncol=numberOfLoci)
+    
+    ### LOOP ON LOCI >>>>>>>>>>>>>>>>>
+    for(locus in 1:numberOfLoci){ # locus=1
+      
+      # Get the stepValue of the locus under concern
+      stepValue <- stepValueOfLoci[locus]
+      
+      # Get the carrying capacity map :
+      rasK <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = ParamList, sublist="NicheK"), 
+                                          rasterStack = rasterStack,
+                                          args = getArgsListNiche(simulation = x, ParamList = ParamList, sublist="NicheK"))
+      
+      # Get growth rate map :
+      rasR <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = ParamList, sublist="NicheR"), 
+                                          rasterStack = rasterStack,
+                                          args = getArgsListNiche(simulation = x, ParamList = ParamList, sublist="NicheR"))
+      
+      # Get migration matrix :
+      kernelMatrix <- dispersionFunctionForRasterLayer(dispersionFunction=getFunctionDispersion(ParamList),
+                                                       rasterLayer=rasterStack[[1]], 
+                                                       args=getArgsListDispersion(simulation = x, ParamList = ParamList))
+      
+      migrationMatrix <- migrationRateMatrix(kernelMatrix)
+      
+      # Get transition matrix :
+      transitionBackward <- transitionMatrixBackward(r = values(rasR), K = values(rasK), migration = migrationMatrix)
+      transitionForward <- transitionMatrixForward(r = values(rasR), K = values(rasK), migration = migrationMatrix, meth = "non_overlap")
+      
+      # launch the coalescent
+      Coalescent_genetics <- simul_coalescent_only(tipDemes = localizationData,
+                                                   transitionForward = transitionForward, 
+                                                   transitionBackward = transitionBackward, 
+                                                   K = values(rasK))
+      
+      # adding branch length and genetic data
+      Coalescent_genetics <- add_br_length_and_mutation(coalescent = Coalescent_genetics, 
+                                                        mutation_rate = ParamList[["Mutation"]][["mutationRate"]][["Values"]][x])
+      
+      # Transforming the coalescent list into a table
+      coalTable <- coalist_2_coaltable(Coalescent_genetics[[1]])
+      
+      # add resultant 
+      whichzero <- coalTable[["mutations"]]==0
+      coalTable[["Resultant"]] <- 0
+      coalTable[["Resultant"]][!whichzero] <- resultantFunction(nbrMutations = coalTable[["mutations"]][!whichzero],
+                                                                stepValue = stepValue,
+                                                                mutationModel = getFunctionMutation(ParamList = ParamList),
+                                                                args = getArgsListMutation(simulation = x, ParamList = ParamList ))
+      
+      # add genetic values
+      coalTable <- addGeneticValueToCoaltable(coalTable = coalTable, initialGenetValue = initialGenetValue, stepValue = stepValue)
+      
+      # Record the genetic data
+      geneticResults[,locus] <- coalTable[coalTable$coalescing%in%names(localizationData),"genetic_value"]
+      # Record the forward log probability
+      
+    } # END OF LOOP OVER LOCI <<<<<<<<<<<<<
+    
+    # write results of genetic data 
+    fname = paste(getwd(),"/SimulResults/", "Genetics_", x , ".txt", sep="")
+    write.table(geneticResults, file=fname)
+    write(Coalescent_genetics$forward_log_prob,file=fname,append=TRUE)
+    
+    # Send progress update
+    writeBin(1/numJobs, f)
+    
+  } # END OF FUNCTION IN MCLAPPLY
+  ,
+  ParamList = ParamList, 
+  rasterStack = rasterStack, 
+  GeneticData = GeneticData, 
+  initialGenetValue = initialGenetValue, 
+  numberOfLoci = numberOfLoci,
+  stepValueOfLoci = stepValueOfLoci,
+  localizationData = localizationData, mc.cores = 2)
   
-} # END OF FUNCTION IN MCLAPPLY
-,
-ParamList = ParamList, 
-rasterStack = rasterStack, 
-GeneticData = GeneticData, 
-initialGenetValue = initialGenetValue, 
-numberOfLoci = numberOfLoci,
-stepValueOfLoci = stepValueOfLoci,
-localizationData = localizationData, mc.cores = 2)
+  close(f)
+  
+})
+
+cat("Done\n")
+

@@ -74,7 +74,7 @@ load("ParamList.RData")
 
 
 #### LOOP ON SIMULATIONS >>>>>>>>>>>>>>>>>>>>>>
-lapply(X = 1:nbSimul, FUN = function(x, 
+mclapply(X = 1:nbSimul, FUN = function(x, 
                                        ParamList, 
                                        rasterStack, 
                                        GeneticData, 
@@ -155,4 +155,4 @@ GeneticData = GeneticData,
 initialGenetValue = initialGenetValue, 
 numberOfLoci = numberOfLoci,
 stepValueOfLoci = stepValueOfLoci,
-localizationData = localizationData)
+localizationData = localizationData, mc.cores = 2)

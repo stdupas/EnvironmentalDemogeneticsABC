@@ -1,38 +1,45 @@
 
 
 spatialCoalescentSimulation <- function(tipDemes, transitionForward, transitionBackward, N){
-  # Args :
-  # tipDemes = as.vector(localizationData)
-  # transitionForward = transitionForward
-  # transitionBackward = transitionBackward
-  # N <- round(values(rasK))
+  # Simulate a genealogy backward in the time, accross demes
+  # 
+  # Args:
+  #   tipdDemes: vector of the demes in which each node is found a time 0.
+  #   transitionForward: matrix of transition backward in time
+  #   transitionBackward: matrix of transition backward in time
+  #   N a vector of population sizes
+  #
+  # Returns: 
+  #   A matrix describing the coalescence events : time/childNode1/childNode2/parentNode
+
+  # waiting for the main :
+  #   tipDemes = c(1,2,4,1,4,10)
+  #   transitionForward = transitionForward
+  #   transitionBackward = transitionBackward
+  #   N <- c(40, 42, 50, 59, 76, 56, 56, 98, 2, 13)
   
-  # Initalize :
+  ###### INITIALISATION
   time <- 0
-  headNode <- length(tipDemes)
-  # newNode <- length(tipDemes)
   events <- 0
-  maxCoalEvent <- length(tipDemes)-1
+  headNode <- length(tipDemes)
+  maxCoalEvent <- length(tipDemes) - 1
   nodesState <- c(tipDemes, rep(NA, maxCoalEvent))
   
-  # coalescent informations : (coalescence time, Child 1, Child 2, Parent)
+  # coalescent informations : (time of coalescence, Child 1, Child 2, Parent)
   coalescent <- matrix(data = NA, nrow = maxCoalEvent, ncol = 4)
   
-  ### until complete coalescence is done
+  ###### REPEAT UNTIL TOTAL COALESCENCE
   while (is.na(tail(nodesState, n=1))){
     time <- time +1
-    print(time)
     
-    #### Migration
+    #### MIGRATION
     nodesState[!is.na(nodesState)] <- vapply(X = nodesState[!is.na(nodesState)],
                                              FUN = function(x, N, transitionBackward)
                                              {sample( length(N), size = 1, prob = c(transitionBackward[x,]) )},
                                              N = N, transitionBackward = transitionBackward,
                                              FUN.VALUE = c(1))
-    
-    #### Coalescence accros cells
-    
-    ####### Evaluation of candidates nodes
+        
+    ####### CANDIDATES NODES FOR COALESCENCE
     # for active nodes, i.e which are not coded by NA : 
     activeNodes <- which(!is.na(nodesState))
     activeDemes <- nodesState[activeNodes]
@@ -45,16 +52,18 @@ spatialCoalescentSimulation <- function(tipDemes, transitionForward, transitionB
                          FUN = function(x, nodesState){which(nodesState == x)},
                          nodesState = nodesState)
     
-    ####### Apply over candidates nodes list
+    ####### COALESCENCE
     if(length(candidates) > 0){
-      for(x in seq(from=1, to= length(candidates))){ # x <- 1
+      
+      for(x in seq(from = 1, to = length(candidates))){ # x <- 1
+        
         focalDeme <- demes[x]
         # Attribute parents (among N possible parents) to each node present in the deme
         parents <- sample(N[focalDeme], size = length(candidates[[x]]), replace = TRUE) # parents[1] <- parents[2]
         # Test for equality of parents :
         anonymous <- which(duplicated(parents) | duplicated(parents, fromLast= TRUE))
         
-        # 
+        # If nodes have same parent node
         if(length(anonymous) > 1) {
           
           # sample in the candidates nodes who will coalesce
@@ -85,7 +94,9 @@ spatialCoalescentSimulation <- function(tipDemes, transitionForward, transitionB
       } # end of for loop over demes
     } # end of if there are co occuring nodes in the same deme
   } # end of while coalescence is not complete
+  return(coalescent)
 }
+
 
 simul_coalescent_only <- function(tipDemes,transitionForward, transitionBackward, K)
 {

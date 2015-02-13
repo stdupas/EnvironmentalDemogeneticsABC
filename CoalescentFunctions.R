@@ -1,3 +1,85 @@
+spatialCoalescentSimulation <- function(tipDemes, transitionForward, transitionBackward, N){
+  # Args :
+  tipDemes = as.vector(localizationData)
+  transitionForward = transitionForward
+  transitionBackward = transitionBackward
+  N <- round(K)
+  
+  # Initalize :
+  time <- 0
+  head <- length(tipDemes)
+  # newNode <- length(tipDemes)
+  events <- 0
+  maxCoalEvent <- length(tipDemes)-1
+  nodesState <- c(tipDemes, rep(NA, maxCoalEvent))
+  
+  # coalescent informations : (coalescence time, Child 1, Child 2, Parent)
+  coalescent <- matrix(data = NA, nrow = maxCoalEvent, ncol = 4)
+  
+  ### until complete coalescence is done
+  while (is.na(tail(nodesState, n=1))){
+    time <- time +1
+    
+    #### Migration
+    nodesState[!is.na(nodesState)] <- vapply(X = nodesState[!is.na(nodesState)],
+                                             FUN = function(x, N, transitionBackward)
+                                             {sample( length(N), size = 1, prob = c(transitionBackward[x,]) )},
+                                             N = N, transitionBackward = transitionBackward,
+                                             FUN.VALUE = c(1))
+    
+    #### Coalescence accros cells
+    
+    # for active nodes, i.e which are not coded by NA : 
+    activeNodes <- nodesState[!is.na(nodesState)]
+    # gives indices of the demes that are duplicated
+    dup <- which(duplicated(activeNodes) | duplicated(activeNodes, fromLast= TRUE))
+    # gives the demes in which more than one node exist :
+    demes <- unique(activeNodes[dup])
+    # gives a list of nodes who can coalesce 
+    candidates <- sapply(X = demes,
+                         FUN = function(x, activeNodes){which(activeNodes == x)},
+                         activeNodes = activeNodes)
+    
+    # Apply over candidates nodes list
+    x <- 1
+    focalDeme <- unique(activeNodes[candidates[[x]]])
+    # Attribute parents (among N possible parents) to each node present in the deme
+    parents <- sample(N[focalDeme], size = length(candidates[[x]]), replace = TRUE)
+    # Test for equality of parents :
+    anonymous <- which(duplicated(parents) | duplicated(parents, fromLast= TRUE))
+    
+    # 
+    if(length(anonymous)> 1 {
+      
+      # sample in the candidates nodes who will coalesce
+      children <- sample(x = candidates[[x]], size = length(anonymous), replace = FALSE)
+      # number of new coalescent events
+      nEvents <- length(children) -1
+      # Move header node forward, and skip ephemeral ones
+      newNode <- newNode +nEvents
+      # Precise the deme were araised the new node
+      nodesState[newNode] <- focalDeme
+      # Shut down children nodes
+      nodesState[children] <- NA
+      # Report coalescence time int the table
+      coalescent[seq(from=event+1, to=event + nEvents), 1] <- rep(time, times=length(children)-1
+                                                                  event <- event +1
+    }
+    
+    coalescent
+    # Fill time
+    coalescent[seq(from = events+1, to = events + nEvents), 1] <- rep(x = time, times = nEvents)
+    # Fill parents
+    coalescent[seq(from = events+1, to = events + nEvents), 4] <- seq(from = newNode-nEvents, to = newNode)
+    
+    children
+    
+    
+    
+  } # end of while coalescence is not complete
+  
+}
+
 simul_coalescent_only <- function(tipDemes,transitionForward, transitionBackward, K)
 {
   # Simulates a coalescent in a lansdcape characterized by an environmental variable rasterStack, for a species with a given niche function. 

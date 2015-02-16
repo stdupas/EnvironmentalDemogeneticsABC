@@ -11,15 +11,17 @@ wd="/home/arnaudb/Documents/GraphPOP" # labo arno
 setwd(wd)
 
 source("SummaryStats.R")
+load("ParamList.RData")
+library(abc)
 
 # load fake GeneticData 
-load("GeneticData.RData")
+GeneticData <- read.table("GeneticData.txt")
 
 # set the distance method to apply
 distanceMethod <- "DeltaMuDistance"
 
 # get the number of simulations (used to initialize reference table)
-nbSimul <- 2
+nbSimul <- 10
 
 # number of loci under study:
 obsGenetics <- GeneticData[!(colnames(GeneticData)%in%c("x","y","Cell_numbers"))]
@@ -40,7 +42,8 @@ summaryStatObsVect = c(summaryStatObsMat)
 
 names(summaryStatObsVect)<- colN
 
-summaryStatObs <- cbind(ForWLogProb=0,as.data.frame(t(summaryStatObsVect)))
+# First element for package abc
+summaryStatObs <- cbind(ForWLogProb=0, as.data.frame(t(summaryStatObsVect)))
 
 
 
@@ -52,5 +55,19 @@ allFiles <- grep(pattern = "^Genetics_\\d*.txt$", x=list.files(), value = TRUE)
 stats <- apply(X = as.array(allFiles), MARGIN = 1, 
                FUN = computeSummaryStats, nbrInd = nbrInd, distanceMethod = "DeltaMuDistance", rotation = rotation)
 
-summaryStatSim = matrix(data = NA, nrow = nbSimul, ncol = ncol(summaryStatObs), dimnames=list(c(), names(summaryStatObs))) 
-summaryStatSim[stats[1,],] <- t(stats[-1,])
+stats <- stats[, order(stats[1,])]
+
+# Second element for package abc
+summaryStatSim <- t(stats)[,-1]
+colnames(summaryStatSim) <- names(summaryStatObs)
+
+# Third element for package abc :
+temp <- as.data.frame(ParamList)
+simulParam <- temp[, grep(pattern = "Values", x = names(temp))]
+
+########### ABC package... Let's go giiiirls !
+
+abc(target = summaryStatObs, param = simulParam, sumstat = summaryStatSim, tol = 0.5, method = "loclinear" )
+
+
+

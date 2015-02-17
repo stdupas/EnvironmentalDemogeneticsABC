@@ -2,7 +2,7 @@ abcSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
   # Estimates the parameters of a model (spatial, niche, coalescence) in an abc framework
   #
   # Args:
-  #   nbSimul: the number of simulations wanted for abc estimation. need to be < or = to the number of simulation specified in ParamList
+  #   nbSimul: the number of simulations wanted for abc estimation. need to be equal to the number of simulation specified in ParamList
   #   ParamList: the R object describing the model, constructed by askListOfParameters function
   #   rasterStack: the raster object describing environment used for niche modelling and dispersion computations
   #   GeneticData: a matrix giving in row the individuals, in columns the coordinates and the loci : names and order have to be : x, y, ... and names of loci
@@ -80,7 +80,7 @@ abcSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
                                            localizationData){
       
       geneticResults <- matrix(data=NA, nrow=nrow(GeneticData), ncol=numberOfLoci)
-      
+      forwardProb <- c()
       
       ### LOOP ON LOCI >>>>>>>>>>>>>>>>>
       
@@ -137,13 +137,14 @@ abcSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
         # Record the genetic data
         geneticResults[,locus] <- coalTable[coalTable$coalescing%in%names(localizationData),"genetic_value"]
         # Record the forward log probability
+        forwardProb[locus] <- Coalescent_genetics$forward_log_prob
         
       } # END OF LOOP OVER LOCI <<<<<<<<<<<<<
       
       # write results of genetic data 
       fname = paste(getwd(),"/SimulResults/", "Genetics_", x , ".txt", sep="")
       write.table(geneticResults, file=fname)
-      write(Coalescent_genetics$forward_log_prob,file=fname,append=TRUE)
+      write(forwardProb,file=fname,append=TRUE)
       
       # Send progress update
       writeBin(1/numJobs, f)
@@ -193,7 +194,7 @@ abcSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
   allFiles <- grep(pattern = "^Genetics_\\d*.txt$", x=list.files(), value = TRUE)
   
   stats <- apply(X = as.array(allFiles), MARGIN = 1, 
-                 FUN = computeSummaryStats, nbrInd = nbrInd, distanceMethod = "DeltaMuDistance", rotation = rotation)
+                 FUN = computeSummaryStats, nbrInd = nbrInd, distanceMethod = distanceMethod, rotation = rotation)
   
   stats <- stats[, order(stats[1,])]
   

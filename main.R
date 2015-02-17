@@ -47,7 +47,7 @@ locusNames <- colnames(GeneticData)[!(colnames(GeneticData)%in%c("x","y","Cell_n
 numberOfLoci <- length(locusNames)
 
 # assuming we have the step values for each locus
-stepValueOfLoci <- c(1,2,3,4,5)
+stepValueOfLoci <- c(1,2,3,4,5,4,4,4,4,4,2,2,2,2)
 
 # where are the sampled data ?
 localizationData <- cellFromXY(object = rasterStack, xy = GeneticData[, c("x", "y")])
@@ -56,7 +56,7 @@ names(localizationData)=1:length(localizationData)
 
 ###### Asking List to the user
 
-# ParamList <- askListOfParameters(rasterStack=rasterStack, nb_simulations=10)
+# ParamList <- askListOfParameters(rasterStack=rasterStack, nb_simulations=10000)
 # save(ParamList, file = "ParamList.RData")
 
 # Or load it from working directory
@@ -84,7 +84,7 @@ local({
     parallel:::mcexit()
   }
     
-  numJobs <- 10
+  numJobs <- 1000
   
   mclapply(X = 1:numJobs, FUN = function(x, 
                                                    ParamList, 

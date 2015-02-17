@@ -144,7 +144,7 @@ abcSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
       # write results of genetic data 
       fname = paste(getwd(),"/SimulResults/", "Genetics_", x , ".txt", sep="")
       write.table(geneticResults, file=fname)
-      write(forwardProb,file=fname,append=TRUE)
+      write(mean(forwardProb),file=fname,append=TRUE)
       
       # Send progress update
       writeBin(1/numJobs, f)
@@ -213,11 +213,11 @@ abcSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
   simulParam <- temp[, grep(pattern = "Values", x = names(temp))]
     
   # ABC analysis
-  res <- abc(target = summaryStatObs, param = simulParam, sumstat = summaryStatSim, tol = tol, method = abcMethod )
+  result <- abc(target = summaryStatObs, param = simulParam, sumstat = summaryStatSim, tol = tol, method = abcMethod )
   
   cat("Done\n")
   
-  return(res)
+  return(result)
 }
 
 

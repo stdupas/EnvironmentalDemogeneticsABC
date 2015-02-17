@@ -1,5 +1,21 @@
-abcSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initialGenetValue, numberOfLoci, stepValueOfLoci, distanceMethod, tol, abcMethod, cores){
-  
+abcSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initialGenetValue, stepValueOfLoci, distanceMethod, tol, abcMethod, cores){
+  # Estimates the parameters of a model (spatial, niche, coalescence) in an abc framework
+  #
+  # Args:
+  #   nbSimul: the number of simulations wanted for abc estimation. need to be < or = to the number of simulation specified in ParamList
+  #   ParamList: the R object describing the model, constructed by askListOfParameters function
+  #   rasterStack: the raster object describing environment used for niche modelling and dispersion computations
+  #   GeneticData: a matrix giving in row the individuals, in columns the coordinates and the loci : names and order have to be : x, y, ... and names of loci
+  #   initialGenetValue: a vector giving the genetic value attributed to the ancestor gene.
+  #   stepValueOfLoci: a vector giving the assumed step value for each locus, given in the same order as in GeneticData
+  #   distanceMethod : the distanceMethod used in PCA analysis
+  #   tol: the tolerance threshold for abc analysis
+  #   abcMethod: the method used in the function abc of the abc package
+  #   cores: the number of cores used for computation
+  #
+  # Returns:
+  #   the results of the abc analysis, and the files of simulated genetic values in the SimulResults repertory
+   
   ### Sourcing functions files
   source("AskModelsFunctions.R")
   source("NicheFunctions.R")
@@ -21,6 +37,10 @@ abcSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
   
   # Create a directory to store simulations results
   dir.create(path=paste(getwd(), "/SimulResults", sep=""))
+  
+  # number of loci under study:
+  locusNames <- colnames(GeneticData)[!(colnames(GeneticData)%in%c("x","y"))]
+  numberOfLoci <- length(locusNames)
   
   # where are the sampled data ?
   localizationData <- cellFromXY(object = rasterStack, xy = GeneticData[, c("x", "y")])
@@ -193,6 +213,8 @@ abcSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
     
   # ABC analysis
   res <- abc(target = summaryStatObs, param = simulParam, sumstat = summaryStatSim, tol = tol, method = abcMethod )
+  
+  cat("Done\n")
   
   return(res)
 }

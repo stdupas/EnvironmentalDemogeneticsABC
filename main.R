@@ -1,12 +1,12 @@
 ### Setting working directories
 rm(list=ls())
-wd="/media/1To/IRD/ARTICLES/Dupas/NicheCoal/Graph_Pop" # portable
-wd="/media/dupas/1To/IRD/ARTICLES/Dupas/NicheCoal/Graph_Pop" # fixe
-wd="/home/legs/GraphPOP/" # portable steph
-wd="/home/dupas/GraphPOP/" # fixe
-wd="/home/arno/These/GraphPOP" # portable arno
-wd="/home/arnaudb/Documents/GraphPOP" # labo arno
-setwd(wd)
+# wd="/media/1To/IRD/ARTICLES/Dupas/NicheCoal/Graph_Pop" # portable
+# wd="/media/dupas/1To/IRD/ARTICLES/Dupas/NicheCoal/Graph_Pop" # fixe
+# wd="/home/legs/GraphPOP/" # portable steph
+# wd="/home/dupas/GraphPOP/" # fixe
+# wd="/home/arno/These/GraphPOP" # portable arno
+# wd="/home/arnaudb/Documents/GraphPOP" # labo arno
+# setwd(wd)
 
 ### Sourcing functions files
 source("AskModelsFunctions.R")
@@ -170,7 +170,7 @@ local({
   initialGenetValue = initialGenetValue, 
   numberOfLoci = numberOfLoci,
   stepValueOfLoci = stepValueOfLoci,
-  localizationData = localizationData, mc.cores = 2)
+  localizationData = localizationData, mc.cores = 40)
   
   close(f)
   

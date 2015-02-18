@@ -44,7 +44,7 @@ abcSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
   
   # where are the sampled data ?
   localizationData <- cellFromXY(object = rasterStack, xy = GeneticData[, c("x", "y")])
-  names(localizationData)=1:length(localizationData)
+  #names(localizationData)=1:length(localizationData)
     
   local({
     
@@ -82,6 +82,27 @@ abcSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
       geneticResults <- matrix(data=NA, nrow=nrow(GeneticData), ncol=numberOfLoci)
       forwardProb <- c()
       
+      # Get the carrying capacity map :
+      rasK <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = ParamList, sublist="NicheK"), 
+                                          rasterStack = rasterStack,
+                                          args = getArgsListNiche(simulation = x, ParamList = ParamList, sublist="NicheK"))
+      
+      # Get growth rate map :
+      rasR <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = ParamList, sublist="NicheR"), 
+                                          rasterStack = rasterStack,
+                                          args = getArgsListNiche(simulation = x, ParamList = ParamList, sublist="NicheR"))
+      
+      # Get migration matrix :
+      kernelMatrix <- dispersionFunctionForRasterLayer(dispersionFunction=getFunctionDispersion(ParamList),
+                                                       rasterLayer=rasterStack[[1]], 
+                                                       args=getArgsListDispersion(simulation = x, ParamList = ParamList))
+      
+      migrationMatrix <- migrationRateMatrix(kernelMatrix)
+      
+      # Get transition matrix :
+      transitionBackward <- transitionMatrixBackward(r = values(rasR), K = values(rasK), migration = migrationMatrix)
+      transitionForward <- transitionMatrixForward(r = values(rasR), K = values(rasK), migration = migrationMatrix, meth = "non_overlap")
+      
       ### LOOP ON LOCI >>>>>>>>>>>>>>>>>
       
       for(locus in 1:numberOfLoci){ # locus=1
@@ -89,39 +110,24 @@ abcSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
         # Get the stepValue of the locus under concern
         stepValue <- stepValueOfLoci[locus]
         
-        # Get the carrying capacity map :
-        rasK <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = ParamList, sublist="NicheK"), 
-                                            rasterStack = rasterStack,
-                                            args = getArgsListNiche(simulation = x, ParamList = ParamList, sublist="NicheK"))
+        maxCoalEvent <- length(localizationData) - 1
         
-        # Get growth rate map :
-        rasR <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = ParamList, sublist="NicheR"), 
-                                            rasterStack = rasterStack,
-                                            args = getArgsListNiche(simulation = x, ParamList = ParamList, sublist="NicheR"))
-        
-        # Get migration matrix :
-        kernelMatrix <- dispersionFunctionForRasterLayer(dispersionFunction=getFunctionDispersion(ParamList),
-                                                         rasterLayer=rasterStack[[1]], 
-                                                         args=getArgsListDispersion(simulation = x, ParamList = ParamList))
-        
-        migrationMatrix <- migrationRateMatrix(kernelMatrix)
-        
-        # Get transition matrix :
-        transitionBackward <- transitionMatrixBackward(r = values(rasR), K = values(rasK), migration = migrationMatrix)
-        transitionForward <- transitionMatrixForward(r = values(rasR), K = values(rasK), migration = migrationMatrix, meth = "non_overlap")
+        # coalescent informations : (time of coalescence, Child 1, Child 2, Parent)
+        Coalescent_genetics <- matrix(data = NA, nrow = maxCoalEvent, ncol = 8)    
         
         # launch the coalescent
-        Coalescent_genetics <- simul_coalescent_only(tipDemes = localizationData,
-                                                     transitionForward = transitionForward, 
-                                                     transitionBackward = transitionBackward, 
-                                                     K = values(rasK))
+        Coalescent_genetics[,c(1:4)] <- spatialCoalescentSimulation(tipDemes = localizationData, transitionForward = transitionForward, 
+                                                           transitionBackward = transitionBackward, 
+                                                           N = round(values(rasK)))
         
-        # adding branch length and genetic data
-        Coalescent_genetics <- add_br_length_and_mutation(coalescent = Coalescent_genetics, 
-                                                          mutation_rate = ParamList[["Mutation"]][["mutationRate"]][["Values"]][x])
+        # add branch length
+        Coalescent_genetics[,5] <- c(Coalescent_genetics[,1][-1] - Coalescent_genetics[,1][-nrow(Coalescent_genetics)], NA)
         
-        # Transforming the coalescent list into a table
-        coalTable <- coalist_2_coaltable(Coalescent_genetics[[1]])
+        # add mutation number
+        mutationRate <- ParamList[["Mutation"]][["mutationRate"]][["Values"]][x]
+        Coalescent_genetics[,6] <- vapply(X = Coalescent_genetics[,5],
+                                          FUN = function(x){rpois(n = 1, lambda = mutationRate*x)},
+                                          FUN.VALUE = c(1))
         
         # add resultant 
         whichzero <- coalTable[["mutations"]]==0

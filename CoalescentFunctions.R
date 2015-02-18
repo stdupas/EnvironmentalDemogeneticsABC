@@ -83,7 +83,7 @@ spatialCoalescentSimulation <- function(tipDemes, transitionForward, transitionB
           # Fill time
           coalescent[lines, 1] <- rep(x = time, times = nEvents)
           # Fill Child1
-          coalescent[lines, 2] <- c(children[1], parentNodes[-1])
+          coalescent[lines, 2] <- c(children[1], parentNodes[-length(parentNodes)])
           # Fill Child2
           coalescent[lines, 3] <- c(children[-1])
           # Fill parents

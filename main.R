@@ -82,6 +82,9 @@ abcSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
       geneticResults <- matrix(data=NA, nrow=nrow(GeneticData), ncol=numberOfLoci)
       forwardProb <- c()
       
+      # Get the mutation rate
+      mutationRate <- ParamList[["Mutation"]][["mutationRate"]][["Values"]][x]
+      
       # Get the carrying capacity map :
       rasK <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = ParamList, sublist="NicheK"), 
                                           rasterStack = rasterStack,
@@ -112,38 +115,40 @@ abcSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
         
         maxCoalEvent <- length(localizationData) - 1
         
-        # coalescent informations : (time of coalescence, Child 1, Child 2, Parent)
-        Coalescent_genetics <- matrix(data = NA, nrow = maxCoalEvent, ncol = 8)    
+        # coalescent informations : (time of coalescence, Child 1, Child 2, Parent, Branch Length, mutation nbr, resultant, genet values)
+        coal <- matrix(data = NA, nrow = maxCoalEvent, ncol = 8)    
         
         # launch the coalescent
-        Coalescent_genetics[,c(1:4)] <- spatialCoalescentSimulation(tipDemes = localizationData, transitionForward = transitionForward, 
+        coal[,c(1:4)] <- spatialCoalescentSimulation(tipDemes = localizationData, transitionForward = transitionForward, 
                                                            transitionBackward = transitionBackward, 
                                                            N = round(values(rasK)))
         
         # add branch length
-        Coalescent_genetics[,5] <- c(Coalescent_genetics[,1][-1] - Coalescent_genetics[,1][-nrow(Coalescent_genetics)], NA)
+        coal[,5] <- c(coal[,1][-1] - coal[,1][-nrow(coal)], NA)
         
         # add mutation number
-        mutationRate <- ParamList[["Mutation"]][["mutationRate"]][["Values"]][x]
-        Coalescent_genetics[,6] <- vapply(X = Coalescent_genetics[,5],
-                                          FUN = function(x){rpois(n = 1, lambda = mutationRate*x)},
-                                          FUN.VALUE = c(1))
+        coal[,6] <- vapply(X = coal[,5],
+                           FUN = function(x){rpois(n = 1, lambda = mutationRate*x)},
+                           FUN.VALUE = c(1))
         
         # add resultant 
-        whichzero <- coalTable[["mutations"]]==0
-        coalTable[["Resultant"]] <- 0
-        coalTable[["Resultant"]][!whichzero] <- resultantFunction(nbrMutations = coalTable[["mutations"]][!whichzero],
-                                                                  stepValue = stepValue,
-                                                                  mutationModel = getFunctionMutation(ParamList = ParamList),
-                                                                  args = getArgsListMutation(simulation = x, ParamList = ParamList ))
+        coal[,7] <- resultantFunction(nbrMutations = coal[,6],
+                                      stepValue = stepValue,
+                                      mutationModel = getFunctionMutation(ParamList = ParamList),
+                                      args = getArgsListMutation(simulation = x, ParamList = ParamList ))
         
         # add genetic values
-        coalTable <- addGeneticValueToCoaltable(coalTable = coalTable, initialGenetValue = initialGenetValue, stepValue = stepValue)
+        coal[nrow(coal),8] <- initialGenetValue
+        for(i in seq(from = nrow(coal)-1, to = 1)){ coal[i,8] <- coal[i+1,8] + coal[i,7] }
         
         # Record the genetic data
-        geneticResults[,locus] <- coalTable[coalTable$coalescing%in%names(localizationData),"genetic_value"]
+        n2 <- which(coal[,2] %in% seq(from = 1, to = length(localizationData)))
+        n3 <- which(coal[,3] %in% seq(from = 1, to = length(localizationData)))
+        geneticResults[coal[n2, 2], locus] <- coal[n2, 8]
+        geneticResults[coal[n3, 3], locus] <- coal[n3, 8]
+        
         # Record the forward log probability
-        forwardProb[locus] <- Coalescent_genetics$forward_log_prob
+        forwardProb[locus] <- coalforward_log_prob
         
       } # END OF LOOP OVER LOCI <<<<<<<<<<<<<
       

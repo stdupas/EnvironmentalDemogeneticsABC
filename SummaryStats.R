@@ -60,7 +60,7 @@ computeSummaryStats <- function(file, nbrInd, distanceMethod, rotation){
   #   a vector containing : the ID of the simulation file, the forwardLogLikelyhood, the projected distances
   
   # Read file
-  genetics <- read.table(file = file, nrows = nbrInd)
+  genetics <- read.table(file = paste0(path, "/" , file), nrows = nbrInd)
   
   # Compute distance
   genetDist = do.call(what = distanceMethod, args = list(genetics))

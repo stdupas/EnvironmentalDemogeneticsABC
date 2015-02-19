@@ -161,7 +161,9 @@ simSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
     initialGenetValue = initialGenetValue, 
     numberOfLoci = numberOfLoci,
     stepValueOfLoci = stepValueOfLoci,
-    localizationData = localizationData, mc.cores = cores)
+    localizationData = localizationData, 
+    mc.cores = cores,
+    mc.preschedule = FALSE)
     
     close(f)
     

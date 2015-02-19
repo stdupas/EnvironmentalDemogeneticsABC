@@ -147,8 +147,6 @@ abcSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
         geneticResults[coal[n2, 2], locus] <- coal[n2, 8]
         geneticResults[coal[n3, 3], locus] <- coal[n3, 8]
         
-        # Record the forward log probability
-        forwardProb[locus] <- coalforward_log_prob
         
       } # END OF LOOP OVER LOCI <<<<<<<<<<<<<
       
@@ -213,7 +211,7 @@ abcSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
   ########### ABC package... Let's go giiiirls !
   
   # First element for package abc
-  summaryStatObs <- cbind(ForWLogProb=0, as.data.frame(t(summaryStatObsVect)))
+  summaryStatObs <- as.data.frame(t(summaryStatObsVect))
   
   # Second element for package abc
   summaryStatSim <- t(stats)[,-1]

@@ -61,7 +61,6 @@ computeSummaryStats <- function(file, nbrInd, distanceMethod, rotation){
   
   # Read file
   genetics <- read.table(file = file, nrows = nbrInd)
-  ForwLogL <- scan(file = file, what = 0 , skip = nbrInd + 1)
   
   # Compute distance
   genetDist = do.call(what = distanceMethod, args = list(genetics))
@@ -69,5 +68,5 @@ computeSummaryStats <- function(file, nbrInd, distanceMethod, rotation){
   
   # Extract the exact number of the simulation
   sim <- as.numeric(gsub(pattern = "[^0-9]", replacement = "", x = file))
-  return(c(sim , ForwLogL, rotatedGenetDist))
+  return(c(sim, rotatedGenetDist))
 }

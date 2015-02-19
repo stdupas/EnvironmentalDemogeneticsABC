@@ -149,7 +149,6 @@ simSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
       # write results of genetic data 
       fname = paste(getwd(),"/SimulResults/", "Genetics_", x , ".txt", sep="")
       write.table(geneticResults, file=fname)
-      write(mean(forwardProb),file=fname,append=TRUE)
       
       # Send progress update
       writeBin(1/numJobs, f)

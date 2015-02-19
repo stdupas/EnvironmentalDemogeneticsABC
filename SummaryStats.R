@@ -47,7 +47,7 @@ appendGenetRefTable <- function(simulation=1,rotation,locusNames,DistanceMethod)
   
 }
 
-computeSummaryStats <- function(file, nbrInd, distanceMethod, rotation){
+computeSummaryStats <- function(file, nbrInd, distanceMethod, rotation, path){
   # Compute the summary statistics of a genetic file (with the forward log likelyhood)
   #
   # Args : 

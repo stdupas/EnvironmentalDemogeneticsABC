@@ -1,4 +1,4 @@
-abcSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initialGenetValue, stepValueOfLoci, distanceMethod, tol, abcMethod, cores){
+simSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initialGenetValue, stepValueOfLoci, cores){
   # Estimates the parameters of a model (spatial, niche, coalescence) in an abc framework
   #
   # Args:
@@ -8,9 +8,6 @@ abcSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
   #   GeneticData: a matrix giving in row the individuals, in columns the coordinates and the loci : names and order have to be : x, y, ... and names of loci
   #   initialGenetValue: a vector giving the genetic value attributed to the ancestor gene.
   #   stepValueOfLoci: a vector giving the assumed step value for each locus, given in the same order as in GeneticData
-  #   distanceMethod : the distanceMethod used in PCA analysis
-  #   tol: the tolerance threshold for abc analysis
-  #   abcMethod: the method used in the function abc of the abc package
   #   cores: the number of cores used for computation
   #
   # Returns:
@@ -174,60 +171,7 @@ abcSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
   })
   
   cat("Simulations Done\n")
-  
-  
-  ############## POST ANALYSIS ###########################################################
-  
-  # number of loci under study:
-  obsGenetics <- GeneticData[!(colnames(GeneticData)%in%c("x","y","Cell_numbers"))]
-  
-  # number of individuals under study:
-  nbrInd <- nrow(obsGenetics)
-  
-  ########## Caracterizing rotation to apply to genetic simulations to get summary statistics
-  
-  rotation = PCA_rotation(geneticData = obsGenetics, DistanceMethod = distanceMethod)
-  
-  summaryStatObsMat = as.matrix(do.call(what = distanceMethod, args = list(obsGenetics)))%*%rotation
-  
-  colN <- paste(rep(colnames(summaryStatObsMat), each = length(rownames(summaryStatObsMat))),
-                rownames(summaryStatObsMat),sep=".")
-  
-  summaryStatObsVect = c(summaryStatObsMat)
-  
-  names(summaryStatObsVect)<- colN
-    
-  
-  ########## Computing summary statistics of simulated data
-  
-  setwd(paste0(getwd(), "/SimulResults/"))
-  allFiles <- grep(pattern = "^Genetics_\\d*.txt$", x=list.files(), value = TRUE)
-  
-  stats <- apply(X = as.array(allFiles), MARGIN = 1, 
-                 FUN = computeSummaryStats, nbrInd = nbrInd, distanceMethod = distanceMethod, rotation = rotation)
-  
-  stats <- stats[, order(stats[1,])]
-  
-  
-  ########### ABC package... Let's go giiiirls !
-  
-  # First element for package abc
-  summaryStatObs <- as.data.frame(t(summaryStatObsVect))
-  
-  # Second element for package abc
-  summaryStatSim <- t(stats)[,-1]
-  colnames(summaryStatSim) <- names(summaryStatObs)
-  
-  # Third element for package abc :
-  temp <- as.data.frame(ParamList)
-  simulParam <- temp[, grep(pattern = "Values", x = names(temp))]
-    
-  # ABC analysis
-  result <- abc(target = summaryStatObs, param = simulParam, sumstat = summaryStatSim, tol = tol, method = abcMethod )
-  
-  cat("Done\n")
-  
-  return(result)
+
 }
 
 

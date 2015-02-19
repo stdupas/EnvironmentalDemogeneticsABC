@@ -22,7 +22,6 @@ simSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
   source("PriorFunctions.R")
   source("MarkovProcess.R")
   source("GeneticDataSimulation.R")
-  source("SummaryStats.R")
   
   ### Sourcing Libraries
   library(raster)
@@ -30,7 +29,6 @@ simSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
   library(stringr)
   library(lattice)
   library(parallel)
-  library(abc)
   
   # Create a directory to store simulations results
   dir.create(path=paste(getwd(), "/SimulResults", sep=""))

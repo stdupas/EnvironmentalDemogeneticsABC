@@ -1,4 +1,4 @@
-abcSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initialGenetValue, stepValueOfLoci, distanceMethod, tol, abcMethod, cores){
+simSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initialGenetValue, stepValueOfLoci, cores){
   # Estimates the parameters of a model (spatial, niche, coalescence) in an abc framework
   #
   # Args:
@@ -8,9 +8,6 @@ abcSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
   #   GeneticData: a matrix giving in row the individuals, in columns the coordinates and the loci : names and order have to be : x, y, ... and names of loci
   #   initialGenetValue: a vector giving the genetic value attributed to the ancestor gene.
   #   stepValueOfLoci: a vector giving the assumed step value for each locus, given in the same order as in GeneticData
-  #   distanceMethod : the distanceMethod used in PCA analysis
-  #   tol: the tolerance threshold for abc analysis
-  #   abcMethod: the method used in the function abc of the abc package
   #   cores: the number of cores used for computation
   #
   # Returns:
@@ -25,7 +22,6 @@ abcSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
   source("PriorFunctions.R")
   source("MarkovProcess.R")
   source("GeneticDataSimulation.R")
-  source("SummaryStats.R")
   
   ### Sourcing Libraries
   library(raster)
@@ -33,7 +29,6 @@ abcSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
   library(stringr)
   library(lattice)
   library(parallel)
-  library(abc)
   
   # Create a directory to store simulations results
   dir.create(path=paste(getwd(), "/SimulResults", sep=""))
@@ -44,7 +39,7 @@ abcSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
   
   # where are the sampled data ?
   localizationData <- cellFromXY(object = rasterStack, xy = GeneticData[, c("x", "y")])
-  names(localizationData)=1:length(localizationData)
+  #names(localizationData)=1:length(localizationData)
     
   local({
     
@@ -82,6 +77,31 @@ abcSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
       geneticResults <- matrix(data=NA, nrow=nrow(GeneticData), ncol=numberOfLoci)
       forwardProb <- c()
       
+      # Get the mutation rate
+      mutationRate <- ParamList[["Mutation"]][["mutationRate"]][["Values"]][x]
+      
+      # Get the carrying capacity map :
+      rasK <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = ParamList, sublist="NicheK"), 
+                                          rasterStack = rasterStack,
+                                          args = getArgsListNiche(simulation = x, ParamList = ParamList, sublist="NicheK"))
+      rasK <- round(rasK)
+      
+      # Get growth rate map :
+      rasR <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = ParamList, sublist="NicheR"), 
+                                          rasterStack = rasterStack,
+                                          args = getArgsListNiche(simulation = x, ParamList = ParamList, sublist="NicheR"))
+      
+      # Get migration matrix :
+      kernelMatrix <- dispersionFunctionForRasterLayer(dispersionFunction=getFunctionDispersion(ParamList),
+                                                       rasterLayer=rasterStack[[1]], 
+                                                       args=getArgsListDispersion(simulation = x, ParamList = ParamList))
+      
+      migrationMatrix <- migrationRateMatrix(kernelMatrix)
+      
+      # Get transition matrix :
+      transitionBackward <- transitionMatrixBackward(r = values(rasR), K = values(rasK), migration = migrationMatrix)
+      transitionForward <- transitionMatrixForward(r = values(rasR), K = values(rasK), migration = migrationMatrix, meth = "non_overlap")
+      
       ### LOOP ON LOCI >>>>>>>>>>>>>>>>>
       
       for(locus in 1:numberOfLoci){ # locus=1
@@ -89,62 +109,46 @@ abcSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
         # Get the stepValue of the locus under concern
         stepValue <- stepValueOfLoci[locus]
         
-        # Get the carrying capacity map :
-        rasK <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = ParamList, sublist="NicheK"), 
-                                            rasterStack = rasterStack,
-                                            args = getArgsListNiche(simulation = x, ParamList = ParamList, sublist="NicheK"))
+        maxCoalEvent <- length(localizationData) - 1
         
-        # Get growth rate map :
-        rasR <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = ParamList, sublist="NicheR"), 
-                                            rasterStack = rasterStack,
-                                            args = getArgsListNiche(simulation = x, ParamList = ParamList, sublist="NicheR"))
-        
-        # Get migration matrix :
-        kernelMatrix <- dispersionFunctionForRasterLayer(dispersionFunction=getFunctionDispersion(ParamList),
-                                                         rasterLayer=rasterStack[[1]], 
-                                                         args=getArgsListDispersion(simulation = x, ParamList = ParamList))
-        
-        migrationMatrix <- migrationRateMatrix(kernelMatrix)
-        
-        # Get transition matrix :
-        transitionBackward <- transitionMatrixBackward(r = values(rasR), K = values(rasK), migration = migrationMatrix)
-        transitionForward <- transitionMatrixForward(r = values(rasR), K = values(rasK), migration = migrationMatrix, meth = "non_overlap")
+        # coalescent informations : (time of coalescence, Child 1, Child 2, Parent, Branch Length, mutation nbr, resultant, genet values)
+        coal <- matrix(data = NA, nrow = maxCoalEvent, ncol = 8)    
         
         # launch the coalescent
-        Coalescent_genetics <- simul_coalescent_only(tipDemes = localizationData,
-                                                     transitionForward = transitionForward, 
-                                                     transitionBackward = transitionBackward, 
-                                                     K = values(rasK))
+        coal[,c(1:4)] <- spatialCoalescentSimulation(tipDemes = localizationData, transitionForward = transitionForward, 
+                                                           transitionBackward = transitionBackward, 
+                                                           N = round(values(rasK)))
         
-        # adding branch length and genetic data
-        Coalescent_genetics <- add_br_length_and_mutation(coalescent = Coalescent_genetics, 
-                                                          mutation_rate = ParamList[["Mutation"]][["mutationRate"]][["Values"]][x])
+        # add branch length
+        coal[,5] <- c(coal[,1][-1] - coal[,1][-nrow(coal)], NA)
         
-        # Transforming the coalescent list into a table
-        coalTable <- coalist_2_coaltable(Coalescent_genetics[[1]])
+        # add mutation number
+        coal[,6] <- vapply(X = coal[,5],
+                           FUN = function(x){rpois(n = 1, lambda = mutationRate*x)},
+                           FUN.VALUE = c(1))
         
         # add resultant 
-        whichzero <- coalTable[["mutations"]]==0
-        coalTable[["Resultant"]] <- 0
-        coalTable[["Resultant"]][!whichzero] <- resultantFunction(nbrMutations = coalTable[["mutations"]][!whichzero],
-                                                                  stepValue = stepValue,
-                                                                  mutationModel = getFunctionMutation(ParamList = ParamList),
-                                                                  args = getArgsListMutation(simulation = x, ParamList = ParamList ))
+        coal[,7] <- resultantFunction(nbrMutations = coal[,6],
+                                      stepValue = stepValue,
+                                      mutationModel = getFunctionMutation(ParamList = ParamList),
+                                      args = getArgsListMutation(simulation = x, ParamList = ParamList ))
         
         # add genetic values
-        coalTable <- addGeneticValueToCoaltable(coalTable = coalTable, initialGenetValue = initialGenetValue, stepValue = stepValue)
+        coal[nrow(coal),8] <- initialGenetValue
+        for(i in seq(from = nrow(coal)-1, to = 1)){ coal[i,8] <- coal[i+1,8] + coal[i,7] }
         
         # Record the genetic data
-        geneticResults[,locus] <- coalTable[coalTable$coalescing%in%names(localizationData),"genetic_value"]
-        # Record the forward log probability
-        forwardProb[locus] <- Coalescent_genetics$forward_log_prob
+        n2 <- which(coal[,2] %in% seq(from = 1, to = length(localizationData)))
+        n3 <- which(coal[,3] %in% seq(from = 1, to = length(localizationData)))
+        geneticResults[coal[n2, 2], locus] <- coal[n2, 8]
+        geneticResults[coal[n3, 3], locus] <- coal[n3, 8]
+        
         
       } # END OF LOOP OVER LOCI <<<<<<<<<<<<<
       
       # write results of genetic data 
       fname = paste(getwd(),"/SimulResults/", "Genetics_", x , ".txt", sep="")
       write.table(geneticResults, file=fname)
-      write(forwardProb,file=fname,append=TRUE)
       
       # Send progress update
       writeBin(1/numJobs, f)
@@ -157,67 +161,16 @@ abcSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
     initialGenetValue = initialGenetValue, 
     numberOfLoci = numberOfLoci,
     stepValueOfLoci = stepValueOfLoci,
-    localizationData = localizationData, mc.cores = cores)
+    localizationData = localizationData, 
+    mc.cores = cores,
+    mc.preschedule = FALSE)
     
     close(f)
     
   })
   
   cat("Simulations Done\n")
-  
-  
-  ############## POST ANALYSIS ###########################################################
-  
-  # number of loci under study:
-  obsGenetics <- GeneticData[!(colnames(GeneticData)%in%c("x","y","Cell_numbers"))]
-  
-  # number of individuals under study:
-  nbrInd <- nrow(obsGenetics)
-  
-  ########## Caracterizing rotation to apply to genetic simulations to get summary statistics
-  
-  rotation = PCA_rotation(geneticData = obsGenetics, DistanceMethod = distanceMethod)
-  
-  summaryStatObsMat = as.matrix(do.call(what = distanceMethod, args = list(obsGenetics)))%*%rotation
-  
-  colN <- paste(rep(colnames(summaryStatObsMat), each = length(rownames(summaryStatObsMat))),
-                rownames(summaryStatObsMat),sep=".")
-  
-  summaryStatObsVect = c(summaryStatObsMat)
-  
-  names(summaryStatObsVect)<- colN
-    
-  
-  ########## Computing summary statistics of simulated data
-  
-  setwd(paste0(getwd(), "/SimulResults/"))
-  allFiles <- grep(pattern = "^Genetics_\\d*.txt$", x=list.files(), value = TRUE)
-  
-  stats <- apply(X = as.array(allFiles), MARGIN = 1, 
-                 FUN = computeSummaryStats, nbrInd = nbrInd, distanceMethod = distanceMethod, rotation = rotation)
-  
-  stats <- stats[, order(stats[1,])]
-  
-  
-  ########### ABC package... Let's go giiiirls !
-  
-  # First element for package abc
-  summaryStatObs <- cbind(ForWLogProb=0, as.data.frame(t(summaryStatObsVect)))
-  
-  # Second element for package abc
-  summaryStatSim <- t(stats)[,-1]
-  colnames(summaryStatSim) <- names(summaryStatObs)
-  
-  # Third element for package abc :
-  temp <- as.data.frame(ParamList)
-  simulParam <- temp[, grep(pattern = "Values", x = names(temp))]
-    
-  # ABC analysis
-  res <- abc(target = summaryStatObs, param = simulParam, sumstat = summaryStatSim, tol = tol, method = abcMethod )
-  
-  cat("Done\n")
-  
-  return(res)
+
 }
 
 

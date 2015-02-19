@@ -59,6 +59,7 @@ spatialCoalescentSimulation <- function(tipDemes, transitionForward, transitionB
         
         focalDeme <- demes[x]
         # Attribute parents (among N possible parents) to each node present in the deme
+        # /!\ If N=0, the nodes will automatically coalesce assuming there was an "accidental parent" -> make sure this does not happen !
         parents <- sample(N[focalDeme], size = length(candidates[[x]]), replace = TRUE) # parents[1] <- parents[2]
         # Test for equality of parents :
         anonymous <- which(duplicated(parents) | duplicated(parents, fromLast= TRUE))
@@ -83,7 +84,7 @@ spatialCoalescentSimulation <- function(tipDemes, transitionForward, transitionB
           # Fill time
           coalescent[lines, 1] <- rep(x = time, times = nEvents)
           # Fill Child1
-          coalescent[lines, 2] <- c(children[1], parentNodes[-1])
+          coalescent[lines, 2] <- c(children[1], parentNodes[-length(parentNodes)])
           # Fill Child2
           coalescent[lines, 3] <- c(children[-1])
           # Fill parents

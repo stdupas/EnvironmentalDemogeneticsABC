@@ -89,6 +89,7 @@ abcSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
       rasK <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = ParamList, sublist="NicheK"), 
                                           rasterStack = rasterStack,
                                           args = getArgsListNiche(simulation = x, ParamList = ParamList, sublist="NicheK"))
+      rasK <- round(rasK)
       
       # Get growth rate map :
       rasR <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = ParamList, sublist="NicheR"), 

@@ -47,7 +47,7 @@ appendGenetRefTable <- function(simulation=1,rotation,locusNames,DistanceMethod)
   
 }
 
-computeSummaryStats <- function(file, nbrInd, distanceMethod, rotation){
+computeSummaryStats <- function(file, nbrInd, distanceMethod, rotation, path){
   # Compute the summary statistics of a genetic file (with the forward log likelyhood)
   #
   # Args : 
@@ -60,8 +60,7 @@ computeSummaryStats <- function(file, nbrInd, distanceMethod, rotation){
   #   a vector containing : the ID of the simulation file, the forwardLogLikelyhood, the projected distances
   
   # Read file
-  genetics <- read.table(file = file, nrows = nbrInd)
-  ForwLogL <- scan(file = file, what = 0 , skip = nbrInd + 1)
+  genetics <- read.table(file = paste0(path, "/" , file), nrows = nbrInd)
   
   # Compute distance
   genetDist = do.call(what = distanceMethod, args = list(genetics))
@@ -69,5 +68,5 @@ computeSummaryStats <- function(file, nbrInd, distanceMethod, rotation){
   
   # Extract the exact number of the simulation
   sim <- as.numeric(gsub(pattern = "[^0-9]", replacement = "", x = file))
-  return(c(sim , ForwLogL, rotatedGenetDist))
+  return(c(sim, rotatedGenetDist))
 }

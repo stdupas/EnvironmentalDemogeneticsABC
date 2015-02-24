@@ -34,8 +34,10 @@ library(parallel)
 #Data2 <- data.frame(BIO1=c(300,120,120,400),BIO12=c(2000,350,350,2900)) 
 startingDate = as.Date("2001-01-01")
 stoppingDate = as.Date("2003-01-01")
-Dates <- as.Date(startingDate:stoppingDate);length(Dates)
-EnvData = array(c(rep(c(300,120,120,400),731),rep(c(2000,350,350,2900),731)),dim=c(1,4,731,2),dimnames = list(1,1:4,as.character(Dates),c("BIO1","BIO12")))
+Dates <- as.Date(startingDate:stoppingDate,origin="1970-01-01");length(Dates)
+EnvData = array(c(rep(c(300,120,120,400),731),rep(c(2000,350,350,2900),731)),dim=c(4,731,2),dimnames = list(1:4,as.character(Dates),c("BIO1","BIO12")))
+rasterStack <- stack(list("BIO1"=raster(as.matrix(t(EnvData[,1,1])),xmn=0,xmx=4,ymn=0,ymx=1),
+                          "BIO12"=raster(as.matrix(t(EnvData[,1,2])),xmn=0,xmx=4,ymn=0,ymx=1)))
 variables=c("BIO1","BIO12")
 # Make raster stack with two layers according to the environmental variables of the dataframe
 #rS=stack(raster(as.matrix(EnvData[,,1,1])))
@@ -47,8 +49,6 @@ variables=c("BIO1","BIO12")
 #  }
 #}
 
-rasterStack <- stack(list("BIO1"=raster(as.matrix(t(EnvData[,,1,1])),xmn=0,xmx=4,ymn=0,ymx=1),
-                          "BIO12"=raster(as.matrix(t(EnvData[,,1,2])),xmn=0,xmx=4,ymn=0,ymx=1)))
 # make Daily raster stack
 
 
@@ -59,7 +59,15 @@ release <- data.frame(individualNb=1:10,
                               max=bbox(rasterStack)[1,2]),
                       y=runif(10,min=bbox(rasterStack)[2,1],
                               max=bbox(rasterStack)[2,2]),
-                      birthDate=as.Date("2013/01/23"))
+                      birthDate=as.Date(as.Date("2001/01/03"):as.Date("2001/01/12"),origin="1970-01-01")
+                      )
+release <- data.frame(individualNb=1:10,
+                      x=runif(10,min=bbox(rasterStack)[1,1],
+                              max=bbox(rasterStack)[1,2]),
+                      y=runif(10,min=bbox(rasterStack)[2,1],
+                              max=bbox(rasterStack)[2,2]),
+                      birthDate=as.Date(as.Date("2001/01/03"):as.Date("2001/01/12"),origin="1970-01-01")
+)
 
 individuals = release[,c("individualNb","birthDate")]
 individuals$demeNb <- cellFromXY(object = rasterStack, xy = release[, c("x", "y")])
@@ -88,6 +96,17 @@ names(localizationData)=individuals$individualNb
 # Or load it from working directory
 load("fwParamList.RData")
 
+fwParamList$NicheR$BIO1$slope$max<-0.03
+fwParamList$NicheR$BIO1$slope$Values=runif(10,0,.03)
+fwParamList$NicheR$BIO12$slope$max<-0.003
+fwParamList$NicheR$BIO12$slope$Values=runif(10,0,.003)
+
+fwParamList$NicheK$BIO1$slope$max<-.1
+fwParamList$NicheK$BIO1$slope$Values=runif(10,0,.1)
+fwParamList$NicheK$BIO12$slope$max<-0.03
+fwParamList$NicheK$BIO12$slope$Values=runif(10,0,.03)
+save(list=fwParamList,file="fwParamList.RData")
+
 ########## end of parameters initialisation <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 # simulation 1
 x=1
@@ -115,36 +134,53 @@ local({
     
   numJobs <- 10
   
-  mclapply(X = 1:numJobs, FUN = function(x, 
+  mclapply(X = 1:numJobs, FUN = function(x, #x=1
                                          fwParamList, 
                                          rasterStack, 
                                          individuals, 
                                          localizationData,
                                          EnvData){
-    # LOOP OVER DAYS
-    for (Date in dimnames(EnvData)[[3]]) Date=dimnames(EnvData)[[3]][1]
-    {
+    kernelMatrix <- dispersionFunctionForRasterLayer(dispersionFunction=getFunctionDispersion(fwParamList),
+                                                     rasterLayer=rasterStack[[1]], 
+                                                     args=getArgsListDispersion(simulation = x, ParamList = fwParamList))
+    migrationMatrix <- forwardMigrationRateMatrixFromKernel(kernelMatrix)
+#    rK <- generate_parameterSeries(EnvData,
+#                                   migrationMatrix,
+#                                   nicheKModelsList=getFunctionListNiche(ParamList = fwParamList, sublist="NicheK"),
+#                                   nicheRModelsList=getFunctionListNiche(ParamList = fwParamList, sublist="NicheR"),
+#                                   paramKList=getArgsListNiche(simulation = x, ParamList = fwParamList, sublist="NicheK"),
+#                                   paramRList=getArgsListNiche(simulation = x, ParamList = fwParamList, sublist="NicheR"))
       
+    # LOOP OVER DAYS
+    for (Date in dimnames(EnvData)[[2]]) #Date=dimnames(EnvData)[[2]][22]
+    {
+      values(rasterStack) <- EnvData[,Date,]
+      # Get the carrying capacity map of the day:
+      rasK <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = fwParamList, sublist="NicheK"), 
+                                          rasterStack = rasterStack,
+                                          args = getArgsListNiche(simulation = x, ParamList = fwParamList, sublist="NicheK"))
+      indivOfDate <- which(individuals$birthDate==Date)
+      # individual in demes exceeding carrying capacity at that date are sampled and removed from the table
+      toRemove = individualsToRemoveFromCompet(individuals=indivOfDate,
+                                     demeNb=individuals[indivOfDate,"demeNb"],
+                                     K=values(rasK))
+      if (length(toRemove)>0) individuals = individuals[-toRemove,]
+      dateSubset = subset(individuals,individuals$birthDate==Date)
       # launch the siulation
-      # Get the carrying capacity map :
-      rasK <- nicheFunctionForArray(functionList = getFunctionListNiche(ParamList = fwParamList, sublist="NicheK"), 
-                                    array = EnvData[,,Date,],
-                                    args = getArgsListNiche(simulation = x, ParamList = fwParamList, sublist="NicheK"))
       
       # Get growth rate map :
       rasR <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = fwParamList, sublist="NicheR"), 
                                           rasterStack = rasterStack,
                                           args = getArgsListNiche(simulation = x, ParamList = fwParamList, sublist="NicheR"))
       
-      # Get migration matrix :
-      kernelMatrix <- dispersionFunctionForRasterLayer(dispersionFunction=getFunctionDispersion(ParamList),
-                                                       rasterLayer=rasterStack[[1]], 
-                                                       args=getArgsListDispersion(simulation = x, ParamList = fwParamList))
-      migrationMatrix <- forwardMigrationRateMatrixFromKernel(kernelMatrix)
-      
-      # Get transition matrix :
-      absTransForw <- absoluteForwardTransition(r = values(rasR), K = values(rasK), migration = migrationMatrix)
-      
+      rownames(individuals) <- NULL
+      newIndividuals <- reprMigr(dateSubset,
+               migrationMatrix,
+               r=values(rasR),
+               generationTime=fwParamList$generationTime$mean$values[x],
+               generationTimeRelativeSD=fwParamList$generationTime$SD$values[x])
+      rownames(newIndividuals) <- 
+      individuals <- rbind(individuals,newIndividuals)
     } # END OF LOOP OVER DAYS <<<<<<<<<<<<<
     
     # write results of genetic data 

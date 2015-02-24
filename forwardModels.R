@@ -39,14 +39,12 @@ reproduction <- function(tipDemes, r)
   return(newTipDemes)
 }
 
-absoluteForwardTransition <- function(r,K,migrationMatrix)
+reproductionMigration <- function(r,migrationMatrix)
 {
-  # Calculte absolute forward transition matrix from r, K and forward migration matrix
-  # 'absolute' means that rowSums is not 1, it determines positions of the offspring
-  # and offspring population size can be different from that of the parent
+  # Calculates number of offspring in deme j of one individual in deme i
   #
   # Arguments:
-  # - tipeDemes : a data frame describing the individuals to reproduce
+  # - tipDemes : a data frame describing the individuals to reproduce
   # with columns "individualNb" (individual number) and "demeNb" (deme number)
   # - r : a vector of growth rate of each deme
   # - K : a vector of carrying capacity of each deme
@@ -55,32 +53,41 @@ absoluteForwardTransition <- function(r,K,migrationMatrix)
   # 
   # Example
   # r<-2^(0:3)
-  # K<-c(10,5,20,2)
   # migrationMatrix <- matrix(c(.9,.1,0,0,.05,.9,0.05,0,0,.05,.9,0.05,0,0,.1,.9),nrow=4,ncol=4,byrow=TRUE)
-  # absoluteTransitionForward(r,K,migrationMatrix)
+  # reproductionMigration(r,K,migrationMatrix)
   #
   #
-  absTrF <- matrix(0,nrow=length(r),ncol=length(r))
-  sum_k.m_kj <- rep(0,length(r))
-  for (k in 1:length(r))
-    for (j in 1:length(r))
-      sum_k.m_kj[j] <- sum_k.m_kj[j] + r[k]*migrationMatrix[k,j]
-  for (i in 1:length(r))
-    for (j in 1:length(r))
-    {
-      absTrF[i,j] <- r[i]*migrationMatrix[i,j]*min(1,K[j]/(sum_k.m_kj[j]))
-    }
-return(absTrF)
+
+  r%*%migrationMatrix
 }
 
-reprMigrCompet <- function(tipDemes,absoluteForwardTransitionMatrix,generationTime,generationTimeSD)
+individualsToRemoveFromCompet <- function(individuals,demeNb,K)
+{
+  # Samples individuals exceeding carring capacity for removal in a vector of deme attribution
+  # 
+  # CarryingCap=rep(2,4)
+  # demeNumb=c(1,1,1,2,3,3,3,3,4,4,4)
+  # indiv = 1:11
+  # individualsToRemoveFromCompet(individuals=indiv,demeNb=demeNumb,K=CarryingCap)
+  numberPerDeme <- hist(demeNb,plot=FALSE,breaks=(0:length(K))+.5)$counts
+  excedent <- round((numberPerDeme - K > 0)*(numberPerDeme - K))
+  remove = NULL
+  for (i in 1:length(excedent))
+  {
+    remove=append(remove,sample(x=individuals[which(demeNb==i)],size=excedent[i]))
+  }
+return(remove)
+}
+
+reprMigr <- function(tipDemes,migrationMatrix,r,generationTime,generationTimeRelativeSD)
 {
   # Randomly reproduces and migrates individuals according to growth rate of their deme
   # migration rates to descendent demes and carrying capcacity of descendent dames
   # Arguments:
   # - tipeDemes : a data frame describing the individuals to reproduce
   # with columns "individualNb" (individual number), "demeNb" (deme number) and "birthDate"
-  # - absoluteForwardTransitionMatrix : absolute transition matrix with expected offspring size in column for each deme in line
+  # - migrationMatrix : absolute transition matrix with expected offspring size in column for each deme in line
+  # - r : reproduction rate in each deme
   # - generationTime : a vector of generation time for each deme
   # - generationTimeRelativeSD : a standard error relative to the mean for generation time
   # Value:
@@ -92,31 +99,51 @@ reprMigrCompet <- function(tipDemes,absoluteForwardTransitionMatrix,generationTi
   # 
   # Example
   # r<-2^(0:3)
-  # K<-c(10,5,20,2)
-  # tipDemes=data.frame(individualNb=1:10,demeNb=sample(1:4,10,replace=TRUE),birthDate=as.Date("2013/01/23"))
+  # tipDemes=data.frame(individualNb=1:10,birthDate=as.Date("2013/01/23"),demeNb=sample(1:4,10,replace=TRUE))
   # generationTime=sample(20:25,4,replace=TRUE)
   # generationTimeRelativeSD=.1
   # migrationMatrix <- matrix(c(.9,.1,0,0,.05,.9,0.05,0,0,.05,.9,0.05,0,0,.1,.9),nrow=4,ncol=4,byrow=TRUE) 
-  # reprMigrCompet(tipDemes,
-  #                absoluteForwardTransitionMatrix=absoluteForwardTransition(r,K,migrationMatrix),
-  #                generationTime,generationTimeRelativeSD)
+  # reprMigr(tipDemes=subset(tipDemes,tipDemes$birthDate=="2013-01-23"),
+  #          migrationMatrix=migrationmatrix,
+  #          r=r,
+  #          generationTime,
+  #          generationTimeRelativeSD)
   #
 
   rownames(tipDemes)<-tipDemes$individualNb
-  # caculating absolute transition matrix with expected offsrpog size in column for each deme of the tip in line
-  trTip <- absoluteForwardTransitionMatrix[tipDemes$demeNb,]
+  repMig = r*migrationMatrix
+  # caculating absolute reproduction migration matrix with expected 
+  # offspring size in column for each deme of the tip in line
+  trTip <- subset(repMig,subset=(1:nrow(repMig)==tipDemes$demeNb))
   # generating number of offspring of each tip (line) in each deme (column)
   individualNb <- matrix( rpois(prod(dim(trTip)),trTip),nrow=nrow(trTip),ncol=ncol(trTip))
   # 
-  offsTipDemes <- tipDemes[rep(tipDemes$individualNb,rowSums(individualNb)),]
-  offsTipDemes$birthDate <- offsTipDemes$birthDate + rnorm(nrow(offsTipDemes),generationTime[offsTipDemes$demeNb],generationTimeRelativeSD*generationTime[offsTipDemes$demeNb])
+  offsTipDemes <- tipDemes[as.character(rep(tipDemes$individualNb,rowSums(individualNb))),]
+  #offsTipDemes$birthDate <- offsTipDemes$birthDate + rnorm(nrow(offsTipDemes),generationTime[offsTipDemes$demeNb],generationTimeRelativeSD*generationTime[offsTipDemes$demeNb])
+  offsTipDemes$birthDate <- as.character(offsTipDemes$birthDate + rnorm(nrow(offsTipDemes),generationTime,generationTimeRelativeSD*generationTime))
   offsTipDemes$demeNb <- rep(rep(1:length(r),nrow(individualNb)),as.vector(t(individualNb)))
   return(offsTipDemes)
 }
 
-generate_parameterSerie <- function(rstSeries,startingDate,stoppingDate,periodicity)
+generate_parameterSeries <- function(EnvData,migrationMatrix,nicheKModelsList,nicheRModelsList,paramKList,paramRList)
 {
-  
+  r <- K <- EnvData[,,1]
+  for (Date in colnames(r)) #Date=colnames(r)[3]
+  {
+    values(rasterStack) <- EnvData[,Date,]
+    # launch the siulation
+    # Get the carrying capacity map :
+    r[,Date] <- values(nicheFunctionForRasterStack(functionList = nicheKModelsList, 
+                                        rasterStack = rasterStack,
+                                        args = paramKList))
+    
+    # Get growth rate map :
+    K[,Date] <- values(nicheFunctionForRasterStack(functionList = nicheRModelsList, 
+                                        rasterStack = rasterStack,
+                                        args = paramKList))
+    
+  }
+list(r=r,K=K)
 }
 
 generateIndividualSerie <- function(release,r_serie,K_serie,migrationMatrix, startingDate, stoppingDate,generationTime,generationTimeSD)

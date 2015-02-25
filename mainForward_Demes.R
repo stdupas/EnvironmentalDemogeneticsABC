@@ -97,7 +97,13 @@ fwParamList$NicheK$BIO1$slope$max<-.1
 fwParamList$NicheK$BIO1$slope$Values=runif(10,0,.1)
 fwParamList$NicheK$BIO12$slope$max<-0.03
 fwParamList$NicheK$BIO12$slope$Values=runif(10,0,.03)
+
+fwParamList$startingDate = as.Date("2001-01-01")
+fwParamList$stoppingDate = as.Date("2003-01-01")
+
 save(list=fwParamList,file="fwParamList.RData")
+
+
 
 ########## end of parameters initialisation <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 # simulation 1
@@ -132,17 +138,19 @@ local({
                                          individuals, 
                                          localizationData,
                                          EnvData){
-    kernelMatrix <- dispersionFunctionForRasterLayer(dispersionFunction=getFunctionDispersion(fwParamList),
-                                                     rasterLayer=rasterStack[[1]], 
-                                                     args=getArgsListDispersion(simulation = 1, ParamList = fwParamList))
-    migrationMatrix <- forwardMigrationRateMatrixFromKernel(kernelMatrix)
-#    rK <- generate_parameterSeries(EnvData,
+    #    rK <- generate_parameterSeries(EnvData,
 #                                   migrationMatrix,
 #                                   nicheKModelsList=getFunctionListNiche(ParamList = fwParamList, sublist="NicheK"),
 #                                   nicheRModelsList=getFunctionListNiche(ParamList = fwParamList, sublist="NicheR"),
 #                                   paramKList=getArgsListNiche(simulation = x, ParamList = fwParamList, sublist="NicheK"),
 #                                   paramRList=getArgsListNiche(simulation = x, ParamList = fwParamList, sublist="NicheR"))
-      
+    DemeSizeSerie <- generateDemeSizeSerie(release,
+                                           dispersionFunction=getFunctionDispersion(fwParamList),
+                                           dispersionParameters=getArgsListDispersion(simulation = x, ParamList = fwParamList),
+                                           nicheFunctionList=getFunctionDispersion(fwParamList),
+                                           nicheParametersList,
+                                           generationTimeParameters
+                                           rasterLayer=rasterStack[[1]]rasterStack, fwParamList)      
     # LOOP OVER DAYS
     for (Date in dimnames(EnvData)[[2]]) #Date=dimnames(EnvData)[[2]][3]
     {

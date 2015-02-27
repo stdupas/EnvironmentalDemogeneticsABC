@@ -50,13 +50,13 @@ simSpatialCoal(nbSimul=10000, ParamList=ParamList, rasterStack=bio, GeneticData=
 pcaRes <- pca4abc(GeneticData = genetic, ParamList = ParamList, distanceMethod = "DeltaMuDistance", path = paste0(getwd(),"/SimulResults"))
 
 # performs cross validation
-cv.rej <- cv4abc(param = pcaRes[[3]], sumstat=pcaRes[[2]], nval=1000, tols=c(0.001), method="rejection")
+cv.rej <- cv4abc(param = pcaRes[[3]], sumstat=pcaRes[[2]], nval=500, tols=c(0.01, 0.1), method="rejection")
 plot(cv.rej)
 
 # performs abc analysis
 result <- abc(target = pcaRes[[1]], 
               param = pcaRes[[3]], 
               sumstat = pcaRes[[2]], 
-              distanceMethod="DeltaMuDistance",
-              tol=0.1, 
+              tol=0.01, 
               method="neuralnet" )
+hist(result)

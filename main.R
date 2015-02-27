@@ -1,5 +1,4 @@
 
-source("main.R")
 source("AskModelsFunctions.R")
 source("NicheFunctions.R")
 source("DispersionFunctions.R")
@@ -51,7 +50,8 @@ simSpatialCoal(nbSimul=10000, ParamList=ParamList, rasterStack=bio, GeneticData=
 pcaRes <- pca4abc(GeneticData = genetic, ParamList = ParamList, distanceMethod = "DeltaMuDistance", path = paste0(getwd(),"/SimulResults"))
 
 # performs cross validation
-cv.rej <- cv4abc(param = pcaRes[[3]], sumstat=pcaRes[[2]], nval=5, tols=c(.1,.2,.3), method="rejection")
+cv.rej <- cv4abc(param = pcaRes[[3]], sumstat=pcaRes[[2]], nval=1000, tols=c(0.001), method="rejection")
+plot(cv.rej)
 
 # performs abc analysis
 result <- abc(target = pcaRes[[1]], 

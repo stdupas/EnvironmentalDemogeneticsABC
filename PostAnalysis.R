@@ -38,14 +38,13 @@ pca4abc <- function(GeneticData, ParamList, distanceMethod, path){
   indices <- vapply(X = allFiles,
                     FUN = function(x){as.numeric(gsub(pattern = "[^0-9]", replacement = "", x = x))},
                     FUN.VALUE = c(1))
-    
+  
+  # stats is a matrix with each column indicing the simulations in the same order as allFiles (not necessarily in ascending order)
   stats <- apply(X = as.array(allFiles), MARGIN = 1, FUN = computeSummaryStats, 
                  nbrInd = nbrInd, 
                  distanceMethod = distanceMethod, 
                  rotation = rotation,
                  path = path)
-
-  stats <- stats[, order(stats[1,])]
   
   
   ### Return necessary elements for abc analysis :

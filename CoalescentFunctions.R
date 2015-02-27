@@ -114,7 +114,7 @@ simSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
         coal <- matrix(data = NA, nrow = maxCoalEvent, ncol = 8)    
         
         # launch the coalescent
-        coal[,c(1:4)] <- spatialCoalescentSimulation(tipDemes = localizationData, 
+        coal[,c(1:4)] <- coalescentCore(tipDemes = localizationData, 
                                                      transitionBackward = transitionBackward, 
                                                      N = round(values(rasK)))
         
@@ -173,7 +173,7 @@ simSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
 }
 
 
-spatialCoalescentSimulation <- function(tipDemes, transitionBackward, N){
+coalescentCore <- function(tipDemes, transitionBackward, N){
   # Simulate a genealogy backward in the time, accross demes
   # 
   # Args:
@@ -225,7 +225,7 @@ spatialCoalescentSimulation <- function(tipDemes, transitionBackward, N){
         
         focalDeme <- demes[x]
         # /!\ If N=0, the nodes would automatically coalesce (parents n°0 for everyone) -> make sure this does not happen !
-        if(N[focalDeme]==0){stop(paste("in spatialCoalescentSimulation you are trying to coalesce in an empty deme : in deme", x ,", N=0"))}
+        if(N[focalDeme]==0){stop(paste("in coalescentCore you are trying to coalesce in an empty deme : in deme", x ,", N=0"))}
         
         # Attribute parents (among N possible parents) to each node present in the deme
         parents <- sample(N[focalDeme], size = length(candidates[[x]]), replace = TRUE) # parents[1] <- parents[2]

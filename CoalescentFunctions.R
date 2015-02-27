@@ -84,11 +84,21 @@ simSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
                                           rasterStack = rasterStack,
                                           args = getArgsListNiche(simulation = x, ParamList = ParamList, sublist="NicheK"))
       rasK <- round(rasK)
+      # Prevent impossible transition :
+      if( cellStats(x = rasK, stat = sum) == 0){
+        stop(paste("The parameters values for niche models led to null carrying capacity over all cells of the landscape :
+                   coalescence is impossible to simulate"))
+      }
       
       # Get growth rate map :
       rasR <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = ParamList, sublist="NicheR"), 
                                           rasterStack = rasterStack,
                                           args = getArgsListNiche(simulation = x, ParamList = ParamList, sublist="NicheR"))
+      # Prevent impossible transition :
+      if( cellStats(x = rasK, stat = sum) == 0){
+        stop(paste("The parameters values for niche models led to null growth rate over all cells of the landscape : 
+                   coalescence is impossible to simulate"))
+      }
       
       # Get migration matrix :
       kernelMatrix <- dispersionFunctionForRasterLayer(dispersionFunction=getFunctionDispersion(ParamList),

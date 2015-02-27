@@ -224,8 +224,10 @@ spatialCoalescentSimulation <- function(tipDemes, transitionBackward, N){
       for(x in seq(from = 1, to = length(candidates))){ # x <- 1
         
         focalDeme <- demes[x]
+        # /!\ If N=0, the nodes would automatically coalesce (parents n°0 for everyone) -> make sure this does not happen !
+        if(N[focalDeme]==0){stop(paste("in spatialCoalescentSimulation you are trying to coalesce in an empty deme : in deme", x ,", N=0"))}
+        
         # Attribute parents (among N possible parents) to each node present in the deme
-        # /!\ If N=0, the nodes will automatically coalesce assuming there was an "accidental parent" -> make sure this does not happen !
         parents <- sample(N[focalDeme], size = length(candidates[[x]]), replace = TRUE) # parents[1] <- parents[2]
         # Test for equality of parents :
         anonymous <- which(duplicated(parents) | duplicated(parents, fromLast= TRUE))

@@ -32,13 +32,19 @@ pca4abc <- function(GeneticData, ParamList, distanceMethod, path){
   ### Computing summary statistics of simulated data
   allFiles <- grep(pattern = "^Genetics_\\d*.txt$", x=list.files(path), value = TRUE)
   
+  # error if empty file vector
+  if(length(allFiles) ==0){stop("no simulation files found in the repertory SimulResults of the current directory")}
+  # get the indices of all simulations which happened
+  indices <- vapply(X = allFiles,
+                    FUN = function(x){as.numeric(gsub(pattern = "[^0-9]", replacement = "", x = x))},
+                    FUN.VALUE = c(1))
+  
+  # stats is a matrix with each column indicing the simulations in the same order as allFiles (not necessarily in ascending order)
   stats <- apply(X = as.array(allFiles), MARGIN = 1, FUN = computeSummaryStats, 
                  nbrInd = nbrInd, 
                  distanceMethod = distanceMethod, 
                  rotation = rotation,
                  path = path)
-
-  stats <- stats[, order(stats[1,])]
   
   
   ### Return necessary elements for abc analysis :
@@ -52,7 +58,7 @@ pca4abc <- function(GeneticData, ParamList, distanceMethod, path){
   
   # Third element for package abc :
   temp <- as.data.frame(ParamList)
-  param <- temp[, grep(pattern = "Values", x = names(temp))]
+  param <- temp[ indices, grep(pattern = "Values", x = names(temp))]
   
   return(list(statobs = statobs, sumstat = sumstat, param = param))
 }

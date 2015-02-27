@@ -11,7 +11,7 @@ simSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
   #   cores: the number of cores used for computation
   #
   # Returns:
-  #   the results of the abc analysis, and the files of simulated genetic values in the SimulResults repertory
+  #   the files of simulated genetic values in the SimulResults repertory
   
   ### Sourcing functions files
   source("AskModelsFunctions.R")
@@ -75,7 +75,6 @@ simSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
                                            localizationData){
       
       geneticResults <- matrix(data=NA, nrow=nrow(GeneticData), ncol=numberOfLoci)
-      forwardProb <- c()
       
       # Get the mutation rate
       mutationRate <- ParamList[["Mutation"]][["mutationRate"]][["Values"]][x]
@@ -100,7 +99,7 @@ simSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
       
       # Get transition matrix :
       transitionBackward <- transitionMatrixBackward(r = values(rasR), K = values(rasK), migration = migrationMatrix)
-      transitionForward <- transitionMatrixForward(r = values(rasR), K = values(rasK), migration = migrationMatrix, meth = "non_overlap")
+
       
       ### LOOP ON LOCI >>>>>>>>>>>>>>>>>
       
@@ -115,7 +114,7 @@ simSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
         coal <- matrix(data = NA, nrow = maxCoalEvent, ncol = 8)    
         
         # launch the coalescent
-        coal[,c(1:4)] <- spatialCoalescentSimulation(tipDemes = localizationData, transitionForward = transitionForward, 
+        coal[,c(1:4)] <- spatialCoalescentSimulation(tipDemes = localizationData, 
                                                      transitionBackward = transitionBackward, 
                                                      N = round(values(rasK)))
         
@@ -174,23 +173,16 @@ simSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
 }
 
 
-spatialCoalescentSimulation <- function(tipDemes, transitionForward, transitionBackward, N){
+spatialCoalescentSimulation <- function(tipDemes, transitionBackward, N){
   # Simulate a genealogy backward in the time, accross demes
   # 
   # Args:
   #   tipdDemes: vector of the demes in which each node is found a time 0.
-  #   transitionForward: matrix of transition backward in time
   #   transitionBackward: matrix of transition backward in time
   #   N a vector of population sizes
   #
   # Returns: 
   #   A matrix describing the coalescence events : time/childNode1/childNode2/parentNode
-
-  # waiting for the main :
-  #   tipDemes = c(1,2,4,1,4,10)
-  #   transitionForward = transitionForward
-  #   transitionBackward = transitionBackward
-  #   N <- c(40, 42, 50, 59, 76, 56, 56, 98, 2, 13)
   
   ###### INITIALISATION
   time <- 0

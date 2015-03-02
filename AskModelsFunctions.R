@@ -348,3 +348,29 @@ getArgsListMutation <- function(simulation, ParamList){
   names(argsValues) <- argsNames
   return(as.list(argsValues))
 }
+
+getArgsListGenerationTime <- function(simulation, ParamList){
+  # Get a list of parameters of generation time model function and their values stored in ParamList
+  #
+  # Args:
+  #   simulations : the index in which to get the value stored in the vector Values (by prior sampling) in ParamList.
+  #   ParamList: the list of model parameters created using askListOfParameters function
+  #
+  # Returns:
+  #   the list of generation time model functions parameters 
+  
+  # initialize the list of parameters
+  argsList <- list()
+  
+  # initialize the vectors
+  argsValues <- c()
+  argsNames <- c()
+  
+  # Loop over the parameters (omitting the first element of the list, containing the name of the model)
+  for(param in names(ParamList[["generationTime"]])){
+    argsNames <- c(argsNames, as.character(param))
+    argsValues <- c(argsValues, value=ParamList[["generationTime"]][[param]][["Values"]][simulation])
+  }
+  names(argsValues)<- argsNames
+  return(as.list(argsValues))
+}

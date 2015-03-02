@@ -98,10 +98,15 @@ fwParamList$NicheK$BIO1$slope$Values=runif(10,0,.1)
 fwParamList$NicheK$BIO12$slope$max<-0.03
 fwParamList$NicheK$BIO12$slope$Values=runif(10,0,.03)
 
-fwParamList$startingDate = as.Date("2001-01-01")
 fwParamList$stoppingDate = as.Date("2003-01-01")
 
-save(list=fwParamList,file="fwParamList.RData")
+fwParamList$NicheK$BIO12$slope$Values=runif(10,0,.03)
+fwParamList$NicheK$BIO12$slope$Values=runif(10,0,.03)
+
+fwParamList$generationTime$mean$Values=runif(10,17,21)
+fwParamList$generationTime$SD$Values=rep(0.1,10)
+
+#save(list=fwParamList,file="fwParamList.RData")
 
 
 
@@ -145,12 +150,14 @@ local({
 #                                   paramKList=getArgsListNiche(simulation = x, ParamList = fwParamList, sublist="NicheK"),
 #                                   paramRList=getArgsListNiche(simulation = x, ParamList = fwParamList, sublist="NicheR"))
     DemeSizeSerie <- generateDemeSizeSerie(release,
+                                           rasterStack,
                                            dispersionFunction=getFunctionDispersion(fwParamList),
                                            dispersionParameters=getArgsListDispersion(simulation = x, ParamList = fwParamList),
-                                           nicheFunctionList=getFunctionDispersion(fwParamList),
-                                           nicheParametersList,
-                                           generationTimeParameters
-                                           rasterLayer=rasterStack[[1]]rasterStack, fwParamList)      
+                                           nicheKFunctionList=getFunctionListNiche(fwParamList,sublist="NicheK"),
+                                           nicheRFunctionList=getFunctionListNiche(fwParamList,sublist="NicheR"),
+                                           nicheKParametersList=getArgsListNiche(simulation = x, ParamList = fwParamList, sublist="NicheK"),
+                                           nicheRParametersList=getArgsListNiche(simulation = x, ParamList = fwParamList, sublist="NicheK"),
+                                           generationTimeParameters=getArgsListGenerationTime(simulation = x, ParamList = fwParamList))      
     # LOOP OVER DAYS
     for (Date in dimnames(EnvData)[[2]]) #Date=dimnames(EnvData)[[2]][3]
     {

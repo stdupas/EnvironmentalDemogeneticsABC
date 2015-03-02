@@ -225,44 +225,109 @@ demeReprodMigr <- function()
   
 }
 
-generateDemeSizeSerie <- function(release,rasterStack,dispersionFunction,dispersionParameters,nicheFunctionList,nicheParametersList,generationTimeParameters)
+generateDemeSizeSerie <- function(release,
+                                  rasterStack,
+                                  dispersionFunction,
+                                  dispersionParameters,
+                                  nicheKFunctionList,
+                                  nicheRFunctionList,
+                                  nicheKParametersList,
+                                  nicheRParametersList,
+                                  generationTimeParameters,
+                                  stoppingDate)
 {
-  kernelMatrix <- dispersionFunctionForRasterLayer(dispersionFunction=dispersionFunction, 
+  kernelMatrix <- dispersionFunctionForRasterLayer(dispersionFunction=dispersionFunction,
+                                                   rasterLayer=rasterStack[[1]],
                                                    args=dispersionParameters)
   migrationMatrix <- forwardMigrationRateMatrixFromKernel(kernelMatrix)
   rm(kernelMatrix)
-  generationTime <- fwParamList$generationTime$mean$values[simulation]
-  generationTimeSD <- fwParamList$generationTime$SD$values[simulation]*fwParamList$generationTime$mean$values[simulation]
+  generationTime <- generationTimeParameters$mean
+  generationTimeSD <- generationTimeParameters$mean*generationTimeParameters$SD
   release$demeNb <- cellFromXY(object = rasterStack, xy = release[, c("x", "y")])
   release$demeSize <- 1
-  Dates = as.Date(min(release$birthDate):max(release$birthDate),origin="1970-01-01")
+  Dates = as.Date(min(release$birthDate):as.Date(stoppingDate),origin="1970-01-01")
   demeSizes <- array(0,dim=c(nrow(EnvData),length(Dates)),dimnames = list(1:nrow(EnvData),as.character(Dates)))
   release <- aggregation(release,BY=c("birthDate","demeNb"),methodes=c("Paste","Mean","Mean","Name","Name","Sum"))
   for (i in rownames(release))
     {demeSizes[release[i,"demeNb"],as.character(release[i,"birthDate"])] <- release[i,"demeSize"]}
-  for (Date in as.Date(as.Date(fwParamList$startingDate):as.Date(fwParamList$stoppingDate),origin="1970-01-01"))
+  for (Date in as.character(as.Date(as.Date(min(Dates)):as.Date(stoppingDate),origin="1970-01-01"))) #Date=as.character(as.Date(as.Date(min(Dates)):as.Date(fwParamList$stoppingDate),origin="1970-01-01"))[1]
   {
     values(rasterStack) <- EnvData[,as.character(Date),]
-    K <- values(nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = fwParamList, sublist="NicheK"), 
+    K <- values(nicheFunctionForRasterStack(functionList = nicheKFunctionList, 
                                             rasterStack = rasterStack,
-                                            args = getArgsListNiche(simulation = simulation, ParamList = fwParamList, sublist="NicheK")
+                                            args = nicheKParametersList
                                             )
                 )
-    demeSizes[,as.character(Date)] <- (demeSizes[,as.character(Date)]>K)*K + round((demeSizes[,as.character(Date)]<=K)*demeSizes[,as.character(Date)])
-    r <- values(nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = fwParamList, sublist="NicheR"), 
+    # competition: cuts deme sizes to K
+    demeSizes[,Date] <- (demeSizes[,as.character(Date)]>K)*K + round((demeSizes[,as.character(Date)]<=K)*demeSizes[,as.character(Date)])
+    # reproduction growth rate
+    r <- values(nicheFunctionForRasterStack(functionList = nicheRFunctionList, 
                                             rasterStack = rasterStack,
-                                            args = getArgsListNiche(simulation = simulation, ParamList = fwParamList, sublist="NicheR")
+                                            args = nicheRParametersList
                                             )
                 )
-    descendants <- (demeSizes[,as.character(Date)]*r)%*%migrationMatrix
-    descendantDates <- as.character(Date + rnorm(sum(descendants),generationTime,generationTimeSD))
-    demes <- rep(colnames(descendants),descendants)
+    descendants <- rpois(nrow(demeSizes),demeSizes[,as.character(Date)]*r)
+    #migration
+    descendants <- rpois(nrow(demeSizes),descendants%*%migrationMatrix)
+    descendantDates <- as.character(as.Date(Date) + rnorm(sum(descendants),generationTime,generationTimeSD))
+    demes <- rep(1:nrow(demeSizes),descendants)
     if (length(descendantDates>0)) {
       for (i in 1:length(descendantDates))
         {
-        demeSizes[demes[i],descendantDates[i]] <- demeSizes[demes[i],descendantDates[i]] + 1
+        demeSizes[demes[i],as.character(descendantDates[i])] <- demeSizes[demes[i],descendantDates[i]] + 1
         }
       }
   }
 demeSizes  
+}
+
+demeSizeArray <- function(Table, minDate, maxDate, BY="day")
+{
+  #
+  # construction of expected deme sizes array
+  #
+  Table$demeNb <- cellFromXY(object = rasterStack, xy = Table[, c("x", "y")])
+  Table$demeSize <- 1
+  Dates = as.Date(as.Date(minDate):as.Date(maxDate),origin="1970-01-01")
+  demeSizes <- array(0,dim=c(nrow(EnvData),length(Dates)),dimnames = list(1:nrow(EnvData),as.character(Dates)))
+  Table <- aggregation(Table,BY=c("birthDate","demeNb"),methodes=c("Paste","Mean","Mean","Name","Name","Sum"))
+  for (i in rownames(Table))
+  {demeSizes[Table[i,"demeNb"],as.character(Table[i,"birthDate"])] <- Table[i,"demeSize"]}
+demeSizes  
+}
+
+
+likelihood <- function(release,
+                       recovery,
+                       rasterStack,
+                       dispersionFunction,
+                       dispersionParameters,
+                       nicheKFunctionList,
+                       nicheRFunctionList,
+                       nicheKParametersList,
+                       nicheRParametersList,
+                       generationTimeParameters,
+                       )
+{
+  kernelMatrix <- dispersionFunctionForRasterLayer(dispersionFunction=dispersionFunction,
+                                                   rasterLayer=rasterStack[[1]],
+                                                   args=dispersionParameters)
+  migrationMatrix <- forwardMigrationRateMatrixFromKernel(kernelMatrix)
+  rm(kernelMatrix)
+  generationTime <- generationTimeParameters$mean
+  generationTimeSD <- generationTimeParameters$mean*generationTimeParameters$SD
+  minDates = min(release$birthDate)
+  maxDates = max(recovery$Date)
+  #
+  # construction of observed recovery array
+  #
+  recovery$demeNb <- cellFromXY(object = rasterStack, xy = recovery[, c("x", "y")])
+  recoverySizes <- array(0,dim=c(nrow(EnvData),length(Dates)),dimnames = list(1:nrow(EnvData),as.character(Dates)))
+  recovery <- aggregation(recovery,BY=c("birthDate","demeNb"),methodes=c("Paste","Mean","Mean","Name","Name","Sum"))
+  for (i in rownames(recovery))
+  {recoverySizes[recovery[i,"demeNb"],as.character(recovery[i,"birthDate"])] <- recovery[i,"demeSize"]}
+  #
+  # construction of 
+  #
+  
 }

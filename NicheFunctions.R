@@ -217,8 +217,8 @@ nicheFunctionForValue <- function(nicheFunction, x, args){
   # nicheFunctionForValue(conquadraticSkewed1, x=4, args=list(Xmin=0, Xmax=10, Xopt=5, Yopt=1))
 }
 
-nicheFunctionForArray <- function(nicheFunction, array, args){ 
-  # Function to apply a niche function over an array
+nicheFunctionForArray <- function(nicheFunction, Array, args){ 
+  # Function to apply a niche function over an Array
   #
   # Args:
   #   nicheFunction: the name of the niche function which is called
@@ -228,7 +228,7 @@ nicheFunctionForArray <- function(nicheFunction, array, args){
   # Returns:
   #   An array corresponding to the norm reaction
   
-  return(apply(X=array, MARGIN=1, FUN=nicheFunctionForValue, nicheFunction=nicheFunction, args=args))
+  return(apply(X=Array, MARGIN=1, FUN=nicheFunctionForValue, nicheFunction=nicheFunction, args=args))
   # Ex:
   # nicheFunctionForArray(nicheFunction=conquadraticSkewed1, 
   #                      array=array(data= 1:10, dim =10), 
@@ -311,6 +311,40 @@ nicheFunctionForRasterStack <- function(functionList, rasterStack, args){
   
 }
 
+nicheFunctionForArray2 <- function(functionList, Array, args){
+  # Function to apply various niche functions to each column of an array, combining them with a geometric mean. 
+  #
+  # Args:
+  #   nichesFunctions: an ordered list containing the names of the niche functions which are called. Must be in the same order as rasterLayer and args
+  #   Array: the array of environmental values used to compute niche function.
+  #   args : an ordered list containing  the lists of arguments necessary to call each niche function. 
+  # 
+  # Returns:
+  #   A raster with values corresponding to the norm reaction
+  
+  # rearrange the list to get each element to be applied in an apply in the same index level
+  X <- lapply(X=1:ncol(Array), 
+              FUN=function(i, Array){assign(paste("r",i), list(Array[,i], functionList[[i]], args[[i]])) },
+              Array)
+  
+  # Apply over each column
+  reactionNorm <- lapply(X, function(x){do.call(x[[2]], c(x[[1]], x[[3]]))})
+  
+  # Transform rasters to matrix
+  unroll <- sapply(X=reactionNorm, FUN=getValues)
+  
+  # Combine the response with a geometric mean : gives a vector
+  response <- apply(X=unroll, FUN=geometricMean, MARGIN=1)
+  return(response)
+  
+  # Ex:*
+  # functionList <- list(conquadraticSkewed1, linearPositiveTwoParameters)
+  # Data <- data.frame(BIO1=c(300,120,120,400),BIO12=c(2000,350,350,2900)) 
+  # 
+  # args <- list(list(Xmin=0, Xmax=10, Xopt=5, Yopt=1),list(X0=0, slope=1/2))
+  # nicheFunctionForArray(functionList, Data, args)
+  
+}
 
 ################# End of Applying Niche Functions to Objects <<<<<<<<<<<<<<<<<<<<<<<
 

@@ -306,7 +306,7 @@ likelihood <- function(release,
                        nicheRFunctionList,
                        nicheKParametersList,
                        nicheRParametersList,
-                       generationTimeParameters,
+                       generationTimeParameters
                        )
 {
   kernelMatrix <- dispersionFunctionForRasterLayer(dispersionFunction=dispersionFunction,

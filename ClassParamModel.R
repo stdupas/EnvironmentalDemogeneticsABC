@@ -21,7 +21,17 @@ setClass(
   
 )
 
-
+#Initiateur
+setMethod(
+  f = "initialize"
+  signature = "ParamModel",
+  definition = function(.Object, type_prior, param_prior){
+    cat("---------- ParamModel : initiation ----------\n")
+    .Object@type_prior = type_prior
+    .Object@param_prior = param_prior
+    return(.Object)
+  }
+  )
 
 #UserFriendly constructor
 paramModel = function(type_prior, param_prior)

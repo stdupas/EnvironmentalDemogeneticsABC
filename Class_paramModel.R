@@ -12,8 +12,9 @@ setClass(
   validity = function(object){
     cat("---------- ParamModel : verification ----------\n")
     #Will be changed in order to check if type_prior match a known prior function
-    if(object@type_prior == "Not a function"){
-      stop("[ ParamModel : verification ] type_prior does not match any know prior function")
+  
+    if((is.null(object@type_prior))){
+      stop("[ ParamModel : verificatiteston ] type_prior does not match any know prior function")
     } else {
       return (TRUE)
     }
@@ -21,30 +22,48 @@ setClass(
   
 )
 
-#Initiateur
+#Initiateur with 2 arguments
+#setMethod(
+#  f = "initialize",
+#  signature = "ParamModel",
+#  definition = function(.Object, type_prior, param_prior){
+#    cat("---------- ParamModel : initiation ----------\n")
+#    if(!missing(type_prior) && !(missing(param_prior))){
+#      .Object@type_prior = type_prior
+#      .Object@param_prior = param_prior
+#      validObject(.Object)
+#    } else {
+#      stop("[ ParamModel : initiation ] Argument is missing")
+#    }
+#    return(.Object)
+#  }
+#)
+
+
+#Initiateur with 0 arguments
 setMethod(
   f = "initialize",
   signature = "ParamModel",
-  definition = function(.Object, type_prior, param_prior){
+  definition = function(.Object){
     cat("---------- ParamModel : initiation ----------\n")
-    if(!missing(type_prior) && !(missing(param_prior))){
-      .Object@type_prior = type_prior
-      .Object@param_prior = param_prior
-      validObject(.Object)
-    } else {
-      stop("[ ParamModel : initiation ] Argument is missing")
-    }
+    validObject(.Object)
     return(.Object)
   }
 )
 
 
-#UserFriendly constructor
-paramModel = function(type_prior, param_prior){
-  cat("---------- ParamModel : construction ----------\n")
-  new(Class = "ParamModel", type_prior=type_prior, param_prior=param_prior)
-}
 
+#UserFriendly constructor with 2 arguments
+#paramModel = function(type_prior, param_prior){
+#  cat("---------- ParamModel : construction ----------\n")
+#  new(Class = "ParamModel", type_prior=type_prior, param_prior=param_prior)
+#}
+
+#UserFriendly constructor with 0 arguments
+paramModel = function(){
+  cat("---------- ParamModel : construction ----------\n")
+  new(Class = "ParamModel")
+}
 
 #Function to get the "type_prior" attribut
 setGeneric("getType_prior",

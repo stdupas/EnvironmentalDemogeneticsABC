@@ -8,5 +8,14 @@ setClass(
     	niche="Composante",
     	dispersion="Composante",
     	mutation="Composante"
-    )
+    ),
+    prototype=prototype(
+    	niche=NULL,
+    	dispersion=NULL,
+    	mutation=NULL
+    ),
+    validity=function(object) {
+    	cat("---------- ParamList : verification ----------\n")
+    	# add verification if needed
+    }
 )

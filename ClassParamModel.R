@@ -6,14 +6,7 @@ setClass(
     param_prior = "numeric"
     ),
   prototype = prototype(
-    type_prior = "vide", 
-    param_prior = NULL
-    )
-  #validity = function(object){ ## object : type_prior doesn't match any known function
-    #if (object@type_prior == "vide" || autre types de fonctions){
-    #  return(FALSE)
-    #} else {
-    #  return(TRUE)
-    #}
-  #}
+    type_prior = character(0), 
+    param_prior = numeric(0)
+    ),
 )

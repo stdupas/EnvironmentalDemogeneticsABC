@@ -271,7 +271,7 @@ nicheFunctionForRasterLayer <- function(nicheFunction, rasterLayer, args){
   
 }
 
-geometricMean = function(x, na.rm=TRUE){
+geometricMean = function(x, na.rm=FALSE){
   #  A vectorized, zero- and NA-tolerant function for calculating geometric mean in R. The verbose mean calculation involving length(x) is necessary for the cases where x contains non-positive values.
   #
   # Args:

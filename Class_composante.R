@@ -1,5 +1,5 @@
 # Sources for needed classes
-source("ClassModel.R")
+source("Class_model.R")
 
 # Class composante
 setClass(

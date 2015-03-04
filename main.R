@@ -16,11 +16,15 @@ library(parallel)
 
 ###### Environmental data :
 
-# Data2 <- data.frame(BIO1=c(200,120,300,400),BIO12=c(1000,350,2000,2900))
-Data2 <- data.frame(BIO1=c(300,400),BIO12=c(2000,1500))
-# Make raster stack with two layers according to the environmental variables of the dataframe
-bio <- stack(list("BIO1"=raster(matrix(Data2$BIO1,nrow=1,ncol=2),xmn=0,xmx=2,ymn=0,ymx=1),
-                  "BIO12"=raster(matrix(Data2$BIO12,nrow=1,ncol=2),xmn=0,xmx=2,ymn=0,ymx=1)))
+## Create false environmental Data
+# # Data2 <- data.frame(BIO1=c(200,120,300,400),BIO12=c(1000,350,2000,2900))
+# Data2 <- data.frame(BIO1=c(300,400),BIO12=c(2000,1500))
+# # Make raster stack with two layers according to the environmental variables of the dataframe
+# bio <- stack(list("BIO1"=raster(matrix(Data2$BIO1,nrow=1,ncol=2),xmn=0,xmx=2,ymn=0,ymx=1),
+#                   "BIO12"=raster(matrix(Data2$BIO12,nrow=1,ncol=2),xmn=0,xmx=2,ymn=0,ymx=1)))
+
+# Or load ones (Camargue)
+load("bio.RData")
 
 ###### Genetic data :
 

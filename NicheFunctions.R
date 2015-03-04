@@ -1,4 +1,17 @@
 ################### Formated Niche Functions >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+binaryMultiplicative <- function(x, Y){
+  # Norm reaction for binary environment variable used in a multiplicative response framework
+  #
+  # Args:
+  #   x: binary value of the environmental variable : 0 or 1
+  #   Y : value of the reaction norm for x = 1
+  #
+  # Returns: 
+  #   The value of the reaction norm for
+  res <- x*(Y-1) +1
+  return(res)
+}
+
 conquadraticSkewed1 <- function(x, Xmin, Xmax, Xopt, Yopt)
 {
   # Asymetric concave conquadratic function within an enveloppe, else returns 0.
@@ -258,7 +271,7 @@ nicheFunctionForRasterLayer <- function(nicheFunction, rasterLayer, args){
   
 }
 
-geometricMean = function(x, na.rm=TRUE){
+geometricMean = function(x, na.rm=FALSE){
   #  A vectorized, zero- and NA-tolerant function for calculating geometric mean in R. The verbose mean calculation involving length(x) is necessary for the cases where x contains non-positive values.
   #
   # Args:

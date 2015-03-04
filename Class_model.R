@@ -5,17 +5,19 @@ source("Class_paramModel.R")
 setClass(
   Class = "Model",
   representation = representation(
+    name = "character",
     type_model = "character",
     param_model = "list"
   ),
   prototype = prototype(
+    name = character(0),
     type_model = character(0), 
-    param_model = NULL
+    param_model = list(0)
   ),
   validity = function(object){
     cat("---------- Model : verification ----------\n")
     #Will be changed in order to check if type_model match a known model function
-    if(object@type_model == "Not a function"){
+    if(is.null(object@type_model)){
       stop("[ Model : verification ] type_model does not match any know model function")
     } else {
       return (TRUE)
@@ -28,24 +30,23 @@ setClass(
 setMethod(
   f = "initialize",
   signature = "Model",
-  definition = function(.Object, type_model, param_model){
+  definition = function(.Object){
     cat("---------- Model : initiation ----------\n")
-    if(!missing(type_model) && !(missing(param_model))){
-      .Object@type_model = type_model
-      .Object@param_model = param_model
-      validObject(.Object)
-    } else {
-      stop("[ Model : initiation ] Argument is missing")
-    }
+    validObject(.Object)
     return(.Object)
   }
 )
 
 
 #UserFriendly constructor
-model = function(type_model, param_model){
+#model = function(type_model, param_model){
+#  cat("---------- Model : construction ----------\n")
+#  new(Class = "Model", type_model=type_model, param_model=param_model)
+#}
+
+model = function(){
   cat("---------- Model : construction ----------\n")
-  new(Class = "Model", type_model=type_model, param_model=param_model)
+  new(Class = "Model")
 }
 
 

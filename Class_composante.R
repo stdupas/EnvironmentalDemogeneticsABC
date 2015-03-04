@@ -5,12 +5,14 @@ source("Class_model.R")
 setClass(
 	Class="Composante", 
     representation=representation(
-    	listModel="list",
+    	name="character",
+        listModel="list",
     	nbModel="numeric"
     ),
     prototype=prototype(
-    	listModel=NULL,
-    	nbModel=1
+        name=character(0),
+    	listModel=list(0),
+    	nbModel=numeric(0)
     ),
     validity=function(object) {
     	cat("---------- Composantes : verification ----------\n")
@@ -25,25 +27,44 @@ setClass(
 )
 
 # Constructor of composante
+# setMethod(
+#     f="initialize",
+#     signature="Composante",
+#     definition=function(.Object) {
+#         cat("---------- Composantes : initiation ----------\n")
+#         if(!missing(listModel) && !missing(nbModel)) {
+#             .Object@listModel = listModel
+#             .Object@nbModel = nbModel
+#             validObject(.Object)
+#         }
+#         else {
+#             stop("[Composante initiation] Missing argument(s)\n")
+#         }
+#         return(.Object)
+#     }
+# )
+
 setMethod(
     f="initialize",
     signature="Composante",
-    definition=function(.Object, listModel, nbModel) {
+    definition=function(.Object, name) {
         cat("---------- Composantes : initiation ----------\n")
-        if(!missing(listModel) && !missing(nbModel)) {
-            .Object@listModel = listModel
-            .Object@nbModel = nbModel
-            validObject(.Object)
+        .Object@name=name
+        .Object@nbModel = as.numeric(readline(paste("How many models for",name,"? ")))
+        
+        mod = NULL
+        for(i in 1:.Object@nbModel) {
+            mod = c(mod, model())
         }
-        else {
-            stop("[Composante initiation] Missing argument(s)\n")
-        }
+
+        .Object@listModel = mod
+        validObject(.Object)
         return(.Object)
     }
 )
 
 # User-friendly constructor of composante
-composante = function(listModel, nbModel) {
+composante = function(name) {
     cat("---------- Composantes : construction ----------\n")
-    new(Class="Composante", listModel=listModel, nbModel=nbModel)
+    new(Class="Composante", name=name)
 }

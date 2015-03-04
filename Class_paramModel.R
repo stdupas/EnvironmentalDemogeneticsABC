@@ -2,10 +2,12 @@
 setClass(
   Class = "ParamModel",
   representation = representation(
+    name = "character",
     type_prior = "character",
     param_prior = "numeric"
     ),
   prototype = prototype(
+    name = character(0),
     type_prior = character(0), 
     param_prior = numeric(0)
     ),

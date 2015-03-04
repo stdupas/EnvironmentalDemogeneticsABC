@@ -1,4 +1,19 @@
 ################### Formated Niche Functions >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+binary <- function(x, Ktrue, Kfalse){
+  # Niche response for binary environment variables used in a multiplicative response framework
+  #
+  # Args:
+  #   x: binary value of the environmental variable : 0 or 1
+  #   Ktrue : value of the reaction norm for x = 1. Ktrue=1 (resp 0) does not change response for multiplicative (resp.additive) model
+  #   Kfalse : value of the reaction norm for x = 0
+  #
+  # Returns: 
+  #   The value of the reaction norm for
+  if(x == 1){return(Ktrue)}
+  else{return(Kfalse)}
+
+} 
+
 conquadraticSkewed1 <- function(x, Xmin, Xmax, Xopt, Yopt)
 {
   # Asymetric concave conquadratic function within an enveloppe, else returns 0.

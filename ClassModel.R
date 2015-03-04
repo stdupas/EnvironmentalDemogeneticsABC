@@ -8,7 +8,7 @@ setClass(
   Class = "Model",
   representation = representation(
     type_model = "character",
-    param_model = "ParamModel"
+    param_model = "list"
   ),
   prototype = prototype(
     type_model = character(0), 

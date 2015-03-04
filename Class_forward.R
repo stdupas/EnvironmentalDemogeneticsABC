@@ -4,9 +4,9 @@ source("Class_paramList.R")
 
 # Class forward
 setClass(
-	Class="forward",
+	Class="Forward",
 	representation=representation(
-		generation="composante"
+		generation="Composante"
 	),
-	contains="paramList"
+	contains="ParamList"
 )

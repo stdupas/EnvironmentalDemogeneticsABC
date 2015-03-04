@@ -3,10 +3,10 @@ source("Class_composante.R")
 
 # Class paramList
 setClass(
-	Class="paramList", 
+	Class="ParamList", 
     representation=representation(
-    	niche="composante",
-    	dispersion="composante",
-    	mutation="composante"
+    	niche="Composante",
+    	dispersion="Composante",
+    	mutation="Composante"
     )
 )

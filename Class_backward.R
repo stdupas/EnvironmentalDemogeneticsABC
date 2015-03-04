@@ -3,6 +3,6 @@ source("Class_paramList.R")
 
 # Class backward
 setClass(
-	Class="backward", 
-	contains="paramList"
+	Class="Backward", 
+	contains="ParamList"
 )

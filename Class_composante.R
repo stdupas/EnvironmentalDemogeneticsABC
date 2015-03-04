@@ -3,9 +3,9 @@ source("ClassModel.R")
 
 # Class composante
 setClass(
-	Class="composante", 
+	Class="Composante", 
     representation=representation(
-    	listModel="Model",
+    	listModel="list",
     	nbModel="numeric"
     ),
     prototype=prototype(

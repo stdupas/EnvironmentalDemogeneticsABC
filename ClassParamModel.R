@@ -14,7 +14,7 @@ setClass(
     #Will be changed in order to check if type_prior match a known prior function
     if(object@type_prior == "Not a function"){
       stop("[ ParamModel : verification ] type_prior does not match any know prior function")
-    } esle {
+    } else {
       return (TRUE)
     }
   }
@@ -23,18 +23,27 @@ setClass(
 
 #Initiateur
 setMethod(
-  f = "initialize"
+  f = "initialize",
   signature = "ParamModel",
   definition = function(.Object, type_prior, param_prior){
     cat("---------- ParamModel : initiation ----------\n")
-    .Object@type_prior = type_prior
-    .Object@param_prior = param_prior
+    if(!missing(type_prior) && !(missing(param_prior))){
+      .Object@type_prior = type_prior
+      .Object@param_prior = param_prior
+      validObject(.Object)
+    } else {
+      stop("[ ParamModel : initiation ] Argument is missing")
+    }
     return(.Object)
   }
-  )
+)
+
 
 #UserFriendly constructor
-paramModel = function(type_prior, param_prior)
+paramModel = function(type_prior, param_prior){
+  cat("---------- ParamModel : construction ----------\n")
+  new(Class = "ParamModel", type_prior=type_prior, param_prior=param_prior)
+}
 
 
 #Function to get the "type_prior" attribut

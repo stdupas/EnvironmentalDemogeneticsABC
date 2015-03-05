@@ -17,9 +17,9 @@ setMethod(
     signature="Backward",
     definition=function(.Object) {
         cat("---------- Backward : initiation ----------\n")
-        niche = composante("niche")
-        dispersion = composante("dispersion")
-        mutation = composante("mutation")
+        .Object@niche = composante("niche")
+        .Object@dispersion = composante("dispersion")
+        .Object@mutation = composante("mutation")
         validObject(.Object)
         return(.Object)
     }

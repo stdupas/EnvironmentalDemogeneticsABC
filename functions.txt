@@ -1,0 +1,5 @@
+#File of all the niche and prior functions
+#ModelType;FunctionName;NumberOfParameters;NameOfTheFirstParameter;NameOfTheSecondParameter;....
+
+Niche;binaryMultiplicative;2;x;Y;
+Niche;conquadraticSkewed1;5;x;Xmin;Xmax;Xopt;Yopt;

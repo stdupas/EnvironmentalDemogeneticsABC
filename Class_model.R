@@ -19,7 +19,8 @@ setClass(
     #Will be changed in order to check if type_model match a known model function
     if(is.null(object@type_model)){
       stop("[ Model : verification ] type_model does not match any know model function")
-    } else {
+    } else{
+    
       return (TRUE)
     }
   }
@@ -30,8 +31,9 @@ setClass(
 setMethod(
   f = "initialize",
   signature = "Model",
-  definition = function(.Object){
+  definition = function(.Object, composante_name, model_num){
     cat("---------- Model : initiation ----------\n")
+    .Object@name=c(composante_name, model_num)
     validObject(.Object)
     return(.Object)
   }
@@ -44,9 +46,9 @@ setMethod(
 #  new(Class = "Model", type_model=type_model, param_model=param_model)
 #}
 
-model = function(){
+model = function(composante_name, model_num){
   cat("---------- Model : construction ----------\n")
-  new(Class = "Model")
+  new(Class = "Model", composante_name=composante_name, model_num=model_num)
 }
 
 

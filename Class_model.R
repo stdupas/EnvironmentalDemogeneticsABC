@@ -71,3 +71,19 @@ setMethod("getParam_model", "Model",
             return(object@param_model)
           }
 )
+
+# Function to update the number of models
+setGeneric(
+    name="setNumModel",
+    def=function(object, nb) {standardGeneric("setNumModel")}
+)
+
+
+setMethod(
+    f="setNumModel",
+    signature="Model",
+    definition=function(object, nb) {
+        object@name[2]=nb
+    }
+)
+

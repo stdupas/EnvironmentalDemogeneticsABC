@@ -19,12 +19,12 @@ setClass(
 setMethod(
 	f="initialize",
 	signature="Forward",
-	definition=function(.Object, niche, dispersion, mutation, generation) {
+	definition=function(.Object) {
 		cat("---------- Forward : initiation ----------\n")
-		niche = composante("niche")
-		dispersion = composante("dispersion")
-		mutation = composante("mutation")
-		generation = composante("generation")
+		.Object@niche = composante("niche")
+		.Object@dispersion = composante("dispersion")
+		.Object@mutation = composante("mutation")
+		.Object@generation = composante("generation")
 		validObject(.Object)
         return(.Object)
 	}

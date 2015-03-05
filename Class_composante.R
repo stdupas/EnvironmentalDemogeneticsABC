@@ -124,10 +124,13 @@ setMethod(
     definition=function(object, nbToAdd) {
         for(i in 1:nbToAdd) {
             object@nbModel = object@nbModel+1
+
             newMod = model(object@name, object@nbModel)
             object@listModel = c(object@listModel, newMod)
         }
         rm(newMod)
+        validObject(object)
+        return(object)
     }
 )
 
@@ -145,15 +148,15 @@ setMethod(
         numModelToDel = sort(numModelToDel)
         # Deletion of the models
         for(i in numModelToDel) {
-            object@listModel = object@listModel[-i-compteur]
+            object@listModel = object@listModel[-(i-compteur)]
             compteur = compteur+1
         }
+        object@nbModel = object@nbModel - length(numModelToDel)
         # Update of the models number
-        j = 1
-        for(i in listModel) {
-            setNumModel(i, j)
-            j = j+1
+        for(i in 1:object@nbModel) {
+            object@listModel[[i]] = setNumModel(object@listModel[[i]], i)
         }
+        return(object)
     }
 )
 

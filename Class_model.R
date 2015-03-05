@@ -40,9 +40,9 @@ setMethod(
     print(data_fct[possible,2])
     .Object@type_model = toString(readline())
     vec = findFunctionFromFile(composante_name, .Object@type_model)
-    .Object@param_model=as.list(vec[-1])
     mod = NULL
     for(i in 1:vec[1]){
+      print(paste("========== ParamModel : ",vec[i+1]," =========="))
       mod = c(mod, paramModel(model_num))
     }
     .Object@param_model = mod  

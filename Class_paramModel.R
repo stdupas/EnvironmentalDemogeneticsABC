@@ -36,6 +36,7 @@ setMethod(
     print(data_fct[possible,2])
     .Object@type_prior = toString(readline())
     vec = findFunctionFromFile("Prior", .Object@type_prior)
+    param=NULL
     for (i in 1:vec[1]){
       param = c(param, as.numeric(readline(paste("What do you want for the parameter ", vec[i+1]," ?"))))
     }

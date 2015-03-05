@@ -46,8 +46,9 @@ setClass(
 setMethod(
   f = "initialize",
   signature = "ParamModel",
-  definition = function(.Object){
+  definition = function(.Object, model_num){
     cat("---------- ParamModel : initiation ----------\n")
+    .Object@name=c("model:",model_num)
     validObject(.Object)
     return(.Object)
   }
@@ -62,9 +63,9 @@ setMethod(
 #}
 
 #UserFriendly constructor with 0 arguments
-paramModel = function(){
+paramModel = function(model_num){
   cat("---------- ParamModel : construction ----------\n")
-  new(Class = "ParamModel")
+  new(Class = "ParamModel", model_num = model_num)
 }
 
 #Function to get the "type_prior" attribut

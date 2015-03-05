@@ -4,12 +4,14 @@ setClass(
   representation = representation(
     name = "character",
     type_prior = "character",
-    param_prior = "numeric"
+    param_prior = "numeric",
+    result_prior = "list"
     ),
   prototype = prototype(
     name = character(0),
     type_prior = character(0), 
-    param_prior = numeric(0)
+    param_prior = numeric(0),
+    result_prior = list(0)
     ),
   validity = function(object){
     cat("---------- ParamModel : verification ----------\n")
@@ -32,15 +34,15 @@ setMethod(
     .Object@name=c("model:",model_num)
     print("What function do you want to use for prior ?")
     data_fct = read.table("functions.txt", sep = ";", header = TRUE, as.is=rep(TRUE, 4))
-    possible = which(data_fct[,1]=="Prior")
+    possible = which(data_fct[,1]=="prior")
     print(data_fct[possible,2])
     .Object@type_prior = toString(readline())
-    vec = findFunctionFromFile("Prior", .Object@type_prior)
+    vec = findFunctionFromFile("prior", .Object@type_prior)
     param=NULL
     for (i in 1:vec[1]){
       param = c(param, as.numeric(readline(paste("What do you want for the parameter ", vec[i+1]," ?"))))
     }
-    param_prior = param
+    .Object@param_prior = param
     validObject(.Object)
     return(.Object)
   }
@@ -88,6 +90,14 @@ findFunctionFromFile = function(model_type,fct_name){
   }
 }
 
+#Function to change the Result_prior
+setGeneric("setResult_prior",
+           function(object){standardGeneric("setResult_prior")})
 
+setMethod("setResult_prior", "Model",
+          function(object){
+            return(object@result_prior)
+          }
+)
 
 

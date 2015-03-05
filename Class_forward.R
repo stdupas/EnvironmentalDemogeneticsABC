@@ -21,16 +21,11 @@ setMethod(
 	signature="Forward",
 	definition=function(.Object, niche, dispersion, mutation, generation) {
 		cat("---------- Forward : initiation ----------\n")
-		if(!missing(niche) && !missing(dispersion) && !missing(mutation) && !missing(generation)) {
-			.Object@niche = niche
-			.Object@dispersion = dispersion
-			.Object@mutation = mutation
-			.Object@generation = generation
-			validObject(.Object)
-		}
-		else {
-            stop("[Forward initiation] Missing argument(s)\n")
-        }
+		niche = composante("niche")
+		dispersion = composante("dispersion")
+		mutation = composante("mutation")
+		generation = composante("generation")
+		validObject(.Object)
         return(.Object)
 	}
 )

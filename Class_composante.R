@@ -54,7 +54,7 @@ setMethod(
         
         mod = NULL
         for(i in 1:.Object@nbModel) {
-            mod = c(mod, model())
+            mod = c(mod, model(name,i))
         }
 
         .Object@listModel = mod

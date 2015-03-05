@@ -1,3 +1,6 @@
 ComposanteName;FunctionName;NumberOfParameters;NamesOfParameters
 Niche;binaryMultiplicative;2;"x,Y"
 Niche;conquadraticSkewed1;5;"x,Xmin,Xmax,Xopt,Yopt"
+Prior;uniform;3;"n,min,max"
+Prior;beta;3;"n,min,max"
+Prior;normal;3;"n,mean,sd"

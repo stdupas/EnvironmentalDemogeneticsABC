@@ -31,7 +31,7 @@ setMethod(
 )
 
 # User-friendly constructor of forward
-forward = function(niche, dispersion, mutation, generation) {
+forward = function() {
 	cat("---------- Forward : construction ----------\n")
-	new(Class="Forward", niche=niche, dispersion=dispersion, mutation=mutation, generation=generation)
+	new(Class="Forward")
 }

@@ -41,6 +41,11 @@ setMethod(
     .Object@type_model = toString(readline())
     vec = findFunctionFromFile(composante_name, .Object@type_model)
     .Object@param_model=as.list(vec[-1])
+    mod = NULL
+    for(i in 1:vec[1]){
+      mod = c(mod, paramModel(model_num))
+    }
+    .Object@param_model = mod  
     validObject(.Object)
     return(.Object)
   }
@@ -91,6 +96,8 @@ setMethod(
     signature="Model",
     definition=function(object, nb) {
         object@name[2]=nb
+        return(object)
     }
 )
+
 

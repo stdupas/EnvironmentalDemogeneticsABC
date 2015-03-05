@@ -112,7 +112,7 @@ setMethod(
     }
 )
 
-# Function to add a model in the composante (used by the function in paramList)
+# Function to add model(s) in the composante (used by the function in paramList)
 setGeneric(
     name="addModel",
     def=function(object, nbToAdd) {standardGeneric("addModel")}
@@ -127,5 +127,33 @@ setMethod(
             newMod = model(object@name, object@nbModel)
             object@listModel = c(object@listModel, newMod)
         }
+        rm(newMod)
     }
 )
+
+# Function to delete model(s) in the composante (used by the function in paramList)
+setGeneric(
+    name="delModel",
+    def=function(object, numModelToDel) {standardGeneric("delModel")}
+)
+
+setMethod(
+    f="delModel",
+    signature="Composante",
+    definition=function(object, numModelToDel) {
+        compteur = 0
+        numModelToDel = sort(numModelToDel)
+        # Deletion of the models
+        for(i in numModelToDel) {
+            object@listModel = object@listModel[-i-compteur]
+            compteur = compteur+1
+        }
+        # Update of the models number
+        j = 1
+        for(i in listModel) {
+            setNumModel(i, j)
+            j = j+1
+        }
+    }
+)
+

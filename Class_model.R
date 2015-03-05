@@ -34,6 +34,13 @@ setMethod(
   definition = function(.Object, composante_name, model_num){
     cat("---------- Model : initiation ----------\n")
     .Object@name=c(composante_name, model_num)
+    print("What function do you want to use for the model ?")
+    data_fct = read.table("functions.txt", sep = ";", header = TRUE, as.is=rep(TRUE, 4))
+    possible = which(data_fct[,1]==composante_name)
+    print(data_fct[possible,2])
+    .Object@type_model = toString(readline())
+    vec = findFunctionFromFile(composante_name, .Object@type_model)
+    .Object@param_model=as.list(vec[-1])
     validObject(.Object)
     return(.Object)
   }

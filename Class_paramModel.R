@@ -17,32 +17,15 @@ setClass(
   
     if((is.null(object@type_prior))){
       stop("[ ParamModel : verificatiteston ] type_prior does not match any know prior function")
-    } else {
+    } else if(object@type_prior){
       return (TRUE)
     }
   }
   
 )
 
-#Initiateur with 2 arguments
-#setMethod(
-#  f = "initialize",
-#  signature = "ParamModel",
-#  definition = function(.Object, type_prior, param_prior){
-#    cat("---------- ParamModel : initiation ----------\n")
-#    if(!missing(type_prior) && !(missing(param_prior))){
-#      .Object@type_prior = type_prior
-#      .Object@param_prior = param_prior
-#      validObject(.Object)
-#    } else {
-#      stop("[ ParamModel : initiation ] Argument is missing")
-#    }
-#    return(.Object)
-#  }
-#)
 
-
-#Initiateur with 0 arguments
+#Initiateur with 1 arguments
 setMethod(
   f = "initialize",
   signature = "ParamModel",
@@ -56,13 +39,7 @@ setMethod(
 
 
 
-#UserFriendly constructor with 2 arguments
-#paramModel = function(type_prior, param_prior){
-#  cat("---------- ParamModel : construction ----------\n")
-#  new(Class = "ParamModel", type_prior=type_prior, param_prior=param_prior)
-#}
-
-#UserFriendly constructor with 0 arguments
+#UserFriendly constructor with 1 arguments
 paramModel = function(model_num){
   cat("---------- ParamModel : construction ----------\n")
   new(Class = "ParamModel", model_num = model_num)
@@ -87,3 +64,23 @@ setMethod("getParam_prior", "ParamModel",
             return(object@param_prior)
           }
 )
+
+
+findFunctionFromFile = function(model_type,fct_name){
+  data_fct = read.table("functions.txt", sep = ";", header = TRUE)
+  if(!is.element(fct_name, data_fct[,2])){
+    stop("The function: ", fct_name," does not match any knowm function")
+  } else {
+    indice = match(fct_name, data_fct[,2])
+    if(data_fct[indice,1]!=model_type){
+      stop("This function is not a ", model_type, " function")
+    } else {
+      paul=unlist(strsplit((toString(data_fct[indice,4])),","))
+      return (c(data_fct[indice,3], as.vector(paul)))
+    }
+  }
+}
+
+
+
+

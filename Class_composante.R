@@ -68,3 +68,64 @@ composante = function(name) {
     cat("---------- Composantes : construction ----------\n")
     new(Class="Composante", name=name)
 }
+
+# Functions get 
+# Get the list of models for this composante
+setGeneric(
+    name="getListModels",
+    def=function(object) {standardGeneric("getListModels")}
+)
+
+setMethod(
+    f="getListModels", 
+    signature="Composante",
+    definition=function(object) {
+        return(object@listModel)
+    }
+)
+
+# Get the number of models for this composante
+setGeneric(
+    name="getNbModel",
+    def=function(object) {standardGeneric("getNbModel")}
+)
+
+setMethod(
+    f="getNbModel", 
+    signature="Composante",
+    definition=function(object) {
+        return(object@nbModel)
+    }
+)
+
+# Get the name of the composante
+setGeneric(
+    name="getName",
+    def=function(object) {standardGeneric("getName")}
+)
+
+setMethod(
+    f="getName", 
+    signature="Composante",
+    definition=function(object) {
+        return(object@name)
+    }
+)
+
+# Function to add a model in the composante (used by the function in paramList)
+setGeneric(
+    name="addModel",
+    def=function(object, nbToAdd) {standardGeneric("addModel")}
+)
+
+setMethod(
+    f="addModel",
+    signature="Composante",
+    definition=function(object, nbToAdd) {
+        for(i in 1:nbToAdd) {
+            object@nbModel = object@nbModel+1
+            newMod = model(object@name, object@nbModel)
+            object@listModel = c(object@listModel, newMod)
+        }
+    }
+)

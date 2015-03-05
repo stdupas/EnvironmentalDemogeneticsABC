@@ -13,11 +13,9 @@ setClass(
     ),
   validity = function(object){
     cat("---------- ParamModel : verification ----------\n")
-    #Will be changed in order to check if type_prior match a known prior function
-  
     if((is.null(object@type_prior))){
-      stop("[ ParamModel : verificatiteston ] type_prior does not match any know prior function")
-    } else if(object@type_prior){
+      stop("[ ParamModel : verificatiteston ] no prior type given")
+    } else{      
       return (TRUE)
     }
   }
@@ -32,12 +30,20 @@ setMethod(
   definition = function(.Object, model_num){
     cat("---------- ParamModel : initiation ----------\n")
     .Object@name=c("model:",model_num)
+    print("What function do you want to use for prior ?")
+    data_fct = read.table("functions.txt", sep = ";", header = TRUE, as.is=rep(TRUE, 4))
+    possible = which(data_fct[,1]=="Prior")
+    print(data_fct[possible,2])
+    .Object@type_prior = toString(readline())
+    vec = findFunctionFromFile("Prior", .Object@type_prior)
+    for (i in 1:vec[1]){
+      param = c(param, as.numeric(readline(paste("What do you want for the parameter ", vec[i+1]," ?"))))
+    }
+    param_prior = param
     validObject(.Object)
     return(.Object)
   }
 )
-
-
 
 #UserFriendly constructor with 1 arguments
 paramModel = function(model_num){

@@ -1,6 +1,12 @@
 ComposanteName;FunctionName;NumberOfParameters;NamesOfParameters
 niche;binaryMultiplicative;2;"x,Y"
 niche;conquadraticSkewed1;5;"x,Xmin,Xmax,Xopt,Yopt"
+dispersion;fatTail1;3;"x,alpha,beta"
+dispersion;fatTail2;3;"x,sigma,gamma"
+dispersion;gaussian;2;"x,sigma"
+dispersion;exponential;2;"x,sigma"
+mutation;stepWiseMutationModel;1;"mutations"
+mutation;twoPhasesModel;3;"mutations,p,sigma2"
 prior;uniform;3;"n,min,max"
 prior;beta;3;"n,min,max"
 prior;normal;3;"n,mean,sd"

@@ -15,7 +15,6 @@ setClass(
     param_model = list(0)
   ),
   validity = function(object){
-    cat("---------- Model : verification ----------\n")
     #Will be changed in order to check if type_model match a known model function
     if(is.null(object@type_model)){
       stop("[ Model : verification ] type_model does not match any know model function")
@@ -32,7 +31,6 @@ setMethod(
   f = "initialize",
   signature = "Model",
   definition = function(.Object, composante_name, model_num){
-    cat("---------- Model : initiation ----------\n")
     .Object@name=c(composante_name, model_num)
     print("What function do you want to use for the model ?")
     data_fct = read.table("functions.txt", sep = ";", header = TRUE, as.is=rep(TRUE, 4))
@@ -42,7 +40,7 @@ setMethod(
     vec = findFunctionFromFile(composante_name, .Object@type_model)
     mod = NULL
     for(i in 1:vec[1]){
-      print(paste("========== ParamModel : ",vec[i+1]," =========="))
+      print(paste("========== ParamModel : ",.Object@type_model,", parameter: ",vec[i+1]," =========="))
       mod = c(mod, paramModel(model_num))
     }
     .Object@param_model = mod  
@@ -59,7 +57,6 @@ setMethod(
 #}
 
 model = function(composante_name, model_num){
-  cat("---------- Model : construction ----------\n")
   new(Class = "Model", composante_name=composante_name, model_num=model_num)
 }
 

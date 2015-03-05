@@ -6,7 +6,6 @@ setClass(
     Class="Backward", 
     contains="ParamList",
     validity=function(object) {
-        cat("---------- Backward : verification ----------\n")
         # add verification if needed
     }
 )
@@ -16,7 +15,6 @@ setMethod(
     f="initialize",
     signature="Backward",
     definition=function(.Object) {
-        cat("---------- Backward : initiation ----------\n")
         .Object@niche = composante("niche")
         .Object@dispersion = composante("dispersion")
         .Object@mutation = composante("mutation")
@@ -27,6 +25,5 @@ setMethod(
 
 # User-friendly constructor of backward
 backward = function() {
-    cat("---------- Backward : construction ----------\n")
     new(Class="Backward")
 }

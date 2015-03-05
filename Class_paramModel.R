@@ -14,7 +14,6 @@ setClass(
     result_prior = list(0)
     ),
   validity = function(object){
-    cat("---------- ParamModel : verification ----------\n")
     if((is.null(object@type_prior))){
       stop("[ ParamModel : verificatiteston ] no prior type given")
     } else{      
@@ -30,7 +29,6 @@ setMethod(
   f = "initialize",
   signature = "ParamModel",
   definition = function(.Object, model_num){
-    cat("---------- ParamModel : initiation ----------\n")
     .Object@name=c("model:",model_num)
     print("What function do you want to use for prior ?")
     data_fct = read.table("functions.txt", sep = ";", header = TRUE, as.is=rep(TRUE, 4))
@@ -50,7 +48,6 @@ setMethod(
 
 #UserFriendly constructor with 1 arguments
 paramModel = function(model_num){
-  cat("---------- ParamModel : construction ----------\n")
   new(Class = "ParamModel", model_num = model_num)
 }
 

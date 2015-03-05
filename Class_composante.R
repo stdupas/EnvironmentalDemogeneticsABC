@@ -15,7 +15,6 @@ setClass(
     	nbModel=numeric(0)
     ),
     validity=function(object) {
-    	cat("---------- Composantes : verification ----------\n")
     	if(object@nbModel <= 0) {
     		stop("[Composante validation] Number of models is not positive\n")
     	}
@@ -48,12 +47,12 @@ setMethod(
     f="initialize",
     signature="Composante",
     definition=function(.Object, name) {
-        cat("---------- Composantes : initiation ----------\n")
         .Object@name=name
         .Object@nbModel = as.numeric(readline(paste("How many models for",name,"? ")))
         
         mod = NULL
         for(i in 1:.Object@nbModel) {
+            print(paste("========== Composante : ",name,", model n°", i," =========="))
             mod = c(mod, model(name,i))
         }
 
@@ -65,7 +64,6 @@ setMethod(
 
 # User-friendly constructor of composante
 composante = function(name) {
-    cat("---------- Composantes : construction ----------\n")
     new(Class="Composante", name=name)
 }
 

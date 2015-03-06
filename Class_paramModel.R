@@ -39,7 +39,7 @@ setMethod(
     while(flag ==0){
       print(paste(num, aff,data_fct[possible,2]))    
       scanner = as.numeric(readline())
-      if (is.na(scanner) || (scanner<1 || scanner > length(possible))){
+      if (is.na(scanner) || (scanner<0 || scanner > length(possible))){
         print("ERROR: Your entry is incorrect, please try again")
       }else if(scanner == 0){
         stop("You stopped the programm")
@@ -51,7 +51,19 @@ setMethod(
     vec = findFunctionFromFile("prior", .Object@type_prior)
     param=NULL
     for (i in 1:vec[1]){
-      param = c(param, as.numeric(readline(paste("What do you want for the parameter ", vec[i+1]," ?"))))
+      flag = 0
+        while(flag == 0){
+          print(paste("What do you want for the parameter ", vec[i+1]," ? (press 0 to quit)"))
+          scanner = as.numeric(readline())
+          if (is.na(scanner) || (i == 1 && scanner<0)){
+            print("ERROR: Your entry is incorrect, please try again")
+          }else if(scanner == 0){
+            stop("You stopped the programm")
+          } else {
+            flag = 1
+          }      
+        }
+      param = c(param, scanner)
     }
     .Object@param_prior = param
     validObject(.Object)

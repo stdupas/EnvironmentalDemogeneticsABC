@@ -7,12 +7,14 @@ setClass(
   representation = representation(
     name = "character",
     type_model = "character",
-    param_model = "list"
+    param_model = "list",
+    param_name = "character"
   ),
   prototype = prototype(
     name = character(0),
     type_model = character(0), 
-    param_model = list(0)
+    param_model = list(0),
+    param_name = character(0)
   ),
   validity = function(object){
     #Will be changed in order to check if type_model match a known model function
@@ -64,11 +66,14 @@ setMethod(
     # ask which parameters and prior functions they want
     vec = findFunctionFromFile(composante_name, .Object@type_model)
     mod = NULL
+    param_name = NULL
     for(i in 1:vec[1]){
       print(paste("========== ParamModel : ",.Object@type_model,", parameter: ",vec[i+1]," =========="))
       mod = c(mod, paramModel(model_num))
+      param_name = c(param_name, vec[i+1])
     }
-    .Object@param_model = mod  
+    .Object@param_model = mod 
+    .Object@param_name = param_name 
     validObject(.Object)
     return(.Object)
   }
@@ -122,4 +127,15 @@ setMethod(
     }
 )
 
+# Function to print the parameters of the model functions
+setMethod(
+    f="show", 
+    signature="Model",
+    definition=function(object) {
+        for(i in 1:length(object@param_name)) {
+            cat("          ",object@param_name[i],": ")
+            print(object@param_model[[i]])
+        }
+    }
+)
 

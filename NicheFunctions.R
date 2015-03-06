@@ -1,4 +1,17 @@
 ################### Formated Niche Functions >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+proportional <- function(x, Y){
+  # Norm reaction for binary environment variable used in an additive response framework
+  #
+  # Args:
+  #   x: proportion of habitat
+  #   Y : value of the reaction norm for x = 1
+  #
+  # Returns: 
+  #   The value of the reaction norm
+  res <- x*Y
+  return(res)
+}
+
 binaryMultiplicative <- function(x, Y){
   # Norm reaction for binary environment variable used in a multiplicative response framework
   #
@@ -7,7 +20,7 @@ binaryMultiplicative <- function(x, Y){
   #   Y : value of the reaction norm for x = 1
   #
   # Returns: 
-  #   The value of the reaction norm for
+  #   The value of the reaction norm
   res <- x*(Y-1) +1
   return(res)
 }
@@ -213,64 +226,6 @@ constant <- function(x,Y)
 
 ################# Applying Niche Functions to Objects >>>>>>>>>>>>>>>>>>
 
-nicheFunctionForValue <- function(nicheFunction, x, args){
-  # Function to apply a niche function over a single value
-  #
-  # Args:
-  #   nicheFunction: the name of the niche function which is called
-  #   x: the value of the environemental variable
-  #   args : a list of the arguments of the niche function
-  # 
-  # Returns:
-  #   The value corresponding to the norm reaction for x
-  args <- c(list(x), args)
-  return(do.call(nicheFunction, args))
-  
-  # Ex : 
-  # nicheFunctionForValue(conquadraticSkewed1, x=4, args=list(Xmin=0, Xmax=10, Xopt=5, Yopt=1))
-}
-
-nicheFunctionForArray <- function(nicheFunction, Array, args){ 
-  # Function to apply a niche function over an Array
-  #
-  # Args:
-  #   nicheFunction: the name of the niche function which is called
-  #   array: the array of environmental values used to compute niche function.
-  #   args : a list of the arguments of the niche function
-  # 
-  # Returns:
-  #   An array corresponding to the norm reaction
-  
-  return(apply(X=Array, MARGIN=1, FUN=nicheFunctionForValue, nicheFunction=nicheFunction, args=args))
-  # Ex:
-  # nicheFunctionForArray(nicheFunction=conquadraticSkewed1, 
-  #                      array=array(data= 1:10, dim =10), 
-  #                      args=list(Xmin=0, Xmax=10, Xopt=5, Yopt=1))
-}
-
-
-nicheFunctionForRasterLayer <- function(nicheFunction, rasterLayer, args){ 
-  # Function to apply a niche function over a raster layer
-  #
-  # Args:
-  #   nicheFunction: the name of the niche function which is called
-  #   rasterLayer: the rasterLayer of environmental values used to compute niche function.
-  #   args : a list of the arguments of the niche function
-  # 
-  # Returns:
-  #   A raster with values corresponding to the norm reaction
-  values(rasterLayer) <- apply(X=as.array(getValues(rasterLayer)), MARGIN=1, FUN=nicheFunctionForValue, 
-                      nicheFunction=nicheFunction, 
-                      args=args)
-  return(rasterLayer)
-  # Ex :
-  # raster <- raster(matrix(Data2$BIO1,nrow=1,ncol=4),xmn=0,xmx=4,ymn=0,ymx=1)
-  # nicheFunctionForRasterLayer(nicheFunction=conquadraticSkewed1, 
-  #                            rasterLayer=raster, 
-  #                            args=list(Xmin=0, Xmax=10, Xopt=5, Yopt=1))
-  
-}
-
 geometricMean = function(x, na.rm=FALSE){
   #  A vectorized, zero- and NA-tolerant function for calculating geometric mean in R. The verbose mean calculation involving length(x) is necessary for the cases where x contains non-positive values.
   #
@@ -282,13 +237,14 @@ geometricMean = function(x, na.rm=FALSE){
   exp(sum(log(x[x > 0]), na.rm=na.rm) / length(x))
 }
 
-nicheFunctionForRasterStack <- function(functionList, rasterStack, args){
+nicheFunctionForRasterStack <- function(functionList, rasterStack, args, meth){
   # Function to apply various niche functions to each layer of a rasterStack, combining them with a geometric mean. 
   #
   # Args:
   #   nichesFunctions: an ordered list containing the names of the niche functions which are called. Must be in the same order as rasterLayer and args
   #   rasterStack: the rasterstack of environmental values used to compute niche function.
-  #   args : an ordered list containing  the lists of arguments necessary to call each niche function. 
+  #   args : an ordered list containing  the lists of arguments necessary to call each niche function.
+  #   meth : the mean function to be applied to combine the various environmental responses : "arithmetic" or "geometric"
   # 
   # Returns:
   #   A raster with values corresponding to the norm reaction
@@ -298,21 +254,19 @@ nicheFunctionForRasterStack <- function(functionList, rasterStack, args){
               FUN=function(i, rasterStack){assign(paste("r",i), list(rasterStack[[i]], functionList[[i]], args[[i]])) },
               rasterStack)
   
-  # Apply over each layer
-  reactionNorm <- lapply(X, function(x){do.call(x[[2]], c(x[[1]], x[[3]]))})
+  # Apply over each layer and stack
+  reactionNorm <- stack(lapply(X, function(x){do.call(x[[2]], c(x[[1]], x[[3]]))}))
   
-  # Transform rasters to matrix
-  unroll <- sapply(X=reactionNorm, FUN=getValues)
-  
-  # Combine the response with a geometric mean : gives a vector
-  response <- apply(X=unroll, FUN=geometricMean, MARGIN=1)
-  
-  # Format the output
-  rasterModel <- rasterStack[[1]]
-  names(rasterModel) <- "Response"
-  values(rasterModel) <- response
+  # Combine the response with a mean function
+  if(meth == "arithmetic"){
+    response <- calc(reactionNorm, mean)
+  }else if(meth == "geometric"){
+    response <- calc(reactionNorm, geometricMean)
+  }else{
+    stop("In nicheFunctionForRasterStack, the meth arguments does not match")
+  }
 
-  return(rasterModel)
+  return(response)
   
   # Ex:*
   # functionList <- list(conquadraticSkewed1, linearPositiveTwoParameters)

@@ -1,10 +1,11 @@
-simSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initialGenetValue, stepValueOfLoci, cores){
+simSpatialCoal <- function(nbSimul, ParamList, rasterStack, nicheMeth, GeneticData, initialGenetValue, stepValueOfLoci, cores){
   # Estimates the parameters of a model (spatial, niche, coalescence) in an abc framework
   #
   # Args:
   #   nbSimul: the number of simulations wanted for abc estimation. need to be equal to the number of simulation specified in ParamList
   #   ParamList: the R object describing the model, constructed by askListOfParameters function
   #   rasterStack: the raster object describing environment used for niche modelling and dispersion computations
+  #   nicheMeth : the mean function to be applied over environmental variables to get a unique response : "arithmetic" or "geometric"
   #   GeneticData: a matrix giving in row the individuals, in columns the coordinates and the loci : names and order have to be : x, y, ... and names of loci
   #   initialGenetValue: a vector giving the genetic value attributed to the ancestor gene.
   #   stepValueOfLoci: a vector giving the assumed step value for each locus, given in the same order as in GeneticData
@@ -40,6 +41,9 @@ simSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
   # where are the sampled data ?
   localizationData <- cellFromXY(object = rasterStack, xy = GeneticData[, c("x", "y")])
   #names(localizationData)=1:length(localizationData)
+  if(anyNA(localizationData)){ 
+    stop("unknown localizations (NA) in simSpatialCoal. Please verify if genetic data coordinates are inside raster extent")
+  }
   
   local({
     
@@ -82,7 +86,8 @@ simSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
       # Get the carrying capacity map :
       rasK <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = ParamList, sublist="NicheK"), 
                                           rasterStack = rasterStack,
-                                          args = getArgsListNiche(simulation = x, ParamList = ParamList, sublist="NicheK"))
+                                          args = getArgsListNiche(simulation = x, ParamList = ParamList, sublist="NicheK"),
+                                          meth = nicheMeth)
       rasK <- round(rasK)
       # Prevent impossible transition :
       if( cellStats(x = rasK, stat = sum) == 0){
@@ -93,7 +98,8 @@ simSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
       # Get growth rate map :
       rasR <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = ParamList, sublist="NicheR"), 
                                           rasterStack = rasterStack,
-                                          args = getArgsListNiche(simulation = x, ParamList = ParamList, sublist="NicheR"))
+                                          args = getArgsListNiche(simulation = x, ParamList = ParamList, sublist="NicheR"),
+                                          meth = nicheMeth)
       # Prevent impossible transition :
       if( cellStats(x = rasK, stat = sum) == 0){
         stop(paste("The parameters values for niche models led to null growth rate over all cells of the landscape : 

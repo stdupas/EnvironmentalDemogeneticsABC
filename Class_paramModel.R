@@ -30,11 +30,24 @@ setMethod(
   signature = "ParamModel",
   definition = function(.Object, model_num){
     .Object@name=c("model:",model_num)
-    print("What function do you want to use for prior ?")
+    print("What function do you want to use for prior ? (press 0 to quit)")
     data_fct = read.table("functions.txt", sep = ";", header = TRUE, as.is=rep(TRUE, 4))
     possible = which(data_fct[,1]=="prior")
-    print(data_fct[possible,2])
-    .Object@type_prior = toString(readline())
+    num = c(1:length(possible))
+    aff = rep(":", length(possible))
+    flag =0
+    while(flag ==0){
+      print(paste(num, aff,data_fct[possible,2]))    
+      scanner = as.numeric(readline())
+      if (is.na(scanner) || (scanner<1 || scanner > length(possible))){
+        print("ERROR: Your entry is incorrect, please try again")
+      }else if(scanner == 0){
+        stop("You stopped the programm")
+      } else {
+        flag = 1
+      }      
+    }
+    .Object@type_prior = data_fct[possible[scanner],2]
     vec = findFunctionFromFile("prior", .Object@type_prior)
     param=NULL
     for (i in 1:vec[1]){
@@ -91,8 +104,9 @@ findFunctionFromFile = function(model_type,fct_name){
 setGeneric("setResult_prior",
            function(object){standardGeneric("setResult_prior")})
 
-setMethod("setResult_prior", "Model",
+setMethod("setResult_prior", "ParamModel",
           function(object){
+            #A COMPLETER
             return(object@result_prior)
           }
 )

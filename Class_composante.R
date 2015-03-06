@@ -52,7 +52,7 @@ setMethod(
         # repeat while the given number is incorrect
         flag = -1
         while(flag == -1) {
-            choice_number = as.numeric(readline(paste("How many models for",name,"? ")))
+            choice_number = as.numeric(readline(paste("How many models for",name,"? (press 0 to quit)")))
             if(choice_number!=0 && choice_number>0 && !is.na(choice_number)) {
                 .Object@nbModel = choice_number
                 flag = 1

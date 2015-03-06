@@ -79,6 +79,10 @@ paramModel = function(model_num){
   new(Class = "ParamModel", model_num = model_num)
 }
 
+
+
+######################### METHODS ##################################
+
 #Function to get the "type_prior" attribut
 setGeneric("getType_prior",
            function(object){standardGeneric("getType_prior")})
@@ -98,6 +102,38 @@ setMethod("getParam_prior", "ParamModel",
             return(object@param_prior)
           }
 )
+
+#Function to get the "name" attribut
+setGeneric("getName",
+           function(object){standardGeneric("getName")})
+
+setMethod("getName", "ParamModel",
+          function(object){
+            return(object@name)
+          }
+)
+
+#Function to get the "param_prior" attribut
+setGeneric("getParam_prior",
+           function(object){standardGeneric("getParam_prior")})
+
+setMethod("getParam_prior", "ParamModel",
+          function(object){
+            return(object@param_prior)
+          }
+)
+
+#Function to get the "result_prior" attribut
+setGeneric("getResult_prior",
+           function(object){standardGeneric("getResult_prior")})
+
+setMethod("getResult_prior", "ParamModel",
+          function(object){
+            return(object@result_prior)
+          }
+)
+
+
 
 
 findFunctionFromFile = function(model_type,fct_name){

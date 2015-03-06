@@ -139,3 +139,75 @@ setMethod(
     }
 )
 
+# Function to change the type of model (function to use for the model)
+setGeneric(
+    name="setTypeModel",
+    def=function(object) {standardGeneric("setTypeModel")}
+)
+
+
+setMethod(
+    f="setTypeModel",
+    signature="Model",
+    definition=function(object) {
+        cat("The actual type of function for this model is :", object@type_model,"\n")
+        # Ask what type the user wants to use
+        newObject = model(object@name[1],object@name[2])
+        return(newObject)
+    }
+)
+
+# Function to change a prior
+setGeneric(
+    name="setPrior",
+    def=function(object) {standardGeneric("setPrior")}
+)
+
+
+setMethod(
+    f="setPrior",
+    signature="Model",
+    definition=function(object) {
+        # Ask which parameter the user wants to change
+        cat("[Type 0 to quit] Which parameter do you want to change ?\n")
+        cat(paste(1:length(object@param_name),":",object@param_name))
+        flag = -1
+        while(flag == -1) {
+            choice_number = as.integer(readline())
+            if(choice_number!=0 && choice_number<=length(object@param_name) && choice_number>0 && !is.na(choice_number)) {
+                # Ask if the user wants to change the prior function or only a parameter of a prior function
+                cat("[Type 0 to quit] Change the prior function or the value of a parameter value ?\n")
+                cat("1. Prior function   2. Parameter value")
+                flag2 = -1
+                while(flag2 == -1) {
+                    choice_number2 = as.integer(readline())
+                    if(choice_number2!=0 && choice_number2<=2 && choice_number2>0 && !is.na(choice_number2)) {
+                        if(choice_number2==1) {
+                            object@param_model[[choice_number]] = setType_prior(object@param_model[[choice_number]])
+                        }
+                        else if(choice_number2==2) {
+                            object@param_model[[choice_number]] = setParam_prior(object@param_model[[choice_number]])
+                        }                    
+                        flag2 = 1
+                    }
+                    else if(choice_number2==0 && !is.na(choice_number2)) {
+                        stop("Stop the program.")
+                    }
+                    else {
+                        print("Wrong number, please type a number in the list :")
+                        cat("1. Prior function   2. Parameter value")
+                    }
+                }
+                flag = 1
+            }
+            else if(choice_number==0 && !is.na(choice_number)) {
+                stop("Stop the program.")
+            }
+            else {
+                print("Wrong number, please type a number in the list :")
+                cat(paste(1:length(object@param_name),":",object@param_name))
+            }
+        }
+        return(object)
+    }
+)

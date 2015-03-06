@@ -47,7 +47,7 @@ length(steps)
 load("ParamList.RData")
 
 # launch simulations
-simSpatialCoal(nbSimul=10000, ParamList=ParamList, rasterStack=bio, GeneticData=genetic, initialGenetValue=ancestor,
+simSpatialCoal(nbSimul=10000, ParamList=ParamList, rasterStack=bio, nicheMeth = "arithmetic", GeneticData=genetic, initialGenetValue=ancestor,
                stepValueOfLoci= steps, cores=detectCores())
 
 # analyse the results, computes summary statistics

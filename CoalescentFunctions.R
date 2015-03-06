@@ -41,6 +41,9 @@ simSpatialCoal <- function(nbSimul, ParamList, rasterStack, nicheMeth, GeneticDa
   # where are the sampled data ?
   localizationData <- cellFromXY(object = rasterStack, xy = GeneticData[, c("x", "y")])
   #names(localizationData)=1:length(localizationData)
+  if(anyNA(localizationData)){ 
+    stop("unknown localizations (NA) in simSpatialCoal. Please verify if genetic data coordinates are inside raster extent")
+  }
   
   local({
     

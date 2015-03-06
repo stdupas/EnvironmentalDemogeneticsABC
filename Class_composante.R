@@ -48,8 +48,24 @@ setMethod(
     signature="Composante",
     definition=function(.Object, name) {
         .Object@name=name
-        .Object@nbModel = as.numeric(readline(paste("How many models for",name,"? ")))
+        .Object@nbModel = as.numeric(readline(paste("[Type 0 to exit] How many models for",name,"? ")))
         
+        # repeat while the given number is incorrect
+        flag = -1
+        while(flag == -1) {
+            choice_number = as.numeric(readline(paste("How many models for",name,"? ")))
+            if(choice_number!=0 && choice_number>0 && !is.na(choice_number)) {
+                .Object@nbModel = choice_number
+                flag = 1
+            }
+            else if(choice_number==0 && !is.na(choice_number)) {
+                stop("Stop the program.")
+            }
+            else {
+                print("Wrong number.")
+            } 
+        }
+
         mod = NULL
         for(i in 1:.Object@nbModel) {
             print(paste("========== Composante : ",name,", model n°", i," =========="))

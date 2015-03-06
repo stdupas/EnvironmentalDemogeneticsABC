@@ -134,6 +134,24 @@ setMethod("getResult_prior", "ParamModel",
 )
 
 
+# Function to update type_prior
+setGeneric(
+  name="setType_prior",
+  def=function(object) {standardGeneric("setType_prior")}
+)
+
+
+setMethod(
+  f="setType_prior",
+  signature="ParamModel",
+  definition=function(object) {
+    print(paste("The actual prior function is: ", getType_prior(object)))
+    newObject = new(Class = "ParamModel", model_num = getName(object)[2])
+
+    return(newObject)
+  }
+)
+
 
 
 findFunctionFromFile = function(model_type,fct_name){

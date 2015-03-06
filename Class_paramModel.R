@@ -53,7 +53,7 @@ setMethod(
     for (i in 1:vec[1]){
       flag = 0
         while(flag == 0){
-          print(paste("What do you want for the parameter ", vec[i+1]," ? (press 0 to quit)"))
+          print(paste("What do you want for the hyper-parameter ", vec[i+1]," ? (press 0 to quit)"))
           scanner = as.numeric(readline())
           if (is.na(scanner) || (i == 1 && scanner<0)){
             print("ERROR: Your entry is incorrect, please try again")

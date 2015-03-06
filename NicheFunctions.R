@@ -1,4 +1,17 @@
 ################### Formated Niche Functions >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+proportional <- function(x, Y){
+  # Norm reaction for binary environment variable used in an additive response framework
+  #
+  # Args:
+  #   x: proportion of habitat
+  #   Y : value of the reaction norm for x = 1
+  #
+  # Returns: 
+  #   The value of the reaction norm
+  res <- x*Y
+  return(res)
+}
+
 binaryMultiplicative <- function(x, Y){
   # Norm reaction for binary environment variable used in a multiplicative response framework
   #
@@ -7,7 +20,7 @@ binaryMultiplicative <- function(x, Y){
   #   Y : value of the reaction norm for x = 1
   #
   # Returns: 
-  #   The value of the reaction norm for
+  #   The value of the reaction norm
   res <- x*(Y-1) +1
   return(res)
 }

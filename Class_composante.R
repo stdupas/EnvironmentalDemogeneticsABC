@@ -48,7 +48,6 @@ setMethod(
     signature="Composante",
     definition=function(.Object, name) {
         .Object@name=name
-        .Object@nbModel = as.numeric(readline(paste("[Type 0 to exit] How many models for",name,"? ")))
         
         # repeat while the given number is incorrect
         flag = -1

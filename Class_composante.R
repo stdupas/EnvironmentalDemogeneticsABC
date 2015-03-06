@@ -173,3 +173,14 @@ setMethod(
     }
 )
 
+# Function to print the parameters of all the composante models
+setMethod(
+    f="show", 
+    signature="Composante",
+    definition=function(object) {
+        for(i in 1:length(object@listModel)) {
+            cat("............... Model:",i,",",object@listModel[[i]]@type_model,"...............\n")
+            print(object@listModel[[i]])
+        }
+    }
+)

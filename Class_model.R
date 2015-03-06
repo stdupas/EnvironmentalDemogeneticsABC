@@ -32,7 +32,7 @@ setMethod(
   signature = "Model",
   definition = function(.Object, composante_name, model_num){
     .Object@name=c(composante_name, model_num)
-    print("What function do you want to use for the model ?")
+    print("[Type 0 to exit] What function do you want to use for the model ?")
     data_fct = read.table("functions.txt", sep = ";", header = TRUE, as.is=rep(TRUE, 4))
     possible = which(data_fct[,1]==composante_name)
 

@@ -118,7 +118,7 @@ setGeneric("setResult_prior",
 
 setMethod("setResult_prior", "ParamModel",
           function(object){
-            #A COMPLETER
+            object@result_prior = do.call(getType_prior(object), as.list(getParam_prior(object)))
             return(object@result_prior)
           }
 )

@@ -140,15 +140,53 @@ setGeneric(
   def=function(object) {standardGeneric("setType_prior")}
 )
 
-
 setMethod(
   f="setType_prior",
   signature="ParamModel",
   definition=function(object) {
     print(paste("The actual prior function is: ", getType_prior(object)))
     newObject = new(Class = "ParamModel", model_num = getName(object)[2])
-
     return(newObject)
+  }
+)
+
+# Function to update param_prior
+setGeneric(
+  name="setParam_prior",
+  def=function(object) {standardGeneric("setParam_prior")}
+)
+
+setMethod(
+  f="setParam_prior",
+  signature="ParamModel",
+  definition=function(object) {
+    print("The actual prior hyper-parameters are: ")
+    num = c(1:length(getParam_prior(object)))
+    cat(paste(num,": ",getParam_prior(object),"\n"))
+    flag = 0
+    while(flag == 0){
+      cat("Which one do you want to change? (press 0 to quit)")
+      scanner = as.numeric(readline())
+      if (is.na(scanner) || (scanner>length(getParam_prior(object)) && scanner<0)){
+        print("ERROR: Your entry is incorrect, please try again")
+      } else if(scanner == 0){
+        stop("You stopped the program")
+      }else{
+        flag = 1
+      }      
+    }
+    flag = 0
+    while(flag == 0){
+      cat("What is its new valor?")
+      new_val = as.numeric(readline())
+      if (is.na(new_val) || (scanner == 1 && new_val<=0)){
+        print("ERROR: Your entry is incorrect, please try again")
+      } else {
+        flag = 1
+      }      
+    }
+    object@param_prior[scanner] = new_val  
+    return(object)
   }
 )
 

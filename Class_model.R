@@ -32,11 +32,36 @@ setMethod(
   signature = "Model",
   definition = function(.Object, composante_name, model_num){
     .Object@name=c(composante_name, model_num)
-    print("What function do you want to use for the model ?")
+    print("[Type 0 to exit] What function do you want to use for the model ?")
     data_fct = read.table("functions.txt", sep = ";", header = TRUE, as.is=rep(TRUE, 4))
     possible = which(data_fct[,1]==composante_name)
-    print(data_fct[possible,2])
-    .Object@type_model = toString(readline())
+
+    # print the possible functions in order (with a number to know which one to use)
+    possible_number = 1:length(possible)
+    possible_function = data_fct[possible,2]
+    possible_print = paste(possible_number, rep(":",length(possible)), possible_function)
+    print(possible_print)
+
+    # choose the function with the given number
+    # repeat while the given number is incorrect
+    flag = -1
+    while (flag == -1) {
+        choice_number = as.integer(readline())
+        if(choice_number!=0 && choice_number<=length(possible) && choice_number>0 && !is.na(choice_number)) {
+            choice_function = possible_function[choice_number]
+            .Object@type_model = toString(choice_function)
+            flag = 1
+        }
+        else if(choice_number==0 && !is.na(choice_number)) {
+            stop("Stop the program.")
+        }
+        else {
+            print("Wrong number, please type a number in the list :")
+            print(possible_print)
+        } 
+    }
+
+    # ask which parameters and prior functions they want
     vec = findFunctionFromFile(composante_name, .Object@type_model)
     mod = NULL
     for(i in 1:vec[1]){

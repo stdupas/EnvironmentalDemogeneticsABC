@@ -173,6 +173,71 @@ setMethod(
     }
 )
 
+# Get the name of the composante
+setGeneric(
+  name="setComposante",
+  def=function(object) {standardGeneric("setComposante")}
+)
+
+setMethod(
+  f="setComposante", 
+  signature="Composante",
+  definition=function(object) {
+    flag = 0
+    while(flag == 0){
+      cat("What do you want to do? (press 0 to quit)\n 1: Add a model\n 2: Delete a model\n 3: Change a model")
+      scanner = as.numeric(readline())
+      if(is.na(scanner) || scanner>3){
+        print("ERROR: Your entry is incorrect, please try again")
+      } else if(scanner == 0){
+        stop("You stopped the program")
+      }else{
+        flag = 1
+      }
+    }
+    if(scanner == 1){
+      flag = 0
+      while(flag == 0){
+        cat("How many models do you want to add ?")
+        nbToAdd = as.numeric(readline())
+        if(is.na(nbToAdd) || nbToAdd<1){
+          print("ERROR: Your entry is incorrect, please try again")
+        }else{
+          flag = 1
+        }
+      }
+      object = addModel(object, nbToAdd)
+    } else if(scanner == 2){
+      flag = 0
+      while(flag == 0){
+        cat("Which model do you want to delete ?")
+        nbToDel = as.numeric(readline())
+        if(is.na(nbToDel) || nbToDel> getNbModel(object)){
+          print("ERROR: Your entry is incorrect, please try again")
+        }else{
+          flag = 1
+        }
+      }
+      object = delModel(object, nbToDel)
+    } else {
+      flag = 0
+      while(flag == 0){
+        print(object)
+        cat("Which model do you want to change ? Please enter the model's number")
+        change = as.numeric(readline())
+        if(is.na(change) || change> getNbModel(object) || change<1){
+          print("ERROR: Your entry is incorrect, please try again")
+        }else{
+          flag = 1
+        }
+      }
+      object@listeModel[[change]] = setTypeModel(object@listeModel[[change]])
+    }
+    return(object)
+  }
+)
+
+
 # Function to print the parameters of all the composante models
 setMethod(
     f="show", 

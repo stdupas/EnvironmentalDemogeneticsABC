@@ -5,12 +5,14 @@ setClass(
     name = "character",
     type_prior = "character",
     param_prior = "numeric",
+    param_name = "character",
     result_prior = "list"
     ),
   prototype = prototype(
     name = character(0),
     type_prior = character(0), 
     param_prior = numeric(0),
+    param_name = character(0),
     result_prior = list(0)
     ),
   validity = function(object){
@@ -50,22 +52,23 @@ setMethod(
     .Object@type_prior = data_fct[possible[scanner],2]
     vec = findFunctionFromFile("prior", .Object@type_prior)
     param=NULL
+    param_name = NULL
     for (i in 1:vec[1]){
       flag = 0
         while(flag == 0){
-          print(paste("What do you want for the hyper-parameter ", vec[i+1]," ? (press 0 to quit)"))
+          print(paste("What do you want for the hyper-parameter ", vec[i+1]," ?"))
           scanner = as.numeric(readline())
           if (is.na(scanner) || (i == 1 && scanner<0)){
             print("ERROR: Your entry is incorrect, please try again")
-          }else if(scanner == 0){
-            stop("You stopped the programm")
           } else {
             flag = 1
           }      
         }
       param = c(param, scanner)
+      param_name = c(param_name, vec[i+1])
     }
     .Object@param_prior = param
+    .Object@param_name = param_name
     validObject(.Object)
     return(.Object)
   }
@@ -123,4 +126,12 @@ setMethod("setResult_prior", "ParamModel",
           }
 )
 
-
+# Function to print the parameters of the prior functions
+setMethod(
+    f="show", 
+    signature="ParamModel",
+    definition=function(object) {
+        param = paste(object@param_name,"=",object@param_prior)
+        cat(object@type_prior,"(",param,")\n")
+    }
+)

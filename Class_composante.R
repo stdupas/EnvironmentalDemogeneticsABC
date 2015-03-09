@@ -3,25 +3,25 @@ source("Class_model.R")
 
 # Class composante
 setClass(
-	Class="Composante", 
+    Class="Composante", 
     representation=representation(
-    	name="character",
+        name="character",
         listModel="list",
-    	nbModel="numeric"
+        nbModel="numeric"
     ),
     prototype=prototype(
         name=character(0),
-    	listModel=list(0),
-    	nbModel=numeric(0)
+        listModel=list(0),
+        nbModel=numeric(0)
     ),
     validity=function(object) {
-    	if(object@nbModel <= 0) {
-    		stop("[Composante validation] Number of models is not positive\n")
-    	}
-    	if(length(object@listModel)!=object@nbModel) {
-    		stop("[Composante validation] Number of models is different from nbModel\n")
-    	}
-    	return(TRUE)
+        if(object@nbModel <= 0) {
+            stop("[Composante validation] Number of models is not positive\n")
+        }
+        if(length(object@listModel)!=object@nbModel) {
+            stop("[Composante validation] Number of models is different from nbModel\n")
+        }
+        return(TRUE)
     }
 )
 
@@ -231,7 +231,27 @@ setMethod(
           flag = 1
         }
       }
-      object@listModel[[change]] = setTypeModel(object@listModel[[change]])
+
+      
+
+      flag = 0
+      while(flag == 0){
+        cat("What do you want to change?\n 1. Model function 2. Model parameters")
+        choice = as.integer(readline())
+        if(is.na(change) || change> getNbModel(object) || change<1){
+          print("ERROR: Your entry is incorrect, please try again")
+        }else{
+          flag = 1
+        }
+      }      
+      print(object@listModel[[change]])
+      if(choice == 1) {
+        object@listModel[[change]] = setTypeModel(object@listModel[[change]])
+      }
+      else if(choice == 2) {
+        object@listModel[[change]] = setPrior(object@listModel[[change]])
+      }
+      
     }
     return(object)
   }

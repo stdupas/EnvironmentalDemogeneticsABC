@@ -162,7 +162,7 @@ setMethod(
   definition=function(object) {
     print("The actual prior hyper-parameters are: ")
     num = c(1:length(getParam_prior(object)))
-    cat(paste(num,": ",getParam_prior(object),"\n"))
+    cat(paste(num,":",object@param_name,"\n"))
     flag = 0
     while(flag == 0){
       cat("Which one do you want to change? (press 0 to quit)")

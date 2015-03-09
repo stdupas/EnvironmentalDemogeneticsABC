@@ -187,7 +187,7 @@ setMethod(
     while(flag == 0){
       cat("What do you want to do? (press 0 to quit)\n 1: Add a model\n 2: Delete a model\n 3: Change a model")
       scanner = as.numeric(readline())
-      if(is.na(scanner) || scanner>3){
+      if(is.na(scanner) || scanner>3 || scanner<1){
         print("ERROR: Your entry is incorrect, please try again")
       } else if(scanner == 0){
         stop("You stopped the program")
@@ -210,15 +210,21 @@ setMethod(
     } else if(scanner == 2){
       flag = 0
       while(flag == 0){
-        cat("Which model do you want to delete ?")
-        nbToDel = as.numeric(readline())
-        if(is.na(nbToDel) || nbToDel> getNbModel(object)){
-          print("ERROR: Your entry is incorrect, please try again")
-        }else{
-          flag = 1
-        }
+          if(object@nbModel > 1) {
+              print(object)
+              cat("Which model do you want to delete ?")
+              nbToDel = as.numeric(readline())
+              if(is.na(nbToDel) || nbToDel> getNbModel(object)){
+                print("ERROR: Your entry is incorrect, please try again")
+              }else{
+                flag = 1
+              }
+              object = delModel(object, nbToDel)
+          } else {
+              stop("There is only one model left in this composante. You can not delete it.")
+          }
       }
-      object = delModel(object, nbToDel)
+
     } else {
       flag = 0
       while(flag == 0){
@@ -238,7 +244,7 @@ setMethod(
       while(flag == 0){
         cat("What do you want to change?\n 1. Model function 2. Model parameters")
         choice = as.integer(readline())
-        if(is.na(change) || change> getNbModel(object) || change<1){
+        if(is.na(change) || change> getNbModel(object) || choice<1){
           print("ERROR: Your entry is incorrect, please try again")
         }else{
           flag = 1

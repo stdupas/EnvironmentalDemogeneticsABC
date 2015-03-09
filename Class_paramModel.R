@@ -104,10 +104,10 @@ setMethod("getParam_prior", "ParamModel",
 )
 
 #Function to get the "name" attribut
-setGeneric("getName",
-           function(object){standardGeneric("getName")})
+setGeneric("getNameParamModel",
+           function(object){standardGeneric("getNameParamModel")})
 
-setMethod("getName", "ParamModel",
+setMethod("getNameParamModel", "ParamModel",
           function(object){
             return(object@name)
           }
@@ -145,7 +145,7 @@ setMethod(
   signature="ParamModel",
   definition=function(object) {
     print(paste("The actual prior function is: ", getType_prior(object)))
-    newObject = new(Class = "ParamModel", model_num = getName(object)[2])
+    newObject = new(Class = "ParamModel", model_num = getNameParamModel(object)[2])
     return(newObject)
   }
 )

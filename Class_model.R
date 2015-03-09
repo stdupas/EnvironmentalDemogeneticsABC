@@ -214,13 +214,13 @@ setMethod(
 
 # Function to assess the prior values for one model
 setGeneric(
-    name="setResultPriorComp",
-    def=function(object) {standardGeneric("setResultPriorComp")}
+    name="setResultPriorMod",
+    def=function(object) {standardGeneric("setResultPriorMod")}
 )
 
 
 setMethod(
-    f="setResultPriorComp",
+    f="setResultPriorMod",
     signature="Model",
     definition=function(object) {
         # ask which parameter the user wants to assess the prior values

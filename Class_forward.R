@@ -91,7 +91,7 @@ setMethod(
           object@niche = setResultPriorComp(object@niche, 1)
           object@dispersion = setResultPriorComp(object@dispersion, 1)
           object@mutation = setResultPriorComp(object@mutation, 1)
-          object@generation = setResultPriorComp(object@genertion, 1)
+          object@generation = setResultPriorComp(object@generation, 1)
         } else if (choice == 2){
           flag2 = -1
           while(flag2 == -1) {
@@ -105,7 +105,7 @@ setMethod(
               } else if(choice == 3){
                 object@mutation = setResultPriorComp(object@mutation, 0)
               } else if(choice == 4){
-                object@generation = setResultPriorComp(object@genertion, 0)
+                object@generation = setResultPriorComp(object@generation, 0)
               }
               flag2 = 1
             }

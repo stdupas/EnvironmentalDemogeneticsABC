@@ -6,14 +6,14 @@ setClass(
     type_prior = "character",
     param_prior = "numeric",
     param_name = "character",
-    result_prior = "list"
+    result_prior = "numeric"
     ),
   prototype = prototype(
     name = character(0),
     type_prior = character(0), 
     param_prior = numeric(0),
     param_name = character(0),
-    result_prior = list(0)
+    result_prior = numeric(0)
     ),
   validity = function(object){
     if((is.null(object@type_prior))){
@@ -214,7 +214,7 @@ setGeneric("setResult_prior",
 setMethod("setResult_prior", "ParamModel",
           function(object){
             object@result_prior = do.call(getType_prior(object), as.list(getParam_prior(object)))
-            return(object@result_prior)
+            return(object)
           }
 )
 

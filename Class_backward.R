@@ -73,27 +73,42 @@ setMethod(
   signature="Backward",
   definition=function(object) {
     # ask which composante the user wants to assess the prior values
-    
-    flag = -1
-    while(flag == -1) {
-      cat("[Type 0 to quit] Which component do you want to assess? \n1: Niche\n2: Dispersion\n3: Mutation\n")
+    flag1 = -1
+    while(flag1 == -1){
+      cat("[Type 0 to quit] What do you want to do? \n1: Assess the prior values of all the components\n2: Assess the prior values of one component\n")
       choice = as.integer(readline())
-      if(choice!=0 && choice<=3 && choice>0 && !is.na(choice)) {
+      if(!is.na(choice) && choice!=0 && choice>0 && choice<=2){
         if(choice == 1){
-          object@niche = setResult_priorComp(object@niche)
-          flag = 1
-        } else if(choice == 2){
-          object@dispersion = setResult_priorComp(object@dispersion)
-          flag = 1
-        } else if(choice == 3){
-          object@generation = setResult_priorComp(object@genertion)
-          flag = 1
+          object@niche = setResultPriorComp(object@niche, 1)
+          object@dispersion = setResultPriorComp(object@dispersion, 1)
+          object@generation = setResultPriorComp(object@genertion, 1)
+        } else if (choice == 2){
+          flag2 = -1
+          while(flag2 == -1) {
+            cat("[Type 0 to quit] Which component do you want to assess? \n1: Niche\n2: Dispersion\n3: Mutation\n")
+            choice = as.integer(readline())
+            if(choice!=0 && choice<=3 && choice>0 && !is.na(choice)) {
+              if(choice == 1){
+                object@niche = setResultPriorComp(object@niche, 0)
+              } else if(choice == 2){
+                object@dispersion = setResultPriorComp(object@dispersion, 0)
+              } else if(choice == 3){
+                object@mutation = setResultPriorComp(object@mutation, 0)
+              }
+              flag2 = 1
+            }
+            else if (choice == 0 && !is.na(choice)) {
+              stop("Stop the program.")
+            }
+            else {
+              print("Wrong number, please type a number in the list :")
+            }
+          }  
         }
-      }
-      else if (choice == 0 && !is.na(choice)) {
+        flag1 = 1
+      } else if (choice == 0){
         stop("Stop the program.")
-      }
-      else {
+      } else {
         print("Wrong number, please type a number in the list :")
       }
     }

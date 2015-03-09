@@ -279,30 +279,43 @@ setMethod(
 # Function to assess the prior values for one model
 setGeneric(
     name="setResultPriorComp",
-    def=function(object) {standardGeneric("setResultPriorComp")}
+    def=function(object, all) {standardGeneric("setResultPriorComp")}
 )
 
 
 setMethod(
     f="setResultPriorComp",
     signature="Composante",
-    definition=function(object) {
-        # ask which model the user wants to assess
-        cat("[Type 0 to quit] Which model do you want to assess? Type the model number.\n")
-        print(object)
-        flag = -1
-        while(flag == -1) {
-            choice = as.integer(readline())
-            if(choice!=0 && choice<=object@nbModel && choice>0 && !is.na(choice)) {
-                object@listModel[[choice]] = setResultPriorMod(object@listModel[[choice]])
-                flag = 1
+    definition=function(object, all) {
+        if(all == 0) { 
+            # ask which model the user wants to assess
+            cat("[Type 0 to quit] Which model do you want to assess? Type the model number.\n")
+            print(object)
+            cat("Type", object@nbModel+1, "to assess all models.\n")
+            
+            flag = -1
+            while(flag == -1) {
+                choice = as.integer(readline())
+                if(choice!=0 && choice<=object@nbModel+1 && choice>0 && !is.na(choice)) {
+                    if(choice == object@nbModel+1) {
+                        for(i in 1:object@nbModel) {
+                            object@listModel[[i]] = setResultPriorMod(object@listModel[[i]],1)
+                        }
+                    }
+                    else {
+                        object@listModel[[choice]] = setResultPriorMod(object@listModel[[choice]],0)
+                    }
+                    flag = 1
+                }
+                else if (choice == 0 && !is.na(choice)) {
+                    stop("Stop the program.")
+                }
+                else {
+                    print("Wrong number, please enter a model number.")
+                }
             }
-            else if (choice == 0 && !is.na(choice)) {
-                stop("Stop the program.")
-            }
-            else {
-                print("Wrong number, please enter a model number.")
-            }
+        } else if(all == 1) {
+
         }
         return(object)
     }

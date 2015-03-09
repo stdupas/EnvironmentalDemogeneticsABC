@@ -32,7 +32,7 @@ setMethod(
   signature = "ParamModel",
   definition = function(.Object, model_num){
     .Object@name=c("model:",model_num)
-    print("What function do you want to use for prior ? (press 0 to quit)")
+    print("[Type 0 to quit] What function do you want to use for prior ?")
     data_fct = read.table("functions.txt", sep = ";", header = TRUE, as.is=rep(TRUE, 4))
     possible = which(data_fct[,1]=="prior")
     num = c(1:length(possible))
@@ -44,7 +44,7 @@ setMethod(
       if (is.na(scanner) || (scanner<0 || scanner > length(possible))){
         print("ERROR: Your entry is incorrect, please try again")
       }else if(scanner == 0){
-        stop("You stopped the programm")
+        stop("You have stopped the programm")
       } else {
         flag = 1
       }      
@@ -79,9 +79,6 @@ paramModel = function(model_num){
   new(Class = "ParamModel", model_num = model_num)
 }
 
-
-
-######################### METHODS ##################################
 
 #Function to get the "type_prior" attribut
 setGeneric("getType_prior",
@@ -165,12 +162,12 @@ setMethod(
     cat(paste(num,":",object@param_name,"\n"))
     flag = 0
     while(flag == 0){
-      cat("Which one do you want to change? (press 0 to quit)")
+      cat("[Type 0 to quit] Which one do you want to change?")
       scanner = as.numeric(readline())
       if (is.na(scanner) || (scanner>length(getParam_prior(object)) && scanner<0)){
         print("ERROR: Your entry is incorrect, please try again")
       } else if(scanner == 0){
-        stop("You stopped the program")
+        stop("You have stopped the program")
       }else{
         flag = 1
       }      

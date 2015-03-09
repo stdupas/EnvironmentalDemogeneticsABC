@@ -40,12 +40,12 @@ setMethod(
   definition=function(object) {
     flag = 0
     while(flag == 0){
-      cat("Which composante do you want to change? (press 0 to quit)\n 1: Niche\n 2: Dispersion\n 3: Mutation")
+      cat("[Type 0 to quit] Which composante do you want to change?\n1: Niche\n2: Dispersion\n3: Mutation")
       scanner = as.numeric(readline())
       if(is.na(scanner) || scanner>3 || scanner<0){
         print("ERROR: Your entry is incorrect, please try again")
       } else if(scanner == 0){
-        stop("You stopped the program")
+        stop("You have stopped the program")
       }else{
         flag = 1
       }
@@ -98,18 +98,18 @@ setMethod(
               flag2 = 1
             }
             else if (choice == 0 && !is.na(choice)) {
-              stop("Stop the program.")
+              stop("You have stopped the program")
             }
             else {
-              print("Wrong number, please type a number in the list :")
+              print("ERROR: Your entry is incorrect, please try again")
             }
           }  
         }
         flag1 = 1
       } else if (choice == 0){
-        stop("Stop the program.")
+        stop("You have stopped the program")
       } else {
-        print("Wrong number, please type a number in the list :")
+        print("ERROR: Your entry is incorrect, please try again")
       }
     }
     return(object)

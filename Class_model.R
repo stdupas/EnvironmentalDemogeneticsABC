@@ -42,25 +42,23 @@ setMethod(
     possible_number = 1:length(possible)
     possible_function = data_fct[possible,2]
     possible_print = paste(possible_number, rep(":",length(possible)), possible_function)
-    print(possible_print)
 
     # choose the function with the given number
     # repeat while the given number is incorrect
     flag = -1
     while (flag == -1) {
-        choice_number = as.integer(readline())
-        if(choice_number!=0 && choice_number<=length(possible) && choice_number>0 && !is.na(choice_number)) {
-            choice_function = possible_function[choice_number]
-            .Object@type_model = toString(choice_function)
-            flag = 1
-        }
-        else if(choice_number==0 && !is.na(choice_number)) {
-            stop("Stop the program.")
-        }
-        else {
-            print("Wrong number, please type a number in the list :")
-            print(possible_print)
-        } 
+      print(possible_print)
+      choice_number = as.integer(readline())
+      if(choice_number!=0 && choice_number<=length(possible) && choice_number>0 && !is.na(choice_number)) {
+        choice_function = possible_function[choice_number]
+        .Object@type_model = toString(choice_function)
+        flag = 1
+      }
+      else if(choice_number==0 && !is.na(choice_number)) {
+        stop("You have stopped the program")        }
+      else {
+        print("ERROR: Your entry is incorrect, please try again")
+      } 
     }
 
     # ask which parameters and prior functions they want
@@ -168,44 +166,41 @@ setMethod(
     f="setPrior",
     signature="Model",
     definition=function(object) {
-        # Ask which parameter the user wants to change
-        cat("[Type 0 to quit] Which parameter do you want to change ?\n")
-        cat(paste(1:length(object@param_name),":",object@param_name))
         flag = -1
         while(flag == -1) {
+          # Ask which parameter the user wants to change
+          cat("[Type 0 to quit] Which parameter do you want to change ?\n")
+          cat(paste(1:length(object@param_name),":",object@param_name))
             choice_number = as.integer(readline())
             if(choice_number!=0 && choice_number<=length(object@param_name) && choice_number>0 && !is.na(choice_number)) {
+              flag2 = -1
+              while(flag2 == -1) {
                 # Ask if the user wants to change the prior function or only a parameter of a prior function
                 cat("[Type 0 to quit] Change the prior function or the value of a parameter value ?\n")
-                cat("1. Prior function   2. Parameter value")
-                flag2 = -1
-                while(flag2 == -1) {
-                    choice_number2 = as.integer(readline())
-                    if(choice_number2!=0 && choice_number2<=2 && choice_number2>0 && !is.na(choice_number2)) {
-                        if(choice_number2==1) {
-                            object@param_model[[choice_number]] = setType_prior(object@param_model[[choice_number]])
-                        }
-                        else if(choice_number2==2) {
-                            object@param_model[[choice_number]] = setParam_prior(object@param_model[[choice_number]])
-                        }                    
-                        flag2 = 1
-                    }
-                    else if(choice_number2==0 && !is.na(choice_number2)) {
-                        stop("Stop the program.")
-                    }
-                    else {
-                        print("Wrong number, please type a number in the list :")
-                        cat("1. Prior function   2. Parameter value")
-                    }
+                cat("1: Prior function\n2: Parameter value")
+                choice_number2 = as.integer(readline())
+                if(choice_number2!=0 && choice_number2<=2 && choice_number2>0 && !is.na(choice_number2)) {
+                  if(choice_number2==1) {
+                    object@param_model[[choice_number]] = setType_prior(object@param_model[[choice_number]])
+                  }
+                  else if(choice_number2==2) {
+                    object@param_model[[choice_number]] = setParam_prior(object@param_model[[choice_number]])
+                  }                    
+                  flag2 = 1
                 }
-                flag = 1
+                else if(choice_number2==0 && !is.na(choice_number2)) {
+                  stop("You have stopped the program")
+                }else {
+                  print("ERROR: Your entry is incorrect, please try again")
+                }
+              }
+              flag = 1
             }
             else if(choice_number==0 && !is.na(choice_number)) {
-                stop("Stop the program.")
+              stop("You have stopped the program")
             }
             else {
-                print("Wrong number, please type a number in the list :")
-                cat(paste(1:length(object@param_name),":",object@param_name))
+              print("ERROR: Your entry is incorrect, please try again")
             }
         }
         return(object)
@@ -223,37 +218,35 @@ setMethod(
     f="setResultPriorMod",
     signature="Model",
     definition=function(object, all) {
-        if(all == 0) { 
-            # ask which parameter the user wants to assess the prior values
-            cat("[Type 0 to quit] Which parameter do you want to assess? \n")
-            cat(paste(1:length(object@param_name),":",object@param_name,"\n"))
-            cat(length(object@param_name)+1,":", "all parameters\n")
+        if(all == 0) {
             flag = -1
             while(flag == -1) {
-                choice = as.integer(readline())
-                if(choice!=0 && choice<=length(object@param_name)+1 && choice>0 && !is.na(choice)) {
-                    if(choice == length(object@param_name)+1) {
-                        for(i in 1:length(object@param_name)) {
-                            object@param_model[[i]] = setResult_prior(object@param_model[[i]])
-                        }
-                    }
-                    else {
-                        object@param_model[[choice]] = setResult_prior(object@param_model[[choice]])                  
-                    }
-                    flag = 1
-                }
-                else if (choice == 0 && !is.na(choice)) {
-                    stop("Stop the program.")
+              # ask which parameter the user wants to assess the prior values
+              cat("[Type 0 to quit] Which parameter do you want to assess? \n")
+              cat(paste(1:length(object@param_name),":",object@param_name,"\n"))
+              cat(length(object@param_name)+1,":", "all parameters\n")
+              choice = as.integer(readline())
+              if(choice!=0 && choice<=length(object@param_name)+1 && choice>0 && !is.na(choice)) {
+                if(choice == length(object@param_name)+1) {
+                  for(i in 1:length(object@param_name)) {
+                    object@param_model[[i]] = setResult_prior(object@param_model[[i]])
+                  }
                 }
                 else {
-                    print("Wrong number, please type a number in the list :")
-                    cat(paste(1:length(object@param_name),":",object@param_name,"\n"))
+                  object@param_model[[choice]] = setResult_prior(object@param_model[[choice]])                  
                 }
+                flag = 1
+              }
+              else if (choice == 0 && !is.na(choice)) {
+                stop("You have stopped the program")                }
+              else {
+                print("ERROR: Your entry is incorrect, please try again")
+              }
             }
         } else if(all == 1) {
-            for(i in 1:length(object@param_name)) {
-                object@param_model[[i]] = setResult_prior(object@param_model[[i]])
-            }
+          for(i in 1:length(object@param_name)) {
+            object@param_model[[i]] = setResult_prior(object@param_model[[i]])
+          }
         }
         return(object)
     }

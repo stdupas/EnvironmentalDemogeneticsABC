@@ -110,18 +110,17 @@ setMethod(
               flag2 = 1
             }
             else if (choice == 0 && !is.na(choice)) {
-              stop("Stop the program.")
-            }
-            else {
-              print("Wrong number, please type a number in the list :")
+              stop("You have stopped the program")
+            } else {
+              print("ERROR: Your entry is incorrect, please try again")
             }
           }  
         }
         flag1 = 1
       } else if (choice == 0){
-        stop("Stop the program.")
+        stop("You have stopped the program")
       } else {
-        print("Wrong number, please type a number in the list :")
+        print("ERROR: Your entry is incorrect, please try again")
       }
     }
     return(object)

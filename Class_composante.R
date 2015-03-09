@@ -25,23 +25,6 @@ setClass(
     }
 )
 
-# Constructor of composante
-# setMethod(
-#     f="initialize",
-#     signature="Composante",
-#     definition=function(.Object) {
-#         cat("---------- Composantes : initiation ----------\n")
-#         if(!missing(listModel) && !missing(nbModel)) {
-#             .Object@listModel = listModel
-#             .Object@nbModel = nbModel
-#             validObject(.Object)
-#         }
-#         else {
-#             stop("[Composante initiation] Missing argument(s)\n")
-#         }
-#         return(.Object)
-#     }
-# )
 
 setMethod(
     f="initialize",
@@ -52,16 +35,16 @@ setMethod(
         # repeat while the given number is incorrect
         flag = -1
         while(flag == -1) {
-            choice_number = as.numeric(readline(paste("How many models for",name,"? (press 0 to quit)")))
+            choice_number = as.numeric(readline(paste("[Type 0 to quit] How many models for the component",name,"?")))
             if(choice_number!=0 && choice_number>0 && !is.na(choice_number)) {
                 .Object@nbModel = choice_number
                 flag = 1
             }
             else if(choice_number==0 && !is.na(choice_number)) {
-                stop("Stop the program.")
+              stop("You have stopped the program")
             }
             else {
-                print("Wrong number.")
+              print("ERROR: Your entry is incorrect, please try again")
             } 
         }
 
@@ -173,7 +156,7 @@ setMethod(
     }
 )
 
-# Get the name of the composante
+# Function that allows the user to ad, delete or modify a model
 setGeneric(
   name="setComposante",
   def=function(object) {standardGeneric("setComposante")}
@@ -185,12 +168,12 @@ setMethod(
   definition=function(object) {
     flag = 0
     while(flag == 0){
-      cat("What do you want to do? (press 0 to quit)\n 1: Add a model\n 2: Delete a model\n 3: Change a model")
+      cat("[Type 0 to quit] What do you want to do?\n1: Add a model\n2: Delete a model\n3: Change a model")
       scanner = as.numeric(readline())
       if(is.na(scanner) || scanner>3 || scanner<1){
         print("ERROR: Your entry is incorrect, please try again")
       } else if(scanner == 0){
-        stop("You stopped the program")
+        stop("You have stopped the program")
       }else{
         flag = 1
       }
@@ -237,9 +220,6 @@ setMethod(
           flag = 1
         }
       }
-
-      
-
       flag = 0
       while(flag == 0){
         cat("What do you want to change?\n 1. Model function 2. Model parameters")
@@ -308,10 +288,10 @@ setMethod(
                     flag = 1
                 }
                 else if (choice == 0 && !is.na(choice)) {
-                    stop("Stop the program.")
+                  stop("You have stopped the program")
                 }
                 else {
-                    print("Wrong number, please enter a model number.")
+                  print("ERROR: Your entry is incorrect, please try again")
                 }
             }
         } else if(all == 1) {

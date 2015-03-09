@@ -28,7 +28,7 @@ backward = function() {
     new(Class="Backward")
 }
 
-# Change anything in the model
+# Change any thing in the model
 setGeneric(
   name="setBackward",
   def=function(object) {standardGeneric("setBackward")}

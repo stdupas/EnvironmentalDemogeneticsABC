@@ -7,12 +7,9 @@ setClass(
     representation=representation(
         name="character",
         listModel="list",
-        nbModel="numeric"
-    ),
-    prototype=prototype(
-        name=character(0),
-        listModel=list(0),
-        nbModel=numeric(0)
+        nbModel="numeric",
+        type_combinaison = "character",
+        independance = "ParamModel"
     ),
     validity=function(object) {
         if(object@nbModel <= 0) {
@@ -31,29 +28,47 @@ setMethod(
     signature="Composante",
     definition=function(.Object, name) {
         .Object@name=name
-        
+        if(.Object@name == "niche" || .Object@name == "generation"){
+            cat("=========== Creation of the independant valor ==========\n")
+            independance = paramModel(0)
+        }
+        flag = -1
+        while(flag == -1){
+            cat("What is the combinaison method ?\n1: Additive\n2: Multiplicative\n")
+            scanner = as.integer(readline())
+            if(!is.na(scanner) && scanner>0 && scanner<3) {
+                if(scanner == 1){
+                    .Object@type_combinaison = "Additive"
+                } else if(scanner == 2){
+                    .Object@type_combinaison = "Multiplicative"
+                }
+                flag = 1
+            } else {
+                print("ERROR: Your entry is incorrect, please try again")
+            } 
+        }
         # repeat while the given number is incorrect
         flag = -1
-        while(flag == -1) {
-            choice_number = as.numeric(readline(paste("[Type 0 to quit] How many models for the component",name,"?")))
+        while(flag == -1) {          
+            choice_number = as.integer(readline(paste("[Type 0 to quit] How many models for the component",name,"?")))
             if(choice_number!=0 && choice_number>0 && !is.na(choice_number)) {
                 .Object@nbModel = choice_number
                 flag = 1
             }
             else if(choice_number==0 && !is.na(choice_number)) {
-              stop("You have stopped the program")
+                stop("You have stopped the program")
             }
             else {
-              print("ERROR: Your entry is incorrect, please try again")
+                print("ERROR: Your entry is incorrect, please try again")
             } 
         }
-
+        
         mod = NULL
         for(i in 1:.Object@nbModel) {
             print(paste("========== Composante : ",name,", model n°", i," =========="))
             mod = c(mod, model(name,i))
         }
-
+        
         .Object@listModel = mod
         validObject(.Object)
         return(.Object)
@@ -120,7 +135,7 @@ setMethod(
     definition=function(object, nbToAdd) {
         for(i in 1:nbToAdd) {
             object@nbModel = object@nbModel+1
-
+            
             newMod = model(object@name, object@nbModel)
             object@listModel = c(object@listModel, newMod)
         }
@@ -158,89 +173,89 @@ setMethod(
 
 # Function that allows the user to ad, delete or modify a model
 setGeneric(
-  name="setComposante",
-  def=function(object) {standardGeneric("setComposante")}
+    name="setComposante",
+    def=function(object) {standardGeneric("setComposante")}
 )
 
 setMethod(
-  f="setComposante", 
-  signature="Composante",
-  definition=function(object) {
-    flag = 0
-    while(flag == 0){
-      cat("[Type 0 to quit] What do you want to do?\n1: Add a model\n2: Delete a model\n3: Change a model")
-      scanner = as.numeric(readline())
-      if(is.na(scanner) || scanner>3 || scanner<0){
-        print("ERROR: Your entry is incorrect, please try again")
-      } else if(scanner == 0){
-        stop("You have stopped the program")
-      }else{
-        flag = 1
-      }
-    }
-    if(scanner == 1){
-      flag = 0
-      while(flag == 0){
-        cat("How many models do you want to add ?")
-        nbToAdd = as.numeric(readline())
-        if(is.na(nbToAdd) || nbToAdd<1){
-          print("ERROR: Your entry is incorrect, please try again")
-        }else{
-          flag = 1
-        }
-      }
-      object = addModel(object, nbToAdd)
-    } else if(scanner == 2){
-      flag = 0
-      while(flag == 0){
-          if(object@nbModel > 1) {
-              print(object)
-              cat("Which model do you want to delete ?")
-              nbToDel = as.numeric(readline())
-              if(is.na(nbToDel) || nbToDel> getNbModel(object)){
+    f="setComposante", 
+    signature="Composante",
+    definition=function(object) {
+        flag = 0
+        while(flag == 0){
+            cat("[Type 0 to quit] What do you want to do?\n1: Add a model\n2: Delete a model\n3: Change a model")
+            scanner = as.numeric(readline())
+            if(is.na(scanner) || scanner>3 || scanner<0){
                 print("ERROR: Your entry is incorrect, please try again")
-              }else{
+            } else if(scanner == 0){
+                stop("You have stopped the program")
+            }else{
                 flag = 1
-              }
-              object = delModel(object, nbToDel)
-          } else {
-              stop("There is only one model left in this composante. You can not delete it.")
-          }
-      }
-
-    } else {
-      flag = 0
-      while(flag == 0){
-        print(object)
-        cat("Which model do you want to change ? Please enter the model's number")
-        change = as.numeric(readline())
-        if(is.na(change) || change> getNbModel(object) || change<1){
-          print("ERROR: Your entry is incorrect, please try again")
-        }else{
-          flag = 1
+            }
         }
-      }
-      flag = 0
-      while(flag == 0){
-        cat("What do you want to change?\n 1. Model function 2. Model parameters")
-        choice = as.integer(readline())
-        if(is.na(change) || change> getNbModel(object) || choice<1){
-          print("ERROR: Your entry is incorrect, please try again")
-        }else{
-          flag = 1
+        if(scanner == 1){
+            flag = 0
+            while(flag == 0){
+                cat("How many models do you want to add ?")
+                nbToAdd = as.numeric(readline())
+                if(is.na(nbToAdd) || nbToAdd<1){
+                    print("ERROR: Your entry is incorrect, please try again")
+                }else{
+                    flag = 1
+                }
+            }
+            object = addModel(object, nbToAdd)
+        } else if(scanner == 2){
+            flag = 0
+            while(flag == 0){
+                if(object@nbModel > 1) {
+                    print(object)
+                    cat("Which model do you want to delete ?")
+                    nbToDel = as.numeric(readline())
+                    if(is.na(nbToDel) || nbToDel> getNbModel(object)){
+                        print("ERROR: Your entry is incorrect, please try again")
+                    }else{
+                        flag = 1
+                    }
+                    object = delModel(object, nbToDel)
+                } else {
+                    stop("There is only one model left in this composante. You can not delete it.")
+                }
+            }
+            
+        } else {
+            flag = 0
+            while(flag == 0){
+                print(object)
+                cat("Which model do you want to change ? Please enter the model's number")
+                change = as.numeric(readline())
+                if(is.na(change) || change> getNbModel(object) || change<1){
+                    print("ERROR: Your entry is incorrect, please try again")
+                }else{
+                    flag = 1
+                }
+            }
+            flag = 0
+            while(flag == 0){
+                cat("What do you want to change?\n 1. Model function 2. Model parameters")
+                choice = as.integer(readline())
+                if(is.na(change) || change> getNbModel(object) || choice<1){
+                    print("ERROR: Your entry is incorrect, please try again")
+                }else{
+                    flag = 1
+                }
+            }      
+            print(object@listModel[[change]])
+            if(choice == 1) {
+                object@listModel[[change]] = setTypeModel(object@listModel[[change]])
+            }
+            else if(choice == 2) {
+                object@listModel[[change]] = setPrior(object@listModel[[change]])
+            }
+            
         }
-      }      
-      print(object@listModel[[change]])
-      if(choice == 1) {
-        object@listModel[[change]] = setTypeModel(object@listModel[[change]])
-      }
-      else if(choice == 2) {
-        object@listModel[[change]] = setPrior(object@listModel[[change]])
-      }
-      
+        return(object)
     }
-    return(object)
-  }
 )
 
 
@@ -288,10 +303,10 @@ setMethod(
                     flag = 1
                 }
                 else if (choice == 0 && !is.na(choice)) {
-                  stop("You have stopped the program")
+                    stop("You have stopped the program")
                 }
                 else {
-                  print("ERROR: Your entry is incorrect, please try again")
+                    print("ERROR: Your entry is incorrect, please try again")
                 }
             }
         } else if(all == 1) {

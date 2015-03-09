@@ -45,8 +45,8 @@ simSpatialCoal <- function(nbSimul, ParamList, rasterStack, nicheMeth, GeneticDa
     stop("unknown localizations (NA) in simSpatialCoal. Please verify if genetic data coordinates are inside raster extent")
   }
   
-  # Compute distance matrix
-  distMat <- distanceMatrixFromRaster(object = rasterStack)
+  # Compute distance matrix in kilometers
+  distMat <- distanceMatrixFromRaster(object = rasterStack)/1000
   
   
   

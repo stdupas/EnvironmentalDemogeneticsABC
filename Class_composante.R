@@ -30,7 +30,7 @@ setMethod(
         .Object@name=name
         if(.Object@name == "niche" || .Object@name == "generation"){
             cat("=========== Creation of the independant valor ==========\n")
-            independance = paramModel(0)
+            .Object@independance = paramModel(0)
         }
         flag = -1
         while(flag == -1){
@@ -183,9 +183,9 @@ setMethod(
     definition=function(object) {
         flag = 0
         while(flag == 0){
-            cat("[Type 0 to quit] What do you want to do?\n1: Add a model\n2: Delete a model\n3: Change a model")
+            cat("[Type 0 to quit] What do you want to do?\n1: Add a model\n2: Delete a model\n3: Change a model\n4: Change the independant model")
             scanner = as.numeric(readline())
-            if(is.na(scanner) || scanner>3 || scanner<0){
+            if(is.na(scanner) || scanner>4 || scanner<0){
                 print("ERROR: Your entry is incorrect, please try again")
             } else if(scanner == 0){
                 stop("You have stopped the program")
@@ -202,9 +202,9 @@ setMethod(
                     print("ERROR: Your entry is incorrect, please try again")
                 }else{
                     flag = 1
+                    object = addModel(object, nbToAdd)
                 }
             }
-            object = addModel(object, nbToAdd)
         } else if(scanner == 2){
             flag = 0
             while(flag == 0){
@@ -216,14 +216,14 @@ setMethod(
                         print("ERROR: Your entry is incorrect, please try again")
                     }else{
                         flag = 1
+                        object = delModel(object, nbToDel)
                     }
-                    object = delModel(object, nbToDel)
                 } else {
                     stop("There is only one model left in this composante. You can not delete it.")
                 }
             }
             
-        } else {
+        } else if(scanner == 3) {
             flag = 0
             while(flag == 0){
                 print(object)
@@ -252,7 +252,34 @@ setMethod(
             else if(choice == 2) {
                 object@listModel[[change]] = setPrior(object@listModel[[change]])
             }
-            
+        } else if (scanner == 4){
+            flag2 = -1
+            while(flag2 == -1) {
+                # Ask if the user wants to change the prior function or only a parameter of a prior function
+                cat("[Type 0 to quit] Change the prior function or the value of a parameter value ?\n")
+                cat("1: Prior function\n2: Parameter value")
+                choice_number2 = as.integer(readline())
+                if(choice_number2!=0 && choice_number2<=2 && choice_number2>0 && !is.na(choice_number2)) {
+                    if(choice_number2==1) {
+                        object@independance = setType_prior(object@independance)
+                    }
+                    else if(choice_number2==2) {
+                        object@independance = setParam_prior(object@independance)
+                    }                    
+                    flag2 = 1
+                }
+                else if(choice_number2==0 && !is.na(choice_number2)) {
+                    stop("You have stopped the program")
+                }else {
+                    print("ERROR: Your entry is incorrect, please try again")
+                }
+            }
+            flag = 1
+        } else if(choice_number==0 && !is.na(choice_number)) {
+            stop("You have stopped the program")
+        }
+        else {
+            print("ERROR: Your entry is incorrect, please try again")
         }
         return(object)
     }

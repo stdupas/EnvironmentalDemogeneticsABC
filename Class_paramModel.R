@@ -218,6 +218,18 @@ setMethod("setResult_prior", "ParamModel",
           }
 )
 
+#Function to clean the Result_prior
+setGeneric("delResult_prior",
+           function(object){standardGeneric("delResult_prior")})
+
+setMethod("delResult_prior", "ParamModel",
+          function(object){
+            object@result_prior = numeric(0)
+            return(object)
+          }
+)
+
+
 # Function to print the parameters of the prior functions
 setMethod(
     f="show", 

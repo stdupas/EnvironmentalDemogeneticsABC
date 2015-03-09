@@ -28,7 +28,7 @@ backward = function() {
     new(Class="Backward")
 }
 
-# Get the name of the composante
+# Change anything in the model
 setGeneric(
   name="setBackward",
   def=function(object) {standardGeneric("setBackward")}

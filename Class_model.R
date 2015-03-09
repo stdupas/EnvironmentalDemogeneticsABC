@@ -211,3 +211,36 @@ setMethod(
         return(object)
     }
 )
+
+# Function to assess the prior values for one model
+setGeneric(
+    name="setResultPriorComp",
+    def=function(object) {standardGeneric("setResultPriorComp")}
+)
+
+
+setMethod(
+    f="setResultPriorComp",
+    signature="Model",
+    definition=function(object) {
+        # ask which parameter the user wants to assess the prior values
+        cat("[Type 0 to quit] Which parameter do you want to assess? \n")
+        cat(paste(1:length(object@param_name),":",object@param_name,"\n"))
+        flag = -1
+        while(flag == -1) {
+            choice = as.integer(readline())
+            if(choice!=0 && choice<=length(object@param_name) && choice>0 && !is.na(choice)) {
+                object@param_model[[choice]] = setResult_prior(object@param_model[[choice]])
+                flag = 1
+            }
+            else if (choice == 0 && !is.na(choice)) {
+                stop("Stop the program.")
+            }
+            else {
+                print("Wrong number, please type a number in the list :")
+                cat(paste(1:length(object@param_name),":",object@param_name,"\n"))
+            }
+        }
+        return(object)
+    }
+)

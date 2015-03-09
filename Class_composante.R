@@ -170,7 +170,7 @@ setMethod(
     while(flag == 0){
       cat("[Type 0 to quit] What do you want to do?\n1: Add a model\n2: Delete a model\n3: Change a model")
       scanner = as.numeric(readline())
-      if(is.na(scanner) || scanner>3 || scanner<1){
+      if(is.na(scanner) || scanner>3 || scanner<0)){
         print("ERROR: Your entry is incorrect, please try again")
       } else if(scanner == 0){
         stop("You have stopped the program")

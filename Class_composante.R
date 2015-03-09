@@ -113,12 +113,12 @@ setMethod(
 
 # Get the name of the composante
 setGeneric(
-    name="getName",
-    def=function(object) {standardGeneric("getName")}
+    name="getNameComp",
+    def=function(object) {standardGeneric("getNameComp")}
 )
 
 setMethod(
-    f="getName", 
+    f="getNameComp", 
     signature="Composante",
     definition=function(object) {
         return(object@name)

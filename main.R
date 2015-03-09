@@ -27,8 +27,7 @@ load("dataSet.RData")
 ancestor <- 200
 
 # assuming we have the step values for each locus
-steps <- c(1,2,3,4,5,4,4,4,4,4)
-length(steps)
+load("steps.RData")
 
 ###### Model :
 
@@ -37,7 +36,7 @@ load("ParamList.RData")
 
 ##### 
 # launch simulations
-simSpatialCoal(nbSimul=10000, ParamList=ParamList, rasterStack=bio, nicheMeth = "arithmetic", GeneticData=dataSet, initialGenetValue=ancestor,
+simSpatialCoal(nbSimul=1000000, ParamList=ParamList, rasterStack=bio, nicheMeth = "arithmetic", GeneticData=dataSet, initialGenetValue=ancestor,
                stepValueOfLoci= steps, cores=detectCores())
 
 # analyse the results, computes summary statistics

@@ -138,13 +138,13 @@ distanceMatrixFromRaster <- function(object){
   #   A matrix of distances in meters if a coordinate system is precised
   
   # Extract coordinates from raster object
-  coords = xyFromCell(object = object, cell = ncell(object), spatial=FALSE)
+  coords = xyFromCell(object = object, cell = 1:ncell(object), spatial=FALSE)
   
   # Compute distance matrix
   dist <- apply(X = coords,
                 MARGIN = 1,
-                FUN = function(x){ values(distanceFromPoints(object = ras, xy = x)) },
-                ras = object)
+                FUN = function(x){ values(distanceFromPoints(object = object[[1]], xy = x)) }
+                )
   return(dist)
 }
 

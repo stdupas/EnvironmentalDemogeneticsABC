@@ -46,7 +46,7 @@ simSpatialCoal <- function(nbSimul, ParamList, rasterStack, nicheMeth, GeneticDa
   }
   
   # Compute distance matrix
-  distMat <- distanceMatrixFromRaster(rasterStack)
+  distMat <- distanceMatrixFromRaster(object = rasterStack)
   
   
   

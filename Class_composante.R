@@ -231,7 +231,7 @@ setMethod(
           flag = 1
         }
       }
-      object@listeModel[[change]] = setTypeModel(object@listeModel[[change]])
+      object@listModel[[change]] = setTypeModel(object@listModel[[change]])
     }
     return(object)
   }

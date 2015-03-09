@@ -5,7 +5,8 @@ source("Class_composante.R")
 setClass(
 	Class="ParamList", 
     representation=representation(
-    	niche="Composante",
+    	niche_r="Composante",
+        niche_k="Composante",
     	dispersion="Composante",
     	mutation="Composante"
     ),
@@ -38,8 +39,10 @@ setGeneric("getResultPrior",
 
 setMethod("getResultPrior", "ParamList",
           function(object,comp,mod,param){
-            if(comp == "niche") {
-                return(getResult_prior(object@niche@listModel[[mod]]@param_model[[param]]))
+            if(comp == "niche_r") {
+                return(getResult_prior(object@niche_r@listModel[[mod]]@param_model[[param]]))
+            } else if(com == "niche_k") {
+                return(getResult_prior(object@niche_k@listModel[[mod]]@param_model[[param]]))
             } else if(comp == "dispersion") {
                 return(getResult_prior(object@dispersion@listModel[[mod]]@param_model[[param]]))
             } else if(comp == "mutation") {

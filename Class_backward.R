@@ -15,7 +15,8 @@ setMethod(
     f="initialize",
     signature="Backward",
     definition=function(.Object) {
-        .Object@niche = composante("niche")
+        .Object@niche_r = composante("niche_r")
+        .Object@niche_k = composante("niche_k")
         .Object@dispersion = composante("dispersion")
         .Object@mutation = composante("mutation")
         validObject(.Object)
@@ -40,7 +41,7 @@ setMethod(
   definition=function(object) {
     flag = 0
     while(flag == 0){
-      cat("[Type 0 to quit] Which composante do you want to change?\n1: Niche\n2: Dispersion\n3: Mutation")
+      cat("[Type 0 to quit] Which composante do you want to change?\n1: Niche_r\n2: Niche_k\n3: Dispersion\n4: Mutation")
       scanner = as.numeric(readline())
       if(is.na(scanner) || scanner>3 || scanner<0){
         print("ERROR: Your entry is incorrect, please try again")
@@ -51,10 +52,12 @@ setMethod(
       }
     }
     if(scanner == 1){
-      object@niche = setComposante(object@niche)
-    } else if (scanner == 2){
-      object@dispersion = setComposante(object@dispersion)
+      object@niche_r = setComposante(object@niche_r)
+    } else if(scanner == 2) {
+      object@niche_k = setComposante(object@niche_k)
     } else if (scanner == 3){
+      object@dispersion = setComposante(object@dispersion)
+    } else if (scanner == 4){
       object@mutation = setComposante(object@mutation)
     }
     return(object)
@@ -79,17 +82,20 @@ setMethod(
       choice = as.integer(readline())
       if(!is.na(choice) && choice!=0 && choice>0 && choice<=2){
         if(choice == 1){
-          object@niche = setResultPriorComp(object@niche, 1)
+          object@niche_r = setResultPriorComp(object@niche_r, 1)
+          object@niche_k = setResultPriorComp(object@niche_k, 1)
           object@dispersion = setResultPriorComp(object@dispersion, 1)
           object@mutation = setResultPriorComp(object@mutation, 1)
         } else if (choice == 2){
           flag2 = -1
           while(flag2 == -1) {
-            cat("[Type 0 to quit] Which component do you want to assess? \n1: Niche\n2: Dispersion\n3: Mutation\n")
+            cat("[Type 0 to quit] Which component do you want to assess? \n1: Niche_r\n2: Niche_k\n3: Dispersion\n4: Mutation\n")
             choice = as.integer(readline())
             if(choice!=0 && choice<=3 && choice>0 && !is.na(choice)) {
               if(choice == 1){
-                object@niche = setResultPriorComp(object@niche, 0)
+                object@niche_r = setResultPriorComp(object@niche_r, 0)
+              } else if(choice == 2) {
+                object@niche_k = setResultPriorComp(object@niche_k, 0)
               } else if(choice == 2){
                 object@dispersion = setResultPriorComp(object@dispersion, 0)
               } else if(choice == 3){

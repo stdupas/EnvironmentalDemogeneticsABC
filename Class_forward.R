@@ -4,33 +4,34 @@ source("Class_paramList.R")
 
 # Class forward
 setClass(
-	Class="Forward",
-	representation=representation(
-		generation="Composante"
-	),
-	contains="ParamList",
+    Class="Forward",
+    representation=representation(
+        generation="Composante"
+    ),
+    contains="ParamList",
     validity=function(object) {
-    	# add verification if needed
+        # add verification if needed
     }
 )
 
 # Constructor of forward
 setMethod(
-	f="initialize",
-	signature="Forward",
-	definition=function(.Object) {
-		.Object@niche = composante("niche")
-		.Object@dispersion = composante("dispersion")
-		.Object@mutation = composante("mutation")
-		.Object@generation = composante("generation")
-		validObject(.Object)
+    f="initialize",
+    signature="Forward",
+    definition=function(.Object) {
+        .Object@niche_r = composante("niche_r")
+        .Object@niche_k = composante("niche_k")
+        .Object@dispersion = composante("dispersion")
+        .Object@mutation = composante("mutation")
+        .Object@generation = composante("generation")
+        validObject(.Object)
         return(.Object)
-	}
+    }
 )
 
 # User-friendly constructor of forward
 forward = function() {
-	new(Class="Forward")
+    new(Class="Forward")
 }
 
 # Change any thing in the forward object
@@ -45,7 +46,7 @@ setMethod(
   definition=function(object) {
     flag = 0
     while(flag == 0){
-      cat("Which composante do you want to change? (press 0 to quit)\n 1: Niche\n 2: Dispersion\n 3: Mutation\n 4: Génération")
+      cat("Which composante do you want to change? (press 0 to quit)\n 1: Niche_r\n 2: Niche_k\n 3: Dispersion\n 4: Mutation\n 5: Génération")
       scanner = as.numeric(readline())
       if(is.na(scanner) || scanner>4 || scanner<0){
         print("ERROR: Your entry is incorrect, please try again")
@@ -56,12 +57,14 @@ setMethod(
       }
     }
     if(scanner == 1){
-      object@niche = setComposante(object@niche)
-    } else if (scanner == 2){
-      object@dispersion = setComposante(object@dispersion)
+      object@niche_r = setComposante(object@niche_r)
+    } else if(scanner == 2) {
+      object@niche_k = setComposante(object@niche_k)
     } else if (scanner == 3){
-      object@mutation = setComposante(object@mutation)
+      object@dispersion = setComposante(object@dispersion)
     } else if (scanner == 4){
+      object@mutation = setComposante(object@mutation)
+    } else if (scanner == 5){
       object@generation = setComposante(object@generation)
     }
     return(object)
@@ -88,18 +91,21 @@ setMethod(
       choice = as.integer(readline())
       if(!is.na(choice) && choice!=0 && choice>0 && choice<=2){
         if(choice == 1){
-          object@niche = setResultPriorComp(object@niche, 1)
+          object@niche_r = setResultPriorComp(object@niche_r, 1)
+          object@niche_k = setResultPriorComp(object@niche_k, 1)
           object@dispersion = setResultPriorComp(object@dispersion, 1)
           object@mutation = setResultPriorComp(object@mutation, 1)
           object@generation = setResultPriorComp(object@generation, 1)
         } else if (choice == 2){
           flag2 = -1
           while(flag2 == -1) {
-            cat("[Type 0 to quit] Which component do you want to assess? \n1: Niche\n2: Dispersion\n3: Mutation\n4: Generation\n")
+            cat("[Type 0 to quit] Which component do you want to assess? \n1: Niche_r\n2: Niche_k\n3: Dispersion\n4: Mutation\n5: Generation\n")
             choice = as.integer(readline())
             if(choice!=0 && choice<=4&& choice>0 && !is.na(choice)) {
               if(choice == 1){
-                object@niche = setResultPriorComp(object@niche, 0)
+                object@niche_r = setResultPriorComp(object@niche_r, 0)
+              } else if(choice == 2) {
+                object@niche_k = setResultPriorComp(object@niche_k, 0)
               } else if(choice == 2){
                 object@dispersion = setResultPriorComp(object@dispersion, 0)
               } else if(choice == 3){

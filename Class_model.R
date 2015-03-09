@@ -36,7 +36,12 @@ setMethod(
     .Object@name=c(composante_name, model_num)
     print("[Type 0 to exit] What function do you want to use for the model ?")
     data_fct = read.table("functions.txt", sep = ";", header = TRUE, as.is=rep(TRUE, 4))
-    possible = which(data_fct[,1]==composante_name)
+    if(composante_name == "niche_r" || composante_name == "niche_k") {
+        possible = which(data_fct[,1]=="niche")
+    } else {
+        possible = which(data_fct[,1]==composante_name)
+    }
+    
 
     # print the possible functions in order (with a number to know which one to use)
     possible_number = 1:length(possible)
@@ -62,7 +67,12 @@ setMethod(
     }
 
     # ask which parameters and prior functions they want
-    vec = findFunctionFromFile(composante_name, .Object@type_model)
+    if(composante_name == "niche_r" || composante_name == "niche_k") {
+        vec = findFunctionFromFile("niche", .Object@type_model)
+    } else {
+        vec = findFunctionFromFile(composante_name, .Object@type_model)
+    }
+    
     mod = NULL
     param_name = NULL
     for(i in 1:vec[1]){

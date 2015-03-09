@@ -295,7 +295,9 @@ setMethod(
                 }
             }
         } else if(all == 1) {
-
+            for(i in 1:object@nbModel) {
+                object@listModel[[i]] = setResultPriorMod(object@listModel[[i]],1)
+            }
         }
         return(object)
     }

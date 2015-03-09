@@ -32,3 +32,20 @@ loadParamList = function(file){
             return(object)
 }
 
+#Function to get the "result_prior"
+setGeneric("getResultPrior",
+           function(object,comp,mod,param){standardGeneric("getResultPrior")})
+
+setMethod("getResultPrior", "ParamList",
+          function(object,comp,mod,param){
+            if(comp == "niche") {
+                return(getResult_prior(object@niche@listModel[[mod]]@param_model[[param]]))
+            } else if(comp == "dispersion") {
+                return(getResult_prior(object@dispersion@listModel[[mod]]@param_model[[param]]))
+            } else if(comp == "mutation") {
+                return(getResult_prior(object@mutation@listModel[[mod]]@param_model[[param]]))
+            } else if(comp == "generation") {
+                return(getResult_prior(object@generation@listModel[[mod]]@param_model[[param]]))
+            }
+          }
+)

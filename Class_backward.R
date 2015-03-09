@@ -60,3 +60,44 @@ setMethod(
     return(object)
   }
 )
+
+# Function to assess the prior values
+setGeneric(
+  name="setResultPriorBack",
+  def=function(object) {standardGeneric("setResultPriorBack")}
+)
+
+
+setMethod(
+  f="setResultPriorBack",
+  signature="Backward",
+  definition=function(object) {
+    # ask which composante the user wants to assess the prior values
+    
+    flag = -1
+    while(flag == -1) {
+      cat("[Type 0 to quit] Which component do you want to assess? \n1: Niche\n2: Dispersion\n3: Mutation\n")
+      choice = as.integer(readline())
+      if(choice!=0 && choice<=3 && choice>0 && !is.na(choice)) {
+        if(choice == 1){
+          object@niche = setResult_priorComp(object@niche)
+          flag = 1
+        } else if(choice == 2){
+          object@dispersion = setResult_priorComp(object@dispersion)
+          flag = 1
+        } else if(choice == 3){
+          object@generation = setResult_priorComp(object@genertion)
+          flag = 1
+        }
+      }
+      else if (choice == 0 && !is.na(choice)) {
+        stop("Stop the program.")
+      }
+      else {
+        print("Wrong number, please type a number in the list :")
+      }
+    }
+    return(object)
+  }
+)
+

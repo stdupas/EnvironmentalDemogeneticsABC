@@ -275,3 +275,35 @@ setMethod(
         }
     }
 )
+
+# Function to assess the prior values for one model
+setGeneric(
+    name="setResultPriorComp",
+    def=function(object) {standardGeneric("setResultPriorComp")}
+)
+
+
+setMethod(
+    f="setResultPriorComp",
+    signature="Composante",
+    definition=function(object) {
+        # ask which model the user wants to assess
+        cat("[Type 0 to quit] Which model do you want to assess? Type the model number.\n")
+        print(object)
+        flag = -1
+        while(flag == -1) {
+            choice = as.integer(readline())
+            if(choice!=0 && choice<=object@nbModel && choice>0 && !is.na(choice)) {
+                object@listModel[[choice]] = setResultPriorMod(object@listModel[[choice]])
+                flag = 1
+            }
+            else if (choice == 0 && !is.na(choice)) {
+                stop("Stop the program.")
+            }
+            else {
+                print("Wrong number, please enter a model number.")
+            }
+        }
+        return(object)
+    }
+)

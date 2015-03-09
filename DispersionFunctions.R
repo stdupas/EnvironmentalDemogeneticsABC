@@ -148,7 +148,7 @@ distanceMatrixFromRaster <- function(object){
   return(dist)
 }
 
-dispersionFunctionForRasterLayer <- function(dispersionFunction, distanceMatrix, args){
+computeDispersionKernel <- function(dispersionFunction, distanceMatrix, args){
   # Apply a dispersion kernel function over distances between the cells of a rasterLayer
   #
   # Args:

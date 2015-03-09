@@ -28,13 +28,9 @@ setMethod(
     signature="Composante",
     definition=function(.Object, name) {
         .Object@name=name
-        if(.Object@name == "niche" || .Object@name == "generation"){
-            cat("=========== Creation of the independant valor ==========\n")
-            .Object@independance = paramModel(0)
-        }
         flag = -1
         while(flag == -1){
-            cat("What is the combinaison method ?\n1: Additive\n2: Multiplicative\n")
+            cat("What is the combinaison method for the component ", .Object@name," ?\n1: Additive\n2: Multiplicative\n")
             scanner = as.integer(readline())
             if(!is.na(scanner) && scanner>0 && scanner<3) {
                 if(scanner == 1){
@@ -47,6 +43,11 @@ setMethod(
                 print("ERROR: Your entry is incorrect, please try again")
             } 
         }
+        if(.Object@name == "niche_r" || .Object@name == "niche_k" || .Object@name == "generation"){
+            cat("=========== Creation of the independant valor ==========\n")
+            .Object@independance = paramModel(0)
+        }
+
         # repeat while the given number is incorrect
         flag = -1
         while(flag == -1) {          

@@ -5,6 +5,9 @@ source("Class_paramList.R")
 setClass(
     Class="Backward", 
     contains="ParamList",
+    representation=representation(
+        method = "character"
+    ),
     validity=function(object) {
         # add verification if needed
     }
@@ -15,6 +18,26 @@ setMethod(
     f="initialize",
     signature="Backward",
     definition=function(.Object) {
+        flag = 0
+        while(flag == 0){
+            cat("[Type 0 to quit] What method do you want to use?\n1: ABC\n")#2: Bayesian\n3: Likelihood\n")
+            scanner = as.numeric(readline())
+            #Only for ABC, otherwise change the 1 into a 3
+            if(is.na(scanner) || scanner>1 || scanner<0){
+                print("ERROR: Your entry is incorrect, please try again")
+            } else if(scanner == 0){
+                stop("You have stopped the program")
+            }else{
+                flag = 1
+            }
+        }
+        if (scanner == 1){
+            .Object@method = "ABC"
+#        } else if (scanner == 2){
+ #           .Object@method = "Bayesian"
+  #      } else if (scanner == 3){
+   #         .Object@method = "Likelihood"
+        }
         .Object@niche_r = composante("niche_r")
         .Object@niche_k = composante("niche_k")
         .Object@dispersion = composante("dispersion")
@@ -43,7 +66,7 @@ setMethod(
     while(flag == 0){
       cat("[Type 0 to quit] Which composante do you want to change?\n1: Niche_r\n2: Niche_k\n3: Dispersion\n4: Mutation")
       scanner = as.numeric(readline())
-      if(is.na(scanner) || scanner>3 || scanner<0){
+      if(is.na(scanner) || scanner>4 || scanner<0){
         print("ERROR: Your entry is incorrect, please try again")
       } else if(scanner == 0){
         stop("You have stopped the program")

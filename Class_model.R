@@ -215,30 +215,44 @@ setMethod(
 # Function to assess the prior values for one model
 setGeneric(
     name="setResultPriorMod",
-    def=function(object) {standardGeneric("setResultPriorMod")}
+    def=function(object, all) {standardGeneric("setResultPriorMod")}
 )
 
 
 setMethod(
     f="setResultPriorMod",
     signature="Model",
-    definition=function(object) {
-        # ask which parameter the user wants to assess the prior values
-        cat("[Type 0 to quit] Which parameter do you want to assess? \n")
-        cat(paste(1:length(object@param_name),":",object@param_name,"\n"))
-        flag = -1
-        while(flag == -1) {
-            choice = as.integer(readline())
-            if(choice!=0 && choice<=length(object@param_name) && choice>0 && !is.na(choice)) {
-                object@param_model[[choice]] = setResult_prior(object@param_model[[choice]])
-                flag = 1
+    definition=function(object, all) {
+        if(all == 0) { 
+            # ask which parameter the user wants to assess the prior values
+            cat("[Type 0 to quit] Which parameter do you want to assess? \n")
+            cat(paste(1:length(object@param_name),":",object@param_name,"\n"))
+            cat(length(object@param_name)+1,":", "all parameters\n")
+            flag = -1
+            while(flag == -1) {
+                choice = as.integer(readline())
+                if(choice!=0 && choice<=length(object@param_name)+1 && choice>0 && !is.na(choice)) {
+                    if(choice == length(object@param_name)+1) {
+                        for(i in 1:length(object@param_name)) {
+                            object@param_model[[i]] = setResult_prior(object@param_model[[i]])
+                        }
+                    }
+                    else {
+                        object@param_model[[choice]] = setResult_prior(object@param_model[[choice]])                  
+                    }
+                    flag = 1
+                }
+                else if (choice == 0 && !is.na(choice)) {
+                    stop("Stop the program.")
+                }
+                else {
+                    print("Wrong number, please type a number in the list :")
+                    cat(paste(1:length(object@param_name),":",object@param_name,"\n"))
+                }
             }
-            else if (choice == 0 && !is.na(choice)) {
-                stop("Stop the program.")
-            }
-            else {
-                print("Wrong number, please type a number in the list :")
-                cat(paste(1:length(object@param_name),":",object@param_name,"\n"))
+        } else if(all == 1) {
+            for(i in 1:length(object@param_name)) {
+                object@param_model[[i]] = setResult_prior(object@param_model[[i]])
             }
         }
         return(object)

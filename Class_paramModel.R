@@ -186,7 +186,7 @@ setMethod(
     definition=function(object) {
         print("The actual prior hyper-parameters are: ")
         num = c(1:length(getParam_prior(object)))
-        cat(paste(num,":",getParam_name(object),"\n"))
+        cat(paste(num,":",getParam_name(object),"=",getParam_prior(object),"\n"))
         flag = 0
         while(flag == 0){
             cat("[Type 0 to quit] Which one do you want to change?")

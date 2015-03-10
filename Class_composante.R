@@ -335,6 +335,7 @@ setMethod(
                         if(choice == object@nbModel+1) {
                             object@independance = setResult_prior(object@independance)
                         } else if(choice == object@nbModel+2) {
+                            object@independance = setResult_prior(object@independance)
                             for(i in 1:object@nbModel) {
                                 object@listModel[[i]] = setResultPriorMod(object@listModel[[i]],1)
                             }
@@ -352,6 +353,7 @@ setMethod(
                     }
                 }
             } else if(all == 1) {
+                object@independance = setResult_prior(object@independance)
                 for(i in 1:object@nbModel) {
                     object@listModel[[i]] = setResultPriorMod(object@listModel[[i]],1)
                 }

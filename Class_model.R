@@ -156,7 +156,7 @@ setMethod(
     definition=function(object) {
         cat("The actual type of function for this model is :", object@type_model,"\n")
         # Ask what type the user wants to use
-        newObject = model(object@name[1],object@name[2])
+        newObject = model(object@name[1],object@name[2],object@method)
         return(newObject)
     }
 )

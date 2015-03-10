@@ -161,7 +161,7 @@ setMethod(
             print("You can not change the prior type with the method: Likelihood")
         } else {
             print(paste("The actual prior function is: ", getType_prior(object)))
-            newObject = new(Class = "ParamModel", model_num = getNameParamModel(object)[2])
+            newObject = new(Class = "ParamModel", model_num = getNameParamModel(object)[2], method = object@method)
             return(newObject)   
         }
     }

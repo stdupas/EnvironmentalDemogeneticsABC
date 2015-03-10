@@ -139,7 +139,7 @@ setMethod(
         for(i in 1:nbToAdd) {
             object@nbModel = object@nbModel+1
             
-            newMod = model(object@name, object@nbModel)
+            newMod = model(object@name, object@nbModel, object@method)
             object@listModel = c(object@listModel, newMod)
         }
         rm(newMod)
@@ -272,7 +272,7 @@ setMethod(
                 choice_number2 = as.integer(readline())
                 if(choice_number2!=0 && choice_number2<=2 && choice_number2>0 && !is.na(choice_number2)) {
                     if(choice_number2==1) {
-                        object@independance = setType_prior(object@independance, object@method)
+                        object@independance = setType_prior(object@independance)
                     }
                     else if(choice_number2==2) {
                         object@independance = setParam_prior(object@independance)

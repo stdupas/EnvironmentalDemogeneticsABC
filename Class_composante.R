@@ -292,6 +292,14 @@ setMethod(
     f="show", 
     signature="Composante",
     definition=function(object) {
+        cat(".................... Combination type ....................\n")
+        cat("           ")
+        cat(object@type_combinaison,"\n")
+        if(object@name == "niche_r" || object@name == "niche_k") {
+            cat(".................... Independant model ....................\n")
+            cat("           ")
+            print(object@independance)
+        }
         for(i in 1:length(object@listModel)) {
             cat("............... Model:",i,",",object@listModel[[i]]@type_model,"...............\n")
             print(object@listModel[[i]])

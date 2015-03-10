@@ -239,7 +239,7 @@ setMethod(
                     print(object)
                     cat("Which model do you want to delete ? (You can not delete the independant model)")
                     nbToDel = as.integer(readline())
-                    if(is.na(nbToDel) || nbToDel> getNbModel(object)){
+                    if(is.na(nbToDel) || nbToDel> getNbModel(object) || nbToDel<1){
                         print("ERROR: Your entry is incorrect, please try again")
                     }else{
                         flag = 1

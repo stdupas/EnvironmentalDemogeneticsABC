@@ -45,6 +45,11 @@ simSpatialCoal <- function(nbSimul, ParamList, rasterStack, nicheMeth, GeneticDa
     stop("unknown localizations (NA) in simSpatialCoal. Please verify if genetic data coordinates are inside raster extent")
   }
   
+  # Compute distance matrix in kilometers
+  distMat <- distanceMatrixFromRaster(object = rasterStack)/1000
+  
+  
+  
   local({
     
     # open a connection to a temporary file : pipe between master process and child
@@ -107,9 +112,9 @@ simSpatialCoal <- function(nbSimul, ParamList, rasterStack, nicheMeth, GeneticDa
       }
       
       # Get migration matrix :
-      kernelMatrix <- dispersionFunctionForRasterLayer(dispersionFunction=getFunctionDispersion(ParamList),
-                                                       rasterLayer=rasterStack[[1]], 
-                                                       args=getArgsListDispersion(simulation = x, ParamList = ParamList))
+      kernelMatrix <- computeDispersionKernel(dispersionFunction = getFunctionDispersion(ParamList),
+                                              distanceMatrix = distMat, 
+                                              args=getArgsListDispersion(simulation = x, ParamList = ParamList))
       
       migrationMatrix <- migrationRateMatrix(kernelMatrix)
       

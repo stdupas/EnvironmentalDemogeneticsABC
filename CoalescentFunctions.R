@@ -121,6 +121,8 @@ simSpatialCoal <- function(nbSimul, ParamList, rasterStack, nicheMeth, GeneticDa
       # Get transition matrix :
       transitionBackward <- transitionMatrixBackward(r = values(rasR), K = values(rasK), migration = migrationMatrix)
 
+      # Compute the maximal number of coalescence events
+      maxCoalEvent <- length(localizationData) - 1
       
       ### LOOP ON LOCI >>>>>>>>>>>>>>>>>
       
@@ -129,8 +131,6 @@ simSpatialCoal <- function(nbSimul, ParamList, rasterStack, nicheMeth, GeneticDa
         # Get the stepValue of the locus under concern
         stepValue <- stepValueOfLoci[locus]
         
-        maxCoalEvent <- length(localizationData) - 1
-        
         # coalescent informations : (time of coalescence, Child 1, Child 2, Parent, Branch Length, mutation nbr, resultant, genet values)
         coal <- matrix(data = NA, nrow = maxCoalEvent, ncol = 8)    
         
@@ -138,6 +138,35 @@ simSpatialCoal <- function(nbSimul, ParamList, rasterStack, nicheMeth, GeneticDa
         coal[,c(1:4)] <- coalescentCore(tipDemes = localizationData, 
                                                      transitionBackward = transitionBackward, 
                                                      N = round(values(rasK)))
+        
+        # Create a matrice for branches (in columns : Child/Parent/Branch length/Number of mutation/Resultant)
+        branchMat <- matrix(NA, nrow = (maxCoalEvent)*2, ncol = 5)
+        
+        # Fill child -> Parent information (decoupling children nodes)
+        branchMat[,c(1,2)] <- rbind(coal[,c(2,4)] , coal[,c(3,4)])
+        
+        # Fill branch length
+        # time of apparition of child node
+        timeC <- sapply(X = branchMat[,1],
+                        FUN = function(x, coal){
+                          # find position in coalescence table
+                          line <- which(coal[, 4] == x)
+                          if(length(line) == 1){
+                            # it's ok : get time
+                            t <- coal[line, 1] 
+                          }else if(length(line) == 0) {
+                            # it's not really ok : node is an initial nod (tip node)
+                            t <- 0                          
+                          }else{
+                            # it's really NOT ok
+                            stop("error in filling branch lengths in coalescent : please verify code")
+                          }
+                          return(t)
+                          },
+                        coal = coal )
+        
+        # time of apparition of parent node
+        timeP <- coal[which(coal[, 4] == branchMat[,2]) ,1]
         
         # add branch length
         coal[,5] <- c(coal[,1][-1] - coal[,1][-nrow(coal)], NA)

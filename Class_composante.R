@@ -186,7 +186,7 @@ setMethod(
     definition=function(object) {
         flag = 0
         while(flag == 0){
-            if(object@name == "niche_k" || object@name == "niche_r") {
+            if(object@name == "niche_k" || object@name == "niche_r" || object@name == "generation") {
                 cat("[Type 0 to quit] What do you want to do?\n1: Add a model\n2: Delete a model\n3: Change a model\n4: Change the independant model")
             } else {
                 cat("[Type 0 to quit] What do you want to do?\n1: Add a model\n2: Delete a model\n3: Change a model")
@@ -197,7 +197,7 @@ setMethod(
             } else if(scanner == 0){
                 stop("You have stopped the program")
             }else{
-                if(scanner == 4 && object@name != "niche_k" && object@name != "niche_r") {
+                if(scanner == 4 && object@name != "niche_k" && object@name != "niche_r" || object@name == "generation") {
                     print("ERROR: Your entry is incorrect, please try again")
                 } else {
                     flag = 1
@@ -305,7 +305,7 @@ setMethod(
         cat(".................... Combination type ....................\n")
         cat("           ")
         cat(object@type_combinaison,"\n")
-        if(object@name == "niche_r" || object@name == "niche_k") {
+        if(object@name == "niche_r" || object@name == "niche_k" || object@name == "generation") {
             cat(".................... Independant model ....................\n")
             cat("           ")
             print(object@independance)
@@ -329,7 +329,7 @@ setMethod(
     signature="Composante",
     definition=function(object, all) {
         # if there is an independant model
-        if(object@name == "niche_k" || object@name == "niche_r") {
+        if(object@name == "niche_k" || object@name == "niche_r" || object@name == "generation") {
             if(all == 0) { 
                 # ask which model the user wants to assess
                 cat("[Type 0 to quit] Which model do you want to assess? Type the model number.\n")

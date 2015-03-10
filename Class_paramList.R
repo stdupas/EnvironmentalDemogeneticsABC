@@ -57,7 +57,11 @@ setMethod("getResultPrior", "ParamList",
             } else if(comp == "mutation") {
                 return(getResult_prior(object@mutation@listModel[[param[1]]]@param_model[[param[2]]]))
             } else if(comp == "generation") {
-                return(getResult_prior(object@generation@listModel[[param[1]]]@param_model[[param[2]]]))
+                if(param[1] == 0) {
+                    return(getResult_prior(object@generation@independance))
+                } else {
+                    return(getResult_prior(object@generation@listModel[[param[1]]]@param_model[[param[2]]]))
+                }
             }
           }
 )

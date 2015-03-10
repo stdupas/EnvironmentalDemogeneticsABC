@@ -68,7 +68,7 @@ setMethod(
     while(flag == 0){
       cat("Which composante do you want to change? (press 0 to quit)\n 1: Niche_r\n 2: Niche_k\n 3: Dispersion\n 4: Mutation\n 5: Génération")
       scanner = as.numeric(readline())
-      if(is.na(scanner) || scanner>4 || scanner<0){
+      if(is.na(scanner) || scanner>5 || scanner<0){
         print("ERROR: Your entry is incorrect, please try again")
       } else if(scanner == 0){
         stop("You stopped the program")

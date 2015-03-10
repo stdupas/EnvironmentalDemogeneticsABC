@@ -37,11 +37,11 @@ setMethod(
         } else if (scanner == 2){
             .Object@method = "Likelihood"
         } 
-        .Object@niche_r = composante("niche_r", .Object@method)
-        .Object@niche_k = composante("niche_k", .Object@method)
-        .Object@dispersion = composante("dispersion", .Object@method)
-        .Object@mutation = composante("mutation", .Object@method)
-        .Object@generation = composante("generation", .Object@method)
+        .Object@niche_r = composante("niche_r", getForwardMethod(.Object))
+        .Object@niche_k = composante("niche_k", getForwardMethod(.Object))
+        .Object@dispersion = composante("dispersion", getForwardMethod(.Object))
+        .Object@mutation = composante("mutation", getForwardMethod(.Object))
+        .Object@generation = composante("generation", getForwardMethod(.Object))
         validObject(.Object)
         return(.Object)
     }

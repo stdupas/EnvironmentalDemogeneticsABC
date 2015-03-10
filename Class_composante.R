@@ -318,36 +318,79 @@ setMethod(
     f="setResultPriorComp",
     signature="Composante",
     definition=function(object, all) {
-        if(all == 0) { 
-            # ask which model the user wants to assess
-            cat("[Type 0 to quit] Which model do you want to assess? Type the model number.\n")
-            print(object)
-            cat("Type", object@nbModel+1, "to assess all models.\n")
-            
-            flag = -1
-            while(flag == -1) {
-                choice = as.integer(readline())
-                if(choice!=0 && choice<=object@nbModel+1 && choice>0 && !is.na(choice)) {
-                    if(choice == object@nbModel+1) {
-                        for(i in 1:object@nbModel) {
-                            object@listModel[[i]] = setResultPriorMod(object@listModel[[i]],1)
+        # if there is an independant model
+        if(object@name == "niche_k" || object@name == "niche_r") {
+            if(all == 0) { 
+                # ask which model the user wants to assess
+                cat("[Type 0 to quit] Which model do you want to assess? Type the model number.\n")
+                print(object)
+                cat("Type", object@nbModel+1, "to assess the independant model.\n")
+                cat("Type", object@nbModel+2, "to assess all models.\n")
+                
+
+                flag = -1
+                while(flag == -1) {
+                    choice = as.integer(readline())
+                    if(choice!=0 && choice<=object@nbModel+2 && choice>0 && !is.na(choice)) {
+                        if(choice == object@nbModel+1) {
+                            object@independance = setResult_prior(object@independance)
+                        } else if(choice == object@nbModel+2) {
+                            for(i in 1:object@nbModel) {
+                                object@listModel[[i]] = setResultPriorMod(object@listModel[[i]],1)
+                            }
                         }
+                        else {
+                            object@listModel[[choice]] = setResultPriorMod(object@listModel[[choice]],0)
+                        }
+                        flag = 1
+                    }
+                    else if (choice == 0 && !is.na(choice)) {
+                        stop("You have stopped the program")
                     }
                     else {
-                        object@listModel[[choice]] = setResultPriorMod(object@listModel[[choice]],0)
+                        print("ERROR: Your entry is incorrect, please try again")
                     }
-                    flag = 1
                 }
-                else if (choice == 0 && !is.na(choice)) {
-                    stop("You have stopped the program")
-                }
-                else {
-                    print("ERROR: Your entry is incorrect, please try again")
+            } else if(all == 1) {
+                for(i in 1:object@nbModel) {
+                    object@listModel[[i]] = setResultPriorMod(object@listModel[[i]],1)
                 }
             }
-        } else if(all == 1) {
-            for(i in 1:object@nbModel) {
-                object@listModel[[i]] = setResultPriorMod(object@listModel[[i]],1)
+
+        # if there is no independant model            
+        } else {
+            if(all == 0) { 
+                # ask which model the user wants to assess
+                cat("[Type 0 to quit] Which model do you want to assess? Type the model number.\n")
+                print(object)
+                cat("Type", object@nbModel+1, "to assess all models.\n")
+                
+
+                flag = -1
+                while(flag == -1) {
+                    choice = as.integer(readline())
+                    if(choice!=0 && choice<=object@nbModel+1 && choice>0 && !is.na(choice)) {
+                        if(choice == object@nbModel+1) {
+                            for(i in 1:object@nbModel) {
+                                object@listModel[[i]] = setResultPriorMod(object@listModel[[i]],1)
+                            }
+                        }
+                        else {
+                            object@listModel[[choice]] = setResultPriorMod(object@listModel[[choice]],0)
+                        }
+                        flag = 1
+                    }
+                    else if (choice == 0 && !is.na(choice)) {
+                        stop("You have stopped the program")
+                    }
+                    else {
+                        print("ERROR: Your entry is incorrect, please try again")
+                    }
+                }
+            } else if(all == 1) {
+                for(i in 1:object@nbModel) {
+                    object@listModel[[i]] = setResultPriorMod(object@listModel[[i]],1)
+                }
             }
         }
         return(object)

@@ -272,7 +272,7 @@ setMethod(
                 choice_number2 = as.integer(readline())
                 if(choice_number2!=0 && choice_number2<=2 && choice_number2>0 && !is.na(choice_number2)) {
                     if(choice_number2==1) {
-                        object@independance = setType_prior(object@independance)
+                        object@independance = setType_prior(object@independance, object@method)
                     }
                     else if(choice_number2==2) {
                         object@independance = setParam_prior(object@independance)

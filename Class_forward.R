@@ -6,6 +6,7 @@ source("Class_paramList.R")
 setClass(
     Class="Forward",
     representation=representation(
+        method = "character",
         generation="Composante"
     ),
     contains="ParamList",
@@ -19,6 +20,23 @@ setMethod(
     f="initialize",
     signature="Forward",
     definition=function(.Object) {
+        flag = 0
+        while(flag == 0){
+            cat("[Type 0 to quit] What method do you want to use?\n1: Bayesian\n2: Likelihood\n")
+            scanner = as.numeric(readline())
+            if(is.na(scanner) || scanner>2 || scanner<0){
+                print("ERROR: Your entry is incorrect, please try again")
+            } else if(scanner == 0){
+                stop("You have stopped the program")
+            }else{
+                flag = 1
+            }
+        }
+        if (scanner == 1){
+            .Object@method = "Bayesian"
+        } else if (scanner == 2){
+            .Object@method = "Likelihood"
+        } 
         .Object@niche_r = composante("niche_r")
         .Object@niche_k = composante("niche_k")
         .Object@dispersion = composante("dispersion")

@@ -192,7 +192,7 @@ setMethod(
                 cat("[Type 0 to quit] What do you want to do?\n1: Add a model\n2: Delete a model\n3: Change a model")
             }
             scanner = as.integer(readline())
-            if(is.na(scanner) || scanner>5 || scanner<0){
+            if(is.na(scanner) || scanner>=5 || scanner<0){
                 print("ERROR: Your entry is incorrect, please try again")
             } else if(scanner == 0){
                 stop("You have stopped the program")
@@ -250,7 +250,7 @@ setMethod(
             while(flag == 0){
                 cat("What do you want to change?\n 1. Model function 2. Model parameters")
                 choice = as.integer(readline())
-                if(is.na(change) || change> getNbModel(object) || choice<1){
+                if(is.na(choice) || choice> getNbModel(object) || choice<1){
                     print("ERROR: Your entry is incorrect, please try again")
                 }else{
                     flag = 1

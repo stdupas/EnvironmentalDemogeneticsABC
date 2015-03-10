@@ -120,9 +120,12 @@ simSpatialCoal <- function(nbSimul, ParamList, rasterStack, nicheMeth, GeneticDa
       
       # Get transition matrix :
       transitionBackward <- transitionMatrixBackward(r = values(rasR), K = values(rasK), migration = migrationMatrix)
+      
+      # number of  tipNodes
+      numNodes <- length(localizationData)
 
       # Compute the maximal number of coalescence events
-      maxCoalEvent <- length(localizationData) - 1
+      maxCoalEvent <- numNodes - 1
       
       ### LOOP ON LOCI >>>>>>>>>>>>>>>>>
       
@@ -204,8 +207,16 @@ simSpatialCoal <- function(nbSimul, ParamList, rasterStack, nicheMeth, GeneticDa
                                       args = getArgsListMutation(simulation = x, ParamList = ParamList ))
         
         # add genetic values
-        coal[nrow(coal),8] <- initialGenetValue
-        for(i in seq(from = nrow(coal)-1, to = 1)){ coal[i,8] <- coal[i+1,8] + coal[i,7] }
+        values <- rep(NA, times = numNodes + maxCoalEvent)
+        values[length(values)] <- initialGenetValue
+        for(n in seq(from = length(values)-1, to =1, by = -1 )){
+          # find the line of the focal node
+          focal <- which(branchMat[,1] == n)
+          # find the resultant
+          res <- branchMat[focal, 5]
+          # find the genetic value of the parent
+          values[n] <- values[branchMat[focal, 2]] +res
+        }
         
         # Record the genetic data
         n2 <- which(coal[,2] %in% seq(from = 1, to = length(localizationData)))

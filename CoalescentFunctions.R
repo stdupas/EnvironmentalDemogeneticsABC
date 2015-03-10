@@ -145,9 +145,8 @@ simSpatialCoal <- function(nbSimul, ParamList, rasterStack, nicheMeth, GeneticDa
         # Fill child -> Parent information (decoupling children nodes)
         branchMat[,c(1,2)] <- rbind(coal[,c(2,4)] , coal[,c(3,4)])
         
-        # Fill branch length
         # time of apparition of child node
-        timeC <- sapply(X = branchMat[,1],
+        timeC <- vapply(X = branchMat[,1],
                         FUN = function(x, coal){
                           # find position in coalescence table
                           line <- which(coal[, 4] == x)
@@ -155,29 +154,51 @@ simSpatialCoal <- function(nbSimul, ParamList, rasterStack, nicheMeth, GeneticDa
                             # it's ok : get time
                             t <- coal[line, 1] 
                           }else if(length(line) == 0) {
-                            # it's not really ok : node is an initial nod (tip node)
+                            # node is an initial nod (tip node)
                             t <- 0                          
                           }else{
                             # it's really NOT ok
-                            stop("error in filling branch lengths in coalescent : please verify code")
+                            stop("error in filling branch lengths in coalescent : 
+                                 several times of apparition for one node seem to appear : 
+                                 please verify code")
                           }
                           return(t)
                           },
-                        coal = coal )
+                        coal = coal,
+                        FUN.VALUE = c(1))
         
         # time of apparition of parent node
-        timeP <- coal[which(coal[, 4] == branchMat[,2]) ,1]
+        timeP <- vapply(X = branchMat[,2],
+                        FUN = function(x, coal){
+                          # find position in coalescence table
+                          line <- which(coal[, 4] == x)
+                          if(length(line) == 1){
+                            # it's ok : get time
+                            t <- coal[line, 1] 
+                          }else if(length(line) == 0) {
+                            # node is an initial nod (tip node)
+                            t <- 0                          
+                          }else{
+                            # it's really NOT ok
+                            stop("error in filling branch lengths in coalescent : 
+                                 several times of apparition for one node seem to appear : 
+                                 please verify code")
+                          }
+                          return(t)
+                        },
+                        coal = coal,
+                        FUN.VALUE = c(1))
         
         # add branch length
-        coal[,5] <- c(coal[,1][-1] - coal[,1][-nrow(coal)], NA)
+        branchMat[,3] <- timeP - timeC        
         
         # add mutation number
-        coal[,6] <- vapply(X = coal[,5],
+        branchMat[,4] <- vapply(X = branchMat[,3],
                            FUN = function(x){rpois(n = 1, lambda = mutationRate*x)},
                            FUN.VALUE = c(1))
         
         # add resultant 
-        coal[,7] <- resultantFunction(nbrMutations = coal[,6],
+        branchMat[,5] <- resultantFunction(nbrMutations = branchMat[,4],
                                       stepValue = stepValue,
                                       mutationModel = getFunctionMutation(ParamList = ParamList),
                                       args = getArgsListMutation(simulation = x, ParamList = ParamList ))
@@ -316,6 +337,32 @@ coalescentCore <- function(tipDemes, transitionBackward, N){
   return(coalescent)
 }
 
+timeFinder <- function(x, coal){
+  # Find time at which a node appeared for the first time. Function used to compute branch length
+  #
+  # Args:
+  #   x : the ID of the node
+  #   coal : the table returned by coalescentCore
+  #
+  # Returns :
+  #   The time at which the node x appeared for the first time
+  
+  # find position in coalescence table
+  line <- which(coal[, 4] == x)
+  if(length(line) == 1){
+    # it's ok : get time
+    t <- coal[line, 1] 
+  }else if(length(line) == 0) {
+    # node is an initial nod (tip node)
+    t <- 0                          
+  }else{
+    # it's really NOT ok
+    stop("error in filling branch lengths in coalescent : 
+                                 several times of apparition for one node seem to appear : 
+                                 please verify code")
+  }
+  return(t)
+}
 
 coalescent_2_newick <- function(coalescent)
 {

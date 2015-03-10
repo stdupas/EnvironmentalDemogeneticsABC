@@ -58,6 +58,8 @@ setGeneric(
   def=function(object) {standardGeneric("setForward")}
 )
 
+# Get method function
+
 setMethod(
   f="setForward", 
   signature="Forward",
@@ -89,6 +91,19 @@ setMethod(
   }
 )
 
+# Get method function
+setGeneric(
+    name="getForwardMethod",
+    def=function(object) {standardGeneric("getForwardMethod")}
+)
+
+setMethod(
+    f = "getForwardMethod",
+    signature = "Forward",
+    definition = function(object){
+        return(object@method)
+    }
+)
 
 
 # Function to assess the prior values
@@ -102,51 +117,55 @@ setMethod(
   f="setResultPriorFor",
   signature="Forward",
   definition=function(object) {
-    # ask which composante the user wants to assess the prior values
-    flag1 = -1
-    while(flag1 == -1){
-      cat("[Type 0 to quit] What do you want to do? \n1: Assess the prior values of all the components\n2: Assess the prior values of one component\n")
-      choice = as.integer(readline())
-      if(!is.na(choice) && choice!=0 && choice>0 && choice<=2){
-        if(choice == 1){
-          object@niche_r = setResultPriorComp(object@niche_r, 1)
-          object@niche_k = setResultPriorComp(object@niche_k, 1)
-          object@dispersion = setResultPriorComp(object@dispersion, 1)
-          object@mutation = setResultPriorComp(object@mutation, 1)
-          object@generation = setResultPriorComp(object@generation, 1)
-        } else if (choice == 2){
-          flag2 = -1
-          while(flag2 == -1) {
-            cat("[Type 0 to quit] Which component do you want to assess? \n1: Niche_r\n2: Niche_k\n3: Dispersion\n4: Mutation\n5: Generation\n")
-            choice = as.integer(readline())
-            if(choice!=0 && choice<=4&& choice>0 && !is.na(choice)) {
-              if(choice == 1){
-                object@niche_r = setResultPriorComp(object@niche_r, 0)
-              } else if(choice == 2) {
-                object@niche_k = setResultPriorComp(object@niche_k, 0)
-              } else if(choice == 2){
-                object@dispersion = setResultPriorComp(object@dispersion, 0)
-              } else if(choice == 3){
-                object@mutation = setResultPriorComp(object@mutation, 0)
-              } else if(choice == 4){
-                object@generation = setResultPriorComp(object@generation, 0)
-              }
-              flag2 = 1
-            }
-            else if (choice == 0 && !is.na(choice)) {
-              stop("You have stopped the program")
-            } else {
-              print("ERROR: Your entry is incorrect, please try again")
-            }
-          }  
-        }
-        flag1 = 1
-      } else if (choice == 0){
-        stop("You have stopped the program")
+      if(getForwardMethod(object) == "Bayesian" || getForwardMethod(object) == "Likelihood"){
+          print("ERROR: Your method doesn't allow any prior result")
       } else {
-        print("ERROR: Your entry is incorrect, please try again")
+          # ask which composante the user wants to assess the prior values
+          flag1 = -1
+          while(flag1 == -1){
+              cat("[Type 0 to quit] What do you want to do? \n1: Assess the prior values of all the components\n2: Assess the prior values of one component\n")
+              choice = as.integer(readline())
+              if(!is.na(choice) && choice!=0 && choice>0 && choice<=2){
+                  if(choice == 1){
+                      object@niche_r = setResultPriorComp(object@niche_r, 1)
+                      object@niche_k = setResultPriorComp(object@niche_k, 1)
+                      object@dispersion = setResultPriorComp(object@dispersion, 1)
+                      object@mutation = setResultPriorComp(object@mutation, 1)
+                      object@generation = setResultPriorComp(object@generation, 1)
+                  } else if (choice == 2){
+                      flag2 = -1
+                      while(flag2 == -1) {
+                          cat("[Type 0 to quit] Which component do you want to assess? \n1: Niche_r\n2: Niche_k\n3: Dispersion\n4: Mutation\n5: Generation\n")
+                          choice = as.integer(readline())
+                          if(choice!=0 && choice<=4&& choice>0 && !is.na(choice)) {
+                              if(choice == 1){
+                                  object@niche_r = setResultPriorComp(object@niche_r, 0)
+                              } else if(choice == 2) {
+                                  object@niche_k = setResultPriorComp(object@niche_k, 0)
+                              } else if(choice == 2){
+                                  object@dispersion = setResultPriorComp(object@dispersion, 0)
+                              } else if(choice == 3){
+                                  object@mutation = setResultPriorComp(object@mutation, 0)
+                              } else if(choice == 4){
+                                  object@generation = setResultPriorComp(object@generation, 0)
+                              }
+                              flag2 = 1
+                          }
+                          else if (choice == 0 && !is.na(choice)) {
+                              stop("You have stopped the program")
+                          } else {
+                              print("ERROR: Your entry is incorrect, please try again")
+                          }
+                      }  
+                  }
+                  flag1 = 1
+              } else if (choice == 0){
+                  stop("You have stopped the program")
+              } else {
+                  print("ERROR: Your entry is incorrect, please try again")
+              }
+          }
       }
-    }
     return(object)
   }
 )

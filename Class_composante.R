@@ -237,7 +237,7 @@ setMethod(
             while(flag == 0){
                 if(getNbModel(object) > 1) {
                     print(object)
-                    cat("Which model do you want to delete ?")
+                    cat("Which model do you want to delete ? (You can not delete the independant model)")
                     nbToDel = as.integer(readline())
                     if(is.na(nbToDel) || nbToDel> getNbModel(object)){
                         print("ERROR: Your entry is incorrect, please try again")

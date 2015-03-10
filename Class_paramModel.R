@@ -191,7 +191,7 @@ setMethod(
         while(flag == 0){
             cat("[Type 0 to quit] Which one do you want to change?")
             scanner = as.integer(readline())
-            if (is.na(scanner) || (scanner>length(getParam_prior(object)) && scanner<0)){
+            if (is.na(scanner) || scanner>length(getParam_prior(object)) || scanner<0){
                 print("ERROR: Your entry is incorrect, please try again")
             } else if(scanner == 0){
                 stop("You have stopped the program")

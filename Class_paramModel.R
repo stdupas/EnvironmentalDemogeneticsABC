@@ -36,7 +36,11 @@ setMethod(
     .Object@method = method
     print("[Type 0 to quit] What function do you want to use for prior ?")
     data_fct = read.table("functions.txt", sep = ";", header = TRUE, as.is=rep(TRUE, 4))
-    possible = which(data_fct[,1]=="prior")
+    if(method == "Likelihood"){
+        possible = which(data_fct[,1]=="prior" & data_fct[,2] == "uniform")
+    } else {
+        possible = which(data_fct[,1]=="prior")
+    }
     num = c(1:length(possible))
     aff = rep(":", length(possible))
     flag =0

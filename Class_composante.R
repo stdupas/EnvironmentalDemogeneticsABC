@@ -186,14 +186,22 @@ setMethod(
     definition=function(object) {
         flag = 0
         while(flag == 0){
-            cat("[Type 0 to quit] What do you want to do?\n1: Add a model\n2: Delete a model\n3: Change a model\n4: Change the independant model")
+            if(object@name == "niche_k" || object@name == "niche_r") {
+                cat("[Type 0 to quit] What do you want to do?\n1: Add a model\n2: Delete a model\n3: Change a model\n4: Change the independant model")
+            } else {
+                cat("[Type 0 to quit] What do you want to do?\n1: Add a model\n2: Delete a model\n3: Change a model")
+            }
             scanner = as.numeric(readline())
             if(is.na(scanner) || scanner>4 || scanner<0){
                 print("ERROR: Your entry is incorrect, please try again")
             } else if(scanner == 0){
                 stop("You have stopped the program")
             }else{
-                flag = 1
+                if(scanner == 4 && object@name != "niche_k" && object@name != "niche_r") {
+                    print("ERROR: Your entry is incorrect, please try again")
+                } else {
+                    flag = 1
+                }
             }
         }
         if(scanner == 1){

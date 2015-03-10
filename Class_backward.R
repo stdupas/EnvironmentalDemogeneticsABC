@@ -38,10 +38,10 @@ setMethod(
   #      } else if (scanner == 3){
    #         .Object@method = "Likelihood"
         }
-        .Object@niche_r = composante("niche_r")
-        .Object@niche_k = composante("niche_k")
-        .Object@dispersion = composante("dispersion")
-        .Object@mutation = composante("mutation")
+        .Object@niche_r = composante("niche_r", .Object@method)
+        .Object@niche_k = composante("niche_k", .Object@method)
+        .Object@dispersion = composante("dispersion", .Object@method)
+        .Object@mutation = composante("mutation", .Object@method)
         validObject(.Object)
         return(.Object)
     }

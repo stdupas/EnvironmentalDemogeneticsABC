@@ -2,6 +2,7 @@
 setClass(
   Class = "ParamModel",
   representation = representation(
+      method = "character",
     name = "character",
     type_prior = "character",
     param_prior = "numeric",
@@ -30,8 +31,9 @@ setClass(
 setMethod(
   f = "initialize",
   signature = "ParamModel",
-  definition = function(.Object, model_num){
+  definition = function(.Object, model_num, method){
     .Object@name=c("model:",model_num)
+    .Object@method = method
     print("[Type 0 to quit] What function do you want to use for prior ?")
     data_fct = read.table("functions.txt", sep = ";", header = TRUE, as.is=rep(TRUE, 4))
     possible = which(data_fct[,1]=="prior")
@@ -75,8 +77,8 @@ setMethod(
 )
 
 #UserFriendly constructor with 1 arguments
-paramModel = function(model_num){
-  new(Class = "ParamModel", model_num = model_num)
+paramModel = function(model_num, method ){
+  new(Class = "ParamModel", model_num = model_num, method = method)
 }
 
 

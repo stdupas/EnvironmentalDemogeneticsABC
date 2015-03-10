@@ -5,6 +5,7 @@ source("Class_paramModel.R")
 setClass(
   Class = "Model",
   representation = representation(
+      method = "character",
     name = "character",
     type_model = "character",
     param_model = "list",
@@ -32,8 +33,9 @@ setClass(
 setMethod(
   f = "initialize",
   signature = "Model",
-  definition = function(.Object, composante_name, model_num){
+  definition = function(.Object, composante_name, model_num, method){
     .Object@name=c(composante_name, model_num)
+    .Object@method = method
     print("[Type 0 to exit] What function do you want to use for the model ?")
     data_fct = read.table("functions.txt", sep = ";", header = TRUE, as.is=rep(TRUE, 4))
     if(composante_name == "niche_r" || composante_name == "niche_k") {
@@ -77,7 +79,7 @@ setMethod(
     param_name = NULL
     for(i in 1:vec[1]){
       print(paste("========== ParamModel : ",.Object@type_model,", parameter: ",vec[i+1]," =========="))
-      mod = c(mod, paramModel(model_num))
+      mod = c(mod, paramModel(model_num, .Object@method))
       param_name = c(param_name, vec[i+1])
     }
     .Object@param_model = mod 
@@ -88,14 +90,8 @@ setMethod(
 )
 
 
-#UserFriendly constructor
-#model = function(type_model, param_model){
-#  cat("---------- Model : construction ----------\n")
-#  new(Class = "Model", type_model=type_model, param_model=param_model)
-#}
-
-model = function(composante_name, model_num){
-  new(Class = "Model", composante_name=composante_name, model_num=model_num)
+model = function(composante_name, model_num, method){
+  new(Class = "Model", composante_name=composante_name, model_num=model_num, method=method)
 }
 
 

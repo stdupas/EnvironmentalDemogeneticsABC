@@ -238,7 +238,7 @@ setMethod(
             flag = 0
             while(flag == 0){
                 print(object)
-                cat("Which model do you want to change ? Please enter the model's number")
+                cat("Which model do you want to change (except for the independant model) ? Please enter the model's number.")
                 change = as.integer(readline())
                 if(is.na(change) || change> getNbModel(object) || change<1){
                     print("ERROR: Your entry is incorrect, please try again")

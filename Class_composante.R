@@ -248,9 +248,9 @@ setMethod(
             }
             flag = 0
             while(flag == 0){
-                cat("What do you want to change?\n 1. Model function 2. Model parameters")
+                cat("What do you want to change?\n1: Model function \n2: Model parameters")
                 choice = as.integer(readline())
-                if(is.na(choice) || choice> getNbModel(object) || choice<1){
+                if(is.na(choice) || choice> 2 || choice<1){
                     print("ERROR: Your entry is incorrect, please try again")
                 }else{
                     flag = 1

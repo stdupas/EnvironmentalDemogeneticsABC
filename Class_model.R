@@ -5,7 +5,7 @@ source("Class_paramModel.R")
 setClass(
   Class = "Model",
   representation = representation(
-      method = "character",
+    method = "character",
     name = "character",
     type_model = "character",
     param_model = "list",
@@ -105,17 +105,27 @@ setMethod("getType_model", "Model",
           }
 )
 
-#Function to get the "param_model" attribut
-setGeneric("getParam_model",
-           function(object){standardGeneric("getParam_model")})
+#Function to get the "param_name" attribut
+setGeneric("getParam_name",
+           function(object){standardGeneric("getParam_name")})
 
-setMethod("getParam_model", "Model",
+setMethod("getParam_name", "Model",
           function(object){
-            return(object@param_model)
+            return(object@param_name)
           }
 )
 
-# Function to update the number of models
+#Function to get the "name" attribut
+setGeneric("getNameModel",
+           function(object){standardGeneric("getNameModel")})
+
+setMethod("getNameModel", "Model",
+          function(object){
+            return(object@name)
+          }
+)
+
+#Function to update the number of models
 setGeneric(
     name="setNumModel",
     def=function(object, nb) {standardGeneric("setNumModel")}

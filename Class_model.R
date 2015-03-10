@@ -19,7 +19,7 @@ setClass(
   ),
   validity = function(object){
     #Will be changed in order to check if type_model match a known model function
-    if(is.null(object@type_model)){
+    if(is.null(getType_model(object))){
       stop("[ Model : verification ] type_model does not match any know model function")
     } else{
     
@@ -70,16 +70,16 @@ setMethod(
 
     # ask which parameters and prior functions they want
     if(composante_name == "niche_r" || composante_name == "niche_k") {
-        vec = findFunctionFromFile("niche", .Object@type_model)
+        vec = findFunctionFromFile("niche", getType_model(.Object))
     } else {
-        vec = findFunctionFromFile(composante_name, .Object@type_model)
+        vec = findFunctionFromFile(composante_name, getType_model(.Object))
     }
     
     mod = NULL
     param_name = NULL
     for(i in 1:vec[1]){
-      print(paste("========== ParamModel : ",.Object@type_model,", parameter: ",vec[i+1]," =========="))
-      mod = c(mod, paramModel(model_num, .Object@method))
+      print(paste("========== ParamModel : ",getType_model(.Object),", parameter: ",vec[i+1]," =========="))
+      mod = c(mod, paramModel(model_num, getMethodeMod(.Object)))
       param_name = c(param_name, vec[i+1])
     }
     .Object@param_model = mod 
@@ -106,10 +106,10 @@ setMethod("getType_model", "Model",
 )
 
 #Function to get the "param_name" attribut
-setGeneric("getParam_name",
-           function(object){standardGeneric("getParam_name")})
+setGeneric("getParam_nameMod",
+           function(object){standardGeneric("getParam_nameMod")})
 
-setMethod("getParam_name", "Model",
+setMethod("getParam_nameMod", "Model",
           function(object){
             return(object@param_name)
           }
@@ -125,12 +125,21 @@ setMethod("getNameModel", "Model",
           }
 )
 
+#Function to get the "method" attribut
+setGeneric("getMethodeMod",
+           function(object){standardGeneric("getMethodeMod")})
+
+setMethod("getMethodeMod", "Model",
+          function(object){
+            return(object@name)
+          }
+)
+
 #Function to update the number of models
 setGeneric(
     name="setNumModel",
     def=function(object, nb) {standardGeneric("setNumModel")}
 )
-
 
 setMethod(
     f="setNumModel",
@@ -146,8 +155,8 @@ setMethod(
     f="show", 
     signature="Model",
     definition=function(object) {
-        for(i in 1:length(object@param_name)) {
-            cat("          ",object@param_name[i],": ")
+        for(i in 1:length(getParam_nameMod(object))) {
+            cat("          ",getParam_nameMod(object)[i],": ")
             print(object@param_model[[i]])
         }
     }
@@ -164,9 +173,9 @@ setMethod(
     f="setTypeModel",
     signature="Model",
     definition=function(object) {
-        cat("The actual type of function for this model is :", object@type_model,"\n")
+        cat("The actual type of function for this model is :", getType_model(object),"\n")
         # Ask what type the user wants to use
-        newObject = model(object@name[1],object@name[2],object@method)
+        newObject = model(getNameModel(object)[1],getNameModel(object)[2],getMethodeMod(object))
         return(newObject)
     }
 )
@@ -186,9 +195,9 @@ setMethod(
         while(flag == -1) {
           # Ask which parameter the user wants to change
           cat("[Type 0 to quit] Which parameter do you want to change ?\n")
-          cat(paste(1:length(object@param_name),":",object@param_name))
+          cat(paste(1:length(getParam_nameMod(object)),":",getParam_nameMod(object)))
             choice_number = as.integer(readline())
-            if(choice_number!=0 && choice_number<=length(object@param_name) && choice_number>0 && !is.na(choice_number)) {
+            if(choice_number!=0 && choice_number<=length(getParam_nameMod(object)) && choice_number>0 && !is.na(choice_number)) {
               flag2 = -1
               while(flag2 == -1) {
                 # Ask if the user wants to change the prior function or only a parameter of a prior function
@@ -239,10 +248,10 @@ setMethod(
             while(flag == -1) {
               # ask which parameter the user wants to assess the prior values
               cat("[Type 0 to quit] Which parameter do you want to assess? \n")
-              cat(paste(1:length(object@param_name),":",object@param_name,"\n"))
-              cat(length(object@param_name)+1,":", "all parameters\n")
+              cat(paste(1:length(getParam_nameMod(object)),":",getParam_nameMod(object),"\n"))
+              cat(length(getParam_nameMod(object))+1,":", "all parameters\n")
               choice = as.integer(readline())
-              if(choice!=0 && choice<=length(object@param_name)+1 && choice>0 && !is.na(choice)) {
+              if(choice!=0 && choice<=length(getParam_nameMod(object))+1 && choice>0 && !is.na(choice)) {
                 if(choice == length(object@param_name)+1) {
                   for(i in 1:length(object@param_name)) {
                     object@param_model[[i]] = setResult_prior(object@param_model[[i]])
@@ -260,7 +269,7 @@ setMethod(
               }
             }
         } else if(all == 1) {
-          for(i in 1:length(object@param_name)) {
+          for(i in 1:length(getParam_nameMod(object))) {
             object@param_model[[i]] = setResult_prior(object@param_model[[i]])
           }
         }

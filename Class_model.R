@@ -131,7 +131,7 @@ setGeneric("getMethodeMod",
 
 setMethod("getMethodeMod", "Model",
           function(object){
-            return(object@name)
+            return(object@method)
           }
 )
 

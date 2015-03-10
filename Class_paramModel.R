@@ -18,7 +18,7 @@ setClass(
     ),
     validity = function(object){
         if((is.null(object@type_prior))){
-            stop("[ ParamModel : verificatiteston ] no prior type given")
+            stop("[ ParamModel : verification ] no prior type given")
         } else{      
             return (TRUE)
         }

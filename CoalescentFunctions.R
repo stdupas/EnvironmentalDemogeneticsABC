@@ -219,11 +219,7 @@ simSpatialCoal <- function(nbSimul, ParamList, rasterStack, nicheMeth, GeneticDa
         }
         
         # Record the genetic data
-        n2 <- which(coal[,2] %in% seq(from = 1, to = length(localizationData)))
-        n3 <- which(coal[,3] %in% seq(from = 1, to = length(localizationData)))
-        geneticResults[coal[n2, 2], locus] <- coal[n2, 8]
-        geneticResults[coal[n3, 3], locus] <- coal[n3, 8]
-        
+        geneticResults[,locus] <- values[1:numNodes]        
         
       } # END OF LOOP OVER LOCI <<<<<<<<<<<<<
       

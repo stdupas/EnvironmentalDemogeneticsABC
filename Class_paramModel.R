@@ -63,7 +63,11 @@ setMethod(
             flag = 0
             while(flag == 0){
                 print(paste("What do you want for the hyper-parameter ", vec[i+1]," ?"))
-                scanner = as.integer(readline())
+                if (i == 1){
+                    scanner = as.integer(readline())
+                } else {
+                    scanner = as.numeric(readline())
+                }
                 if (is.na(scanner) || (i == 1 && scanner<0)){
                     print("ERROR: Your entry is incorrect, please try again")
                 } else {
@@ -198,7 +202,11 @@ setMethod(
         flag = 0
         while(flag == 0){
             cat("What is its new valor?")
-            new_val = as.integer(readline())
+            if(scanner ==1){
+                new_val = as.integer(readline())
+            } else {
+                new_val = as.numeric(readline())
+            }
             if (is.na(new_val) || (scanner == 1 && new_val<=0)){
                 print("ERROR: Your entry is incorrect, please try again")
             } else {

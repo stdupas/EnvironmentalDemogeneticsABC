@@ -46,7 +46,7 @@ setMethod(
         flag =0
         while(flag ==0){
             print(paste(num, aff,data_fct[possible,2]))    
-            scanner = as.numeric(readline())
+            scanner = as.integer(readline())
             if (is.na(scanner) || (scanner<0 || scanner > length(possible))){
                 print("ERROR: Your entry is incorrect, please try again")
             }else if(scanner == 0){
@@ -63,7 +63,7 @@ setMethod(
             flag = 0
             while(flag == 0){
                 print(paste("What do you want for the hyper-parameter ", vec[i+1]," ?"))
-                scanner = as.numeric(readline())
+                scanner = as.integer(readline())
                 if (is.na(scanner) || (i == 1 && scanner<0)){
                     print("ERROR: Your entry is incorrect, please try again")
                 } else {
@@ -183,7 +183,7 @@ setMethod(
         flag = 0
         while(flag == 0){
             cat("[Type 0 to quit] Which one do you want to change?")
-            scanner = as.numeric(readline())
+            scanner = as.integer(readline())
             if (is.na(scanner) || (scanner>length(getParam_prior(object)) && scanner<0)){
                 print("ERROR: Your entry is incorrect, please try again")
             } else if(scanner == 0){
@@ -195,7 +195,7 @@ setMethod(
         flag = 0
         while(flag == 0){
             cat("What is its new valor?")
-            new_val = as.numeric(readline())
+            new_val = as.integer(readline())
             if (is.na(new_val) || (scanner == 1 && new_val<=0)){
                 print("ERROR: Your entry is incorrect, please try again")
             } else {

@@ -191,7 +191,7 @@ setMethod(
             } else {
                 cat("[Type 0 to quit] What do you want to do?\n1: Add a model\n2: Delete a model\n3: Change a model")
             }
-            scanner = as.numeric(readline())
+            scanner = as.integer(readline())
             if(is.na(scanner) || scanner>5 || scanner<0){
                 print("ERROR: Your entry is incorrect, please try again")
             } else if(scanner == 0){
@@ -208,7 +208,7 @@ setMethod(
             flag = 0
             while(flag == 0){
                 cat("How many models do you want to add ?")
-                nbToAdd = as.numeric(readline())
+                nbToAdd = as.integer(readline())
                 if(is.na(nbToAdd) || nbToAdd<1){
                     print("ERROR: Your entry is incorrect, please try again")
                 }else{
@@ -222,7 +222,7 @@ setMethod(
                 if(object@nbModel > 1) {
                     print(object)
                     cat("Which model do you want to delete ?")
-                    nbToDel = as.numeric(readline())
+                    nbToDel = as.integer(readline())
                     if(is.na(nbToDel) || nbToDel> getNbModel(object)){
                         print("ERROR: Your entry is incorrect, please try again")
                     }else{
@@ -239,7 +239,7 @@ setMethod(
             while(flag == 0){
                 print(object)
                 cat("Which model do you want to change ? Please enter the model's number")
-                change = as.numeric(readline())
+                change = as.integer(readline())
                 if(is.na(change) || change> getNbModel(object) || change<1){
                     print("ERROR: Your entry is incorrect, please try again")
                 }else{

@@ -21,7 +21,7 @@ setMethod(
         flag = 0
         while(flag == 0){
             cat("[Type 0 to quit] What method do you want to use?\n1: ABC\n")#2: Bayesian\n3: Likelihood\n")
-            scanner = as.numeric(readline())
+            scanner = as.integer(readline())
             #Only for ABC, otherwise change the 1 into a 3
             if(is.na(scanner) || scanner>1 || scanner<0){
                 print("ERROR: Your entry is incorrect, please try again")
@@ -65,7 +65,7 @@ setMethod(
     flag = 0
     while(flag == 0){
       cat("[Type 0 to quit] Which composante do you want to change?\n1: Niche_r\n2: Niche_k\n3: Dispersion\n4: Mutation")
-      scanner = as.numeric(readline())
+      scanner = as.integer(readline())
       if(is.na(scanner) || scanner>4 || scanner<0){
         print("ERROR: Your entry is incorrect, please try again")
       } else if(scanner == 0){

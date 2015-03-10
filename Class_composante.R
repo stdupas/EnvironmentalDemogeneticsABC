@@ -192,12 +192,12 @@ setMethod(
                 cat("[Type 0 to quit] What do you want to do?\n1: Add a model\n2: Delete a model\n3: Change a model")
             }
             scanner = as.numeric(readline())
-            if(is.na(scanner) || scanner>4 || scanner<0){
+            if(is.na(scanner) || scanner>5 || scanner<0){
                 print("ERROR: Your entry is incorrect, please try again")
             } else if(scanner == 0){
                 stop("You have stopped the program")
             }else{
-                if(scanner == 4 && object@name != "niche_k" && object@name != "niche_r" || object@name == "generation") {
+                if(scanner == 4 && object@name != "niche_k" && object@name != "niche_r" && object@name != "generation") {
                     print("ERROR: Your entry is incorrect, please try again")
                 } else {
                     flag = 1

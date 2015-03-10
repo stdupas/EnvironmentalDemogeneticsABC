@@ -34,21 +34,30 @@ loadParamList = function(file){
 }
 
 #Function to get the "result_prior"
+#Args: object paramList, component name, c(model number, parameter model) or 0 for independant model
 setGeneric("getResultPrior",
-           function(object,comp,mod,param){standardGeneric("getResultPrior")})
+           function(object,comp,param){standardGeneric("getResultPrior")})
 
 setMethod("getResultPrior", "ParamList",
-          function(object,comp,mod,param){
+          function(object,comp,param){
             if(comp == "niche_r") {
-                return(getResult_prior(object@niche_r@listModel[[mod]]@param_model[[param]]))
+                if(param[1] == 0) {
+                    return(getResult_prior(object@niche_r@independance))
+                } else {
+                    return(getResult_prior(object@niche_r@listModel[[param[1]]]@param_model[[param[2]]]))
+                }
             } else if(com == "niche_k") {
-                return(getResult_prior(object@niche_k@listModel[[mod]]@param_model[[param]]))
+                if(param[1] == 0) {
+                    return(getResult_prior(object@niche_k@independance))
+                } else {
+                    return(getResult_prior(object@niche_k@listModel[[param[1]]]@param_model[[param[2]]]))
+                }
             } else if(comp == "dispersion") {
-                return(getResult_prior(object@dispersion@listModel[[mod]]@param_model[[param]]))
+                return(getResult_prior(object@dispersion@listModel[[param[1]]]@param_model[[param[2]]]))
             } else if(comp == "mutation") {
-                return(getResult_prior(object@mutation@listModel[[mod]]@param_model[[param]]))
+                return(getResult_prior(object@mutation@listModel[[param[1]]]@param_model[[param[2]]]))
             } else if(comp == "generation") {
-                return(getResult_prior(object@generation@listModel[[mod]]@param_model[[param]]))
+                return(getResult_prior(object@generation@listModel[[param[1]]]@param_model[[param[2]]]))
             }
           }
 )

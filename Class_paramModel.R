@@ -159,6 +159,7 @@ setMethod(
     definition=function(object) {
         if(getParamMethod(object) == "Likelihood"){
             print("You can not change the prior type with the method: Likelihood")
+            return(object)
         } else {
             print(paste("The actual prior function is: ", getType_prior(object)))
             newObject = new(Class = "ParamModel", model_num = getNameParamModel(object)[2], method = object@method)

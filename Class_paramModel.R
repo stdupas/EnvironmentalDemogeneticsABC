@@ -27,7 +27,7 @@ setClass(
 )
 
 
-#Initiateur with 1 arguments
+#Initiateur
 setMethod(
     f = "initialize",
     signature = "ParamModel",
@@ -80,11 +80,12 @@ setMethod(
     }
 )
 
-#UserFriendly constructor with 1 arguments
+#UserFriendly constructor
 paramModel = function(model_num, method ){
     new(Class = "ParamModel", model_num = model_num, method = method)
 }
 
+############################## GET METHODS ####################################
 
 #Function to get the "type_prior" attribut
 setGeneric("getType_prior",
@@ -116,16 +117,6 @@ setMethod("getNameParamModel", "ParamModel",
           }
 )
 
-#Function to get the "param_prior" attribut
-setGeneric("getParam_prior",
-           function(object){standardGeneric("getParam_prior")})
-
-setMethod("getParam_prior", "ParamModel",
-          function(object){
-              return(object@param_prior)
-          }
-)
-
 #Function to get the "result_prior" attribut
 setGeneric("getResult_prior",
            function(object){standardGeneric("getResult_prior")})
@@ -146,7 +137,17 @@ setMethod("getParamMethod", "ParamModel",
           }
 )
 
+#Function to get the "param_name" attribut
+setGeneric("getParam_name",
+           function(object){standardGeneric("getParam_name")})
 
+setMethod("getParam_name", "ParamModel",
+          function(object){
+              return(object@param_name)
+          }
+)
+
+######################################## SET METHODS ###################################
 # Function to update type_prior
 setGeneric(
     name="setType_prior",
@@ -161,11 +162,12 @@ setMethod(
             print("You can not change the prior type with the method: Likelihood")
         } else {
             print(paste("The actual prior function is: ", getType_prior(object)))
-            newObject = new(Class = "ParamModel", model_num = getNameParamModel(object)[2], method = object@method)
+            newObject = new(Class = "ParamModel", model_num = getNameParamModel(object)[2], method = getParamMethod(object))
             return(newObject)   
         }
     }
 )
+
 
 # Function to update param_prior
 setGeneric(
@@ -179,7 +181,7 @@ setMethod(
     definition=function(object) {
         print("The actual prior hyper-parameters are: ")
         num = c(1:length(getParam_prior(object)))
-        cat(paste(num,":",object@param_name,"\n"))
+        cat(paste(num,":",getParam_name(object),"\n"))
         flag = 0
         while(flag == 0){
             cat("[Type 0 to quit] Which one do you want to change?")
@@ -208,6 +210,30 @@ setMethod(
 )
 
 
+#Function to change the Result_prior
+setGeneric("setResult_prior",
+           function(object){standardGeneric("setResult_prior")})
+
+setMethod("setResult_prior", "ParamModel",
+          function(object){
+              object@result_prior = do.call(getType_prior(object), as.list(getParam_prior(object)))
+              return(object)
+          }
+)
+
+
+#Function to clean the Result_prior
+setGeneric("delResult_prior",
+           function(object){standardGeneric("delResult_prior")})
+
+setMethod("delResult_prior", "ParamModel",
+          function(object){
+              object@result_prior = numeric(0)
+              return(object)
+          }
+)
+
+
 
 findFunctionFromFile = function(model_type,fct_name){
     data_fct = read.table("functions.txt", sep = ";", header = TRUE)
@@ -224,35 +250,13 @@ findFunctionFromFile = function(model_type,fct_name){
     }
 }
 
-#Function to change the Result_prior
-setGeneric("setResult_prior",
-           function(object){standardGeneric("setResult_prior")})
-
-setMethod("setResult_prior", "ParamModel",
-          function(object){
-              object@result_prior = do.call(getType_prior(object), as.list(getParam_prior(object)))
-              return(object)
-          }
-)
-
-#Function to clean the Result_prior
-setGeneric("delResult_prior",
-           function(object){standardGeneric("delResult_prior")})
-
-setMethod("delResult_prior", "ParamModel",
-          function(object){
-              object@result_prior = numeric(0)
-              return(object)
-          }
-)
-
 
 # Function to print the parameters of the prior functions
 setMethod(
     f="show", 
     signature="ParamModel",
     definition=function(object) {
-        param = paste(object@param_name,"=",object@param_prior)
-        cat(object@type_prior,"(",param,")\n")
+        param = paste(getParam_name(object),"=",getParam_prior(object))
+        cat(getType_prior(object),"(",param,")\n")
     }
 )

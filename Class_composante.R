@@ -32,7 +32,7 @@ setMethod(
         .Object@method=method
         flag = -1
         while(flag == -1){
-            cat("What is the combinaison method for the component ", .Object@name," ?\n1: Additive\n2: Multiplicative\n")
+            cat("What is the combinaison method for the component ", name," ?\n1: Additive\n2: Multiplicative\n")
             scanner = as.integer(readline())
             if(!is.na(scanner) && scanner>0 && scanner<3) {
                 if(scanner == 1){
@@ -45,9 +45,9 @@ setMethod(
                 print("ERROR: Your entry is incorrect, please try again")
             } 
         }
-        if(.Object@name == "niche_r" || .Object@name == "niche_k" || .Object@name == "generation"){
+        if(name == "niche_r" || name == "niche_k" || name == "generation"){
             cat("=========== Creation of the independant valor ==========\n")
-            .Object@independance = paramModel(0, .Object@method)
+            .Object@independance = paramModel(0, getMethodComp(.Object))
         }
 
         # repeat while the given number is incorrect
@@ -67,9 +67,9 @@ setMethod(
         }
         
         mod = NULL
-        for(i in 1:.Object@nbModel) {
+        for(i in 1:getNbModel(.Object)) {
             print(paste("========== Composante : ",name,", model n°", i," =========="))
-            mod = c(mod, model(name,i, .Object@method))
+            mod = c(mod, model(name,i, getMethodComp(.Object)))
         }
         
         .Object@listModel = mod
@@ -78,25 +78,13 @@ setMethod(
     }
 )
 
+
 # User-friendly constructor of composante
 composante = function(name, method) {
     new(Class="Composante", name=name, method = method)
 }
 
-# Functions get 
-# Get the list of models for this composante
-setGeneric(
-    name="getListModels",
-    def=function(object) {standardGeneric("getListModels")}
-)
-
-setMethod(
-    f="getListModels", 
-    signature="Composante",
-    definition=function(object) {
-        return(object@listModel)
-    }
-)
+#################################### GET METHODS ####################################
 
 # Get the number of models for this composante
 setGeneric(
@@ -126,6 +114,34 @@ setMethod(
     }
 )
 
+# Get the combinaison type of the composante
+setGeneric(
+    name="getType_combinaison",
+    def=function(object) {standardGeneric("getType_combinaison")}
+)
+
+setMethod(
+    f="getType_combinaison", 
+    signature="Composante",
+    definition=function(object) {
+        return(object@type_combinaison)
+    }
+)
+
+# Get the method of the composante
+setGeneric(
+    name="getMethodComp",
+    def=function(object) {standardGeneric("getMethodComp")}
+)
+
+setMethod(
+    f="getMethodComp", 
+    signature="Composante",
+    definition=function(object) {
+        return(object@method)
+    }
+)
+
 # Function to add model(s) in the composante (used by the function in paramList)
 setGeneric(
     name="addModel",
@@ -137,9 +153,9 @@ setMethod(
     signature="Composante",
     definition=function(object, nbToAdd) {
         for(i in 1:nbToAdd) {
-            object@nbModel = object@nbModel+1
+            object@nbModel = getNbModel(object)+1
             
-            newMod = model(object@name, object@nbModel, object@method)
+            newMod = model(getNameComp(object), getNbModel(object), getMethodComp(object))
             object@listModel = c(object@listModel, newMod)
         }
         rm(newMod)
@@ -165,9 +181,9 @@ setMethod(
             object@listModel = object@listModel[-(i-compteur)]
             compteur = compteur+1
         }
-        object@nbModel = object@nbModel - length(numModelToDel)
+        object@nbModel = getNbModel(object) - length(numModelToDel)
         # Update of the models number
-        for(i in 1:object@nbModel) {
+        for(i in 1: getNbModel(object) ) {
             object@listModel[[i]] = setNumModel(object@listModel[[i]], i)
         }
         return(object)
@@ -186,7 +202,7 @@ setMethod(
     definition=function(object) {
         flag = 0
         while(flag == 0){
-            if(object@name == "niche_k" || object@name == "niche_r" || object@name == "generation") {
+            if(getNameComp(object) == "niche_k" || getNameComp(object) == "niche_r" || getNameComp(object) == "generation") {
                 cat("[Type 0 to quit] What do you want to do?\n1: Add a model\n2: Delete a model\n3: Change a model\n4: Change the independant model")
             } else {
                 cat("[Type 0 to quit] What do you want to do?\n1: Add a model\n2: Delete a model\n3: Change a model")
@@ -197,7 +213,7 @@ setMethod(
             } else if(scanner == 0){
                 stop("You have stopped the program")
             }else{
-                if(scanner == 4 && object@name != "niche_k" && object@name != "niche_r" && object@name != "generation") {
+                if(scanner == 4 && getNameComp(object) != "niche_k" && getNameComp(object) != "niche_r" && getNameComp(object) != "generation") {
                     print("ERROR: Your entry is incorrect, please try again")
                 } else {
                     flag = 1
@@ -219,7 +235,7 @@ setMethod(
         } else if(scanner == 2){
             flag = 0
             while(flag == 0){
-                if(object@nbModel > 1) {
+                if(getNbModel(object) > 1) {
                     print(object)
                     cat("Which model do you want to delete ?")
                     nbToDel = as.integer(readline())
@@ -304,8 +320,8 @@ setMethod(
     definition=function(object) {
         cat(".................... Combination type ....................\n")
         cat("           ")
-        cat(object@type_combinaison,"\n")
-        if(object@name == "niche_r" || object@name == "niche_k" || object@name == "generation") {
+        cat(getType_combinaison(object),"\n")
+        if(getNameComp(object) == "niche_r" || getNameComp(object) == "niche_k" || getNameComp(object) == "generation") {
             cat(".................... Independant model ....................\n")
             cat("           ")
             print(object@independance)
@@ -329,24 +345,24 @@ setMethod(
     signature="Composante",
     definition=function(object, all) {
         # if there is an independant model
-        if(object@name == "niche_k" || object@name == "niche_r" || object@name == "generation") {
+        if(getNameComp(object) == "niche_k" || getNameComp(object) == "niche_r" || getNameComp(object) == "generation") {
             if(all == 0) { 
                 # ask which model the user wants to assess
                 cat("[Type 0 to quit] Which model do you want to assess? Type the model number.\n")
                 print(object)
-                cat("Type", object@nbModel+1, "to assess the independant model.\n")
-                cat("Type", object@nbModel+2, "to assess all models.\n")
+                cat("Type", getNbModel(object)+1, "to assess the independant model.\n")
+                cat("Type", getNbModel(object)+2, "to assess all models.\n")
                 
 
                 flag = -1
                 while(flag == -1) {
                     choice = as.integer(readline())
-                    if(choice!=0 && choice<=object@nbModel+2 && choice>0 && !is.na(choice)) {
-                        if(choice == object@nbModel+1) {
+                    if(choice!=0 && choice<=getNbModel(object)+2 && choice>0 && !is.na(choice)) {
+                        if(choice == getNbModel(object)+1) {
                             object@independance = setResult_prior(object@independance)
-                        } else if(choice == object@nbModel+2) {
+                        } else if(choice == getNbModel(object)+2) {
                             object@independance = setResult_prior(object@independance)
-                            for(i in 1:object@nbModel) {
+                            for(i in 1:getNbModel(object)) {
                                 object@listModel[[i]] = setResultPriorMod(object@listModel[[i]],1)
                             }
                         }
@@ -364,7 +380,7 @@ setMethod(
                 }
             } else if(all == 1) {
                 object@independance = setResult_prior(object@independance)
-                for(i in 1:object@nbModel) {
+                for(i in 1:getNbModel(object)) {
                     object@listModel[[i]] = setResultPriorMod(object@listModel[[i]],1)
                 }
             }
@@ -375,15 +391,15 @@ setMethod(
                 # ask which model the user wants to assess
                 cat("[Type 0 to quit] Which model do you want to assess? Type the model number.\n")
                 print(object)
-                cat("Type", object@nbModel+1, "to assess all models.\n")
+                cat("Type", getNbModel(object)+1, "to assess all models.\n")
                 
 
                 flag = -1
                 while(flag == -1) {
                     choice = as.integer(readline())
-                    if(choice!=0 && choice<=object@nbModel+1 && choice>0 && !is.na(choice)) {
-                        if(choice == object@nbModel+1) {
-                            for(i in 1:object@nbModel) {
+                    if(choice!=0 && choice<=getNbModel(object)+1 && choice>0 && !is.na(choice)) {
+                        if(choice == getNbModel(object)+1) {
+                            for(i in 1:getNbModel(object)) {
                                 object@listModel[[i]] = setResultPriorMod(object@listModel[[i]],1)
                             }
                         }
@@ -400,7 +416,7 @@ setMethod(
                     }
                 }
             } else if(all == 1) {
-                for(i in 1:object@nbModel) {
+                for(i in 1:getNbModel(object)) {
                     object@listModel[[i]] = setResultPriorMod(object@listModel[[i]],1)
                 }
             }

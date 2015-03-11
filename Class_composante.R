@@ -287,14 +287,26 @@ setMethod(
             flag = 0
             while(flag == 0){
                 if(getNameComp(object) == "niche_k" || getNameComp(object) == "niche_r" || getNameComp(object) == "generation") {
-                    if()
-
+                    if(getNb_stacks(object) == getNbModel(object)) {
+                        cat("ERROR: You can not have more models than stacks.")
+                    } else {
+                        cat("How many models do you want to add ?")
+                        nbToAdd = as.integer(readline())
+                        if(is.na(nbToAdd) || nbToAdd<1){
+                            cat("ERROR: Your entry is incorrect, please try again")
+                        } else if(getNb_stacks(object) < getNbModel(object)+nbToAdd) {
+                            cat("How many models do you want to add ?")
+                        } else {    
+                            flag = 1
+                            object = addModel(object, nbToAdd)
+                        }
+                    }
                 } else {
                     cat("How many models do you want to add ?")
                     nbToAdd = as.integer(readline())
                     if(is.na(nbToAdd) || nbToAdd<1){
                         print("ERROR: Your entry is incorrect, please try again")
-                    }else{
+                    } else {    
                         flag = 1
                         object = addModel(object, nbToAdd)
                     }

@@ -53,41 +53,41 @@ setMethod(
             cat("=========== Creation of the independant valor ==========\n")
             .Object@independance = paramModel(0, getMethodComp(.Object))
         }
-
-        # repeat while the given number is incorrect
-        flag = -1
-        while(flag == -1) {  
-            if(name == "niche_r" || name == "niche_k" || name == "generation"){
-                vec = 1:getNb_stacks(.Object)
-                vec2 = getNames_stacks(.Object)
-                vec3 = NULL
-                compteur = 0
-                sortie = 0
-                mod = NULL
-                while (compteur < getNb_stacks(.Object) && sortie == 0){
-                    cat("Which variable do you wan't to build ? (type 0 if you don't wan't to build any other model)\n")
-                    print(vec3)
-                    print(is.null(vec3))
-                    if(is.null(vec3)){
-                        cat(paste(vec,":", vec2),"\n")
-                    } else {
-                        cat(paste(vec,":", vec2[-vec3]),"\n")
-                    }
-                    scanner = as.integer(readline())
-                    if((scanner<getNb_stacks(.Object) && scanner>0) && !is.na(scanner)) {
-                        vec3 = c(vec3, scanner)
-                        .Object@nbModel = .Object@nbModel + 1
-                        mod = c(mod, model(name,compteur+1, getMethodComp(.Object)))
-                        compteur = compteur + 1
-                    }
-                    else if(scanner==0 && !is.na(scanner)) {
-                        sortie = 1
-                    }
-                    else {
-                        print("ERROR: Your entry is incorrect, please try again")
-                    } 
+        
+        if(name == "niche_r" || name == "niche_k" || name == "generation"){
+            vec2 = getNames_stacks(.Object)
+            vec3 = NULL
+            compteur = 0
+            sortie = 0
+            mod = NULL
+            while (compteur < getNb_stacks(.Object) && sortie == 0){
+                vec = 1:(getNb_stacks(.Object) - length(vec3))
+                cat("Which variable do you wan't to build ? (type 0 if you don't wan't to build any other model)\n")
+                if(is.null(vec3)){
+                    cat(paste(vec,":", vec2),"\n")
+                } else {
+                    cat(paste(vec,":", vec2[-vec3]),"\n")
                 }
-            } else {
+                scanner = as.integer(readline())
+                if((scanner<=length(vec) && scanner>0) && !is.na(scanner)) {
+                    vec3 = c(vec3, scanner)
+                    .Object@nbModel = length(vec3)
+                    print(.Object@nbModel)
+                    mod = c(mod, model(name,compteur+1, getMethodComp(.Object), vec2[scanner]))
+                    compteur = compteur + 1
+                }
+                else if(scanner==0 && !is.na(scanner)) {
+                    sortie = 1
+                }
+                else {
+                    print("ERROR: Your entry is incorrect, please try again")
+                } 
+            }
+        } else {
+            
+            # repeat while the given number is incorrect
+            flag = -1
+            while(flag == -1) {  
                 choice_number = as.integer(readline(paste("[Type 0 to quit] How many models for the component",name,"?")))
                 if(choice_number!=0 && choice_number>0 && !is.na(choice_number)) {
                     .Object@nbModel = choice_number
@@ -104,7 +104,7 @@ setMethod(
             mod = NULL
             for(i in 1:getNbModel(.Object)) {
                 print(paste("========== Composante : ",name,", model n°", i," =========="))
-                mod = c(mod, model(name,i, getMethodComp(.Object)))
+                mod = c(mod, model(name,i, getMethodComp(.Object)), "STANDARD")
             }
         }
         

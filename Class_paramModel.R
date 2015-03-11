@@ -68,7 +68,7 @@ setMethod(
                 } else {
                     scanner = as.numeric(readline())
                 }
-                if (is.na(scanner) || (i == 1 && scanner<0)){
+                if (is.na(scanner) || (i == 1 && scanner<1)){
                     print("ERROR: Your entry is incorrect, please try again")
                 } else {
                     flag = 1

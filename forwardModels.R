@@ -300,6 +300,7 @@ demeSizes
 likelihood <- function(release,
                        recovery,
                        rasterStack,
+                       EnvData,
                        dispersionFunction,
                        dispersionParameters,
                        nicheKFunctionList,
@@ -317,17 +318,27 @@ likelihood <- function(release,
   generationTime <- generationTimeParameters$mean
   generationTimeSD <- generationTimeParameters$mean*generationTimeParameters$SD
   minDates = min(release$birthDate)
-  maxDates = max(recovery$Date)
+  maxDates = min(max(recovery$birthDate),max(as.Date(colnames(EnvData))))
+  Dates <- as.Date(as.Date(minDates):as.Date(maxDates),origin="1970/01/01")
   #
-  # construction of observed recovery array
+  # construction of observed recovery array and expected recovery
   #
   recovery$demeNb <- cellFromXY(object = rasterStack, xy = recovery[, c("x", "y")])
-  recoverySizes <- array(0,dim=c(nrow(EnvData),length(Dates)),dimnames = list(1:nrow(EnvData),as.character(Dates)))
-  recovery <- aggregation(recovery,BY=c("birthDate","demeNb"),methodes=c("Paste","Mean","Mean","Name","Name","Sum"))
+  expectedRecoverySizes <- array(0,dim=c(nrow(EnvData),length(Dates)),dimnames = list(1:nrow(EnvData),as.character(Dates)))
+  recovery <- aggregation(recovery,BY=c("birthDate","demeNb"),methodes=c("Mean","Mean","Name","Sum","Name"))
+  recovery <- recovery[which(as.Date(recovery$birthDate)<=as.Date("2003/12/31")),]
   for (i in rownames(recovery))
-  {recoverySizes[recovery[i,"demeNb"],as.character(recovery[i,"birthDate"])] <- recovery[i,"demeSize"]}
-  #
-  # construction of 
-  #
+  {expectedRecoverySizes[recovery[i,"demeNb"],as.character(recovery[i,"birthDate"])] <- recovery[i,"size"]}
+  # construction of likelihood with expected recovery
+  for (Date in colnames(expectedRecoverySizes)) # Date = colnames(expectedRecoverySizes)[1]
+  {
+    values(rasterStack) <- EnvData[,Date,]
+    K <- values(nicheFunctionForRasterStack(functionList = nicheKFunctionList, 
+                                            rasterStack = rasterStack,
+                                            args = nicheKParametersList))#meth="arithmetic"
+    # competition: cuts deme sizes to K
+    expectedRecoverySizes[,Date] <- (expectedRecoverySizes[,Date]>K)*K + (expectedRecoverySizes[,Date]<=K)*expectedRecoverySizes[,Date]
+    
+  }
   
 }

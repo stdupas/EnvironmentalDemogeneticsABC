@@ -19,7 +19,9 @@ setClass(
 setMethod(
     f="initialize",
     signature="Forward",
-    definition=function(.Object) {
+    definition=function(.Object, nb_stacks, names_stacks) {
+        .Object@nb_stacks = nb_stacks
+        .Object@names_stacks = names_stacks
         flag = 0
         while(flag == 0){
             cat("[Type 0 to quit] What method do you want to use?\n1: Bayesian\n2: Likelihood\n")
@@ -48,8 +50,8 @@ setMethod(
 )
 
 # User-friendly constructor of forward
-forward = function() {
-    new(Class="Forward")
+forward = function(nb_stacks, names_stacks) {
+    new(Class="Forward", nb_stacks = nb_stacks, names_stacks = names_stacks)
 }
 
 # Change any thing in the forward object

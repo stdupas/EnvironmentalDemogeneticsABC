@@ -17,7 +17,9 @@ setClass(
 setMethod(
     f="initialize",
     signature="Backward",
-    definition=function(.Object) {
+    definition=function(.Object, nb_stacks, names_stacks) {
+        .Object@nb_stacks = nb_stacks
+        .Object@names_stacks = names_stacks
         flag = 0
         while(flag == 0){
             cat("[Type 0 to quit] What method do you want to use?\n1: ABC\n")#2: Bayesian\n3: Likelihood\n")
@@ -48,8 +50,8 @@ setMethod(
 )
 
 # User-friendly constructor of backward
-backward = function() {
-    new(Class="Backward")
+backward = function(nb_stacks, names_stacks) {
+    new(Class="Backward", nb_stacks = nb_stacks, names_stacks = names_stacks)
 }
 
 # Change any thing in the model

@@ -282,18 +282,37 @@ setMethod(
                 }
             }
         }
+        # Add a model
         if(scanner == 1){
             flag = 0
             while(flag == 0){
-                cat("How many models do you want to add ?")
-                nbToAdd = as.integer(readline())
-                if(is.na(nbToAdd) || nbToAdd<1){
-                    print("ERROR: Your entry is incorrect, please try again")
-                }else{
-                    flag = 1
-                    object = addModel(object, nbToAdd)
+                if(getNameComp(object) == "niche_k" || getNameComp(object) == "niche_r" || getNameComp(object) == "generation") {
+                    if(getNb_stacks(object) == getNbModel(object)) {
+                        cat("ERROR: You can not have more models than stacks.")
+                    } else {
+                        cat("How many models do you want to add ?")
+                        nbToAdd = as.integer(readline())
+                        if(is.na(nbToAdd) || nbToAdd<1){
+                            cat("ERROR: Your entry is incorrect, please try again")
+                        } else if(getNb_stacks(object) < getNbModel(object)+nbToAdd) {
+                            cat("ERROR: You can not have more models than stacks.")
+                        } else {    
+                            flag = 1
+                            object = addModel(object, nbToAdd)
+                        }
+                    }
+                } else {
+                    cat("How many models do you want to add ?")
+                    nbToAdd = as.integer(readline())
+                    if(is.na(nbToAdd) || nbToAdd<1){
+                        print("ERROR: Your entry is incorrect, please try again")
+                    } else {    
+                        flag = 1
+                        object = addModel(object, nbToAdd)
+                    }
                 }
             }
+        # Delete a model
         } else if(scanner == 2){
             flag = 0
             while(flag == 0){
@@ -311,7 +330,7 @@ setMethod(
                     stop("There is only one model left in this composante. You can not delete it.")
                 }
             }
-            
+        # Change a model
         } else if(scanner == 3) {
             flag = 0
             while(flag == 0){
@@ -341,6 +360,7 @@ setMethod(
             else if(choice == 2) {
                 object@listModel[[change]] = setPrior(object@listModel[[change]])
             }
+        # Change the independant model
         } else if (scanner == 4){
             flag2 = -1
             while(flag2 == -1) {

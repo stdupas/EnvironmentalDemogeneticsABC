@@ -10,7 +10,9 @@ setClass(
         listModel="list",
         nbModel="numeric",
         type_combinaison = "character",
-        independance = "ParamModel"
+        independance = "ParamModel",
+        nb_stacks = "numeric",
+        names_stacks = "character"
     ),
     validity=function(object) {
         if(object@nbModel <= 0) {
@@ -27,9 +29,11 @@ setClass(
 setMethod(
     f="initialize",
     signature="Composante",
-    definition=function(.Object, name, method) {
+    definition=function(.Object, name, method, nb_stacks, names_stacks) {
         .Object@name=name
         .Object@method=method
+        .Object@nb_stacks = nb_stacks
+        .Object@names_stacks = names_stacks
         flag = -1
         while(flag == -1){
             cat("What is the combinaison method for the component ", name," ?\n1: Additive\n2: Multiplicative\n")
@@ -80,8 +84,8 @@ setMethod(
 
 
 # User-friendly constructor of composante
-composante = function(name, method) {
-    new(Class="Composante", name=name, method = method)
+composante = function(name, method, nb_stacks, names_stacks) {
+    new(Class="Composante", name=name, method = method, nb_stacks = nb_stacks, names_stacks = names_stacks)
 }
 
 #################################### GET METHODS ####################################

@@ -215,7 +215,7 @@ setMethod(
     signature="Composante",
     definition=function(object, nbToAdd) {
         if(getNameComp(object) == "niche_k" || getNameComp(object) == "niche_r" || getNameComp(object) == "generation") {
-            cat("Which model do you want to add?")
+            cat("Which layer do you want to add?")
             cat()
         }
         for(i in 1:nbToAdd) {

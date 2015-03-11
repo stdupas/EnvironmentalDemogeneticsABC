@@ -76,46 +76,35 @@ setMethod("getResultPrior", "ParamList",
 )
 
 # Constructor of paramList
-setGeneric(
-    name="paramList",
-    def=function(env) {standardGeneric("paramList")}
-)
-
-setMethod(
-    f="paramList",
-    signature="ParamList",
-    definition=function(env) {
-        flag = -1
-        while(flag == -1) {
-            cat("[Type 0 to quit] What do you want to do?\n1: Forward\n2: Backward\n")
-            scanner = as.integer(readline())
-            if(is.na(scanner) || scanner>2 || scanner<0) {
-                print("ERROR: Your entry is incorrect, please try again")
-            } else if(scanner == 0) {
-                stop("You have stopped the program")
-            } else {
-                flag = 1
-            }
+paramList = function(env) {
+    flag = -1
+    while(flag == -1) {
+        cat("[Type 0 to quit] What do you want to do?\n1: Forward\n2: Backward\n")
+        scanner = as.integer(readline())
+        if(is.na(scanner) || scanner>2 || scanner<0) {
+            print("ERROR: Your entry is incorrect, please try again")
+        } else if(scanner == 0) {
+            stop("You have stopped the program")
+        } else {
+            flag = 1
         }
-        # if the environmental data is an array
-        if(is.array(env)) {
-            na = dimnames(env)[3]
-            nb = dim(env)[3]
-        }
-        # if the environmental data is a rasterstack
-        else {
-            na = names(env)
-            nb = length(na)
-        }
-        # initialisation of the object
-        if(scanner == 1) {
-            .Object = forward()
-        } else if(scanner == 2) {
-            .Object = backward()
-        }
-        .Object@nb_stacks = nb
-        .Object@names_stacks = na
-        validObject(.Object)
-        return(.Object)
     }
-)
+    # if the environmental data is an array
+    if(is.array(env)) {
+        na = dimnames(env)[3]
+        nb = dim(env)[3]
+    }
+    # if the environmental data is a rasterstack
+    else {
+        na = names(env)
+        nb = length(na)
+    }
+    # initialisation of the object
+    if(scanner == 1) {
+        .Object = forward(nb,na)
+    } else if(scanner == 2) {
+        .Object = backward(nb,na)
+    }
+    return(.Object)
+}
+

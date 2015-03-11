@@ -33,8 +33,8 @@ setClass(
 setMethod(
   f = "initialize",
   signature = "Model",
-  definition = function(.Object, composante_name, model_num, method){
-    .Object@name=c(composante_name, model_num)
+  definition = function(.Object, composante_name, model_num, method, nameStack){
+    .Object@name=c(composante_name, model_num, nameStack)
     .Object@method = method
     print("[Type 0 to exit] What function do you want to use for the model ?")
     data_fct = read.table("functions.txt", sep = ";", header = TRUE, as.is=rep(TRUE, 4))

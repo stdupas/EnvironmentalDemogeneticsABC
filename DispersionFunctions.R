@@ -128,26 +128,42 @@ dispersionFunctionForArray <- function(dispersionFunction, array, args){
   #                            args=list(sigma = 0.2, gamma=0.3 ))
 }
 
-dispersionFunctionForRasterLayer <- function(dispersionFunction, rasterLayer, args){
+distanceMatrixFromRaster <- function(object){
+  # Computes a pairwise distance matrix from a raster object
+  #
+  # Args:
+  #   object: a raster object from which computes distances
+  #
+  # Returns:
+  #   A matrix of distances in meters if a coordinate system is precised
+  
+  # Extract coordinates from raster object
+  coords = xyFromCell(object = object, cell = 1:ncell(object), spatial=FALSE)
+  
+  # Compute distance matrix
+  dist <- apply(X = coords,
+                MARGIN = 1,
+                FUN = function(x){ values(distanceFromPoints(object = object[[1]], xy = x)) }
+                )
+  return(dist)
+}
+
+computeDispersionKernel <- function(dispersionFunction, distanceMatrix, args){
   # Apply a dispersion kernel function over distances between the cells of a rasterLayer
   #
   # Args:
   #   dispersionFunction: the dispersion kernel function to apply
-  #   rasterLayer: a rasterLayer with coordinates set
+  #   distanceMatrix: a pairwise distance matrix, computed with distanceMatrixFromRaster function
   #   args: a list of the dispersion function arguments
   #
   # Returns:
   #   A matrix of dispersion kernel values, similar in shape with the distance matrix between cells.
   
-  # Extract coordinates from rasterLayer
-  coords = xyFromCell(object=rasterLayer, cell=1:length(values(rasterLayer[[1]])), spatial=FALSE)
-  # Compute distance matrix
-  distanceMatrix = as.matrix(dist(coords))
   # Apply dispersionFunction
   dispersion <- apply(X=distanceMatrix, 
                       MARGIN=c(1,2), 
-                      FUN=dispersionFunctionForValue, 
-                      dispersionFunction=dispersionFunction, 
+                      FUN=dispersionFunctionForValue,
+                      dispersionFunction=dispersionFunction,
                       args=args)
   return(dispersion)
 }

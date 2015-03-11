@@ -39,11 +39,11 @@ setMethod(
         } else if (scanner == 2){
             .Object@method = "Likelihood"
         } 
-        .Object@niche_r = composante("niche_r", getForwardMethod(.Object), getForwardNb_stacks(.objects), getForwardNames_stacks(.Objects))
-        .Object@niche_k = composante("niche_k", getForwardMethod(.Object), getForwardNb_stacks(.objects), getForwardNames_stacks(.Objects))
-        .Object@dispersion = composante("dispersion", getForwardMethod(.Object), getForwardNb_stacks(.objects), getForwardNames_stacks(.Objects))
-        .Object@mutation = composante("mutation", getForwardMethod(.Object), getForwardNb_stacks(.objects), getForwardNames_stacks(.Objects))
-        .Object@generation = composante("generation", getForwardMethod(.Object), getForwardNb_stacks(.objects), getForwardNames_stacks(.Objects))
+        .Object@niche_r = composante("niche_r", getForwardMethod(.Object), getForwardNb_stacks(.Objects), getForwardNames_stacks(.Objects))
+        .Object@niche_k = composante("niche_k", getForwardMethod(.Object), getForwardNb_stacks(.bjects), getForwardNames_stacks(.Objects))
+        .Object@dispersion = composante("dispersion", getForwardMethod(.Object), getForwardNb_stacks(.Objects), getForwardNames_stacks(.Objects))
+        .Object@mutation = composante("mutation", getForwardMethod(.Object), getForwardNb_stacks(.Objects), getForwardNames_stacks(.Objects))
+        .Object@generation = composante("generation", getForwardMethod(.Object), getForwardNb_stacks(.Objects), getForwardNames_stacks(.Objects))
         validObject(.Object)
         return(.Object)
     }

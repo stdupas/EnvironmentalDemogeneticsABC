@@ -38,10 +38,10 @@ setMethod(
   #      } else if (scanner == 3){
    #         .Object@method = "Likelihood"
         }
-        .Object@niche_r = composante("niche_r", getBackwardMethod(.Object))
-        .Object@niche_k = composante("niche_k", getBackwardMethod(.Object))
-        .Object@dispersion = composante("dispersion", getBackwardMethod(.Object))
-        .Object@mutation = composante("mutation", getBackwardMethod(.Object))
+        .Object@niche_r = composante("niche_r", getBackwardMethod(.Object), getBackwardNb_stacks(.Object), getBackwardNames_stacks(.Object))
+        .Object@niche_k = composante("niche_k", getBackwardMethod(.Object), getBackwardNb_stacks(.Object), getBackwardNames_stacks(.Object))
+        .Object@dispersion = composante("dispersion", getBackwardMethod(.Object), getBackwardNb_stacks(.Object), getBackwardNames_stacks(.Object))
+        .Object@mutation = composante("mutation", getBackwardMethod(.Object), getBackwardNb_stacks(.Object), getBackwardNames_stacks(.Object))
         validObject(.Object)
         return(.Object)
     }
@@ -101,6 +101,32 @@ setMethod(
     }
 )
 
+setGeneric(
+    name="getBackwardNames_stacks",
+    def=function(object) {standardGeneric("getBackwardNames_stacks")}
+)
+
+setMethod(
+    f = "getBackwardNames_stacks",
+    signature = "Backward",
+    definition = function(object){
+        return(object@names_stacks)
+    }
+)
+
+
+setGeneric(
+    name="getBackwardNb_stacks",
+    def=function(object) {standardGeneric("getBackwardNb_stacks")}
+)
+
+setMethod(
+    f = "getBackwardNb_stacks",
+    signature = "Backward",
+    definition = function(object){
+        return(object@nb_stacks)
+    }
+)
 
 # Function to assess the prior values
 setGeneric(

@@ -37,11 +37,11 @@ setMethod(
         } else if (scanner == 2){
             .Object@method = "Likelihood"
         } 
-        .Object@niche_r = composante("niche_r", getForwardMethod(.Object))
-        .Object@niche_k = composante("niche_k", getForwardMethod(.Object))
-        .Object@dispersion = composante("dispersion", getForwardMethod(.Object))
-        .Object@mutation = composante("mutation", getForwardMethod(.Object))
-        .Object@generation = composante("generation", getForwardMethod(.Object))
+        .Object@niche_r = composante("niche_r", getForwardMethod(.Object), getForwardNb_stacks(.objects), getForwardNames_stacks(.Objects))
+        .Object@niche_k = composante("niche_k", getForwardMethod(.Object), getForwardNb_stacks(.objects), getForwardNames_stacks(.Objects))
+        .Object@dispersion = composante("dispersion", getForwardMethod(.Object), getForwardNb_stacks(.objects), getForwardNames_stacks(.Objects))
+        .Object@mutation = composante("mutation", getForwardMethod(.Object), getForwardNb_stacks(.objects), getForwardNames_stacks(.Objects))
+        .Object@generation = composante("generation", getForwardMethod(.Object), getForwardNb_stacks(.objects), getForwardNames_stacks(.Objects))
         validObject(.Object)
         return(.Object)
     }
@@ -102,6 +102,34 @@ setMethod(
     signature = "Forward",
     definition = function(object){
         return(object@method)
+    }
+)
+
+
+setGeneric(
+    name="getForwardNames_stacks",
+    def=function(object) {standardGeneric("getForwardNames_stacks")}
+)
+
+setMethod(
+    f = "getForwardNames_stacks",
+    signature = "Forward",
+    definition = function(object){
+        return(object@names_stacks)
+    }
+)
+
+
+setGeneric(
+    name="getForwardNb_stacks",
+    def=function(object) {standardGeneric("getForwardNb_stacks")}
+)
+
+setMethod(
+    f = "getForwardNb_stacks",
+    signature = "Forward",
+    definition = function(object){
+        return(object@nb_stacks)
     }
 )
 

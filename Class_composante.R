@@ -389,8 +389,13 @@ setMethod(
             print(object@independance)
         }
         for(i in 1:length(object@listModel)) {
-            cat("............... Model:",i,",",object@listModel[[i]]@type_model,"...............\n")
-            print(object@listModel[[i]])
+            if(getNameComp(object) == "niche_r" || getNameComp(object) == "niche_k" || getNameComp(object) == "generation") {
+                cat("............... Model:",i,",",object@listModel[[i]]@type_model,", name:",object@listModel[[i]]@name[3],"...............\n")
+                print(object@listModel[[i]])
+            } else {
+                cat("............... Model:",i,",",object@listModel[[i]]@type_model,"...............\n")
+                print(object@listModel[[i]])
+            }
         }
     }
 )

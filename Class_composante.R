@@ -62,19 +62,18 @@ setMethod(
             mod = NULL
             while (compteur < getNb_stacks(.Object) && sortie == 0){
                 vec = 1:(getNb_stacks(.Object) - length(vec3))
-                cat("Which variable do you wan't to build ? (type 0 if you don't wan't to build any other model)\n")
-                if(is.null(vec3)){
-                    cat(paste(vec,":", vec2),"\n")
-                } else {
-                    cat(paste(vec,":", vec2[-vec3]),"\n")
+                cat("Which variable do you wan't to build ? (type 0 if you don't want to build any other model)\n")
+                if(!is.null(vec3)){
+                    vec2 = vec2[-vec3[compteur]]
                 }
+                cat(paste(vec,":", vec2),"\n")
                 scanner = as.integer(readline())
                 if((scanner<=length(vec) && scanner>0) && !is.na(scanner)) {
                     vec3 = c(vec3, scanner)
                     .Object@nbModel = length(vec3)
                     print(.Object@nbModel)
-                    mod = c(mod, model(name,compteur+1, getMethodComp(.Object), vec2[scanner]))
                     compteur = compteur + 1
+                    mod = c(mod, model(name,compteur, getMethodComp(.Object), vec2[vec3[compteur]]))
                 }
                 else if(scanner==0 && !is.na(scanner)) {
                     sortie = 1

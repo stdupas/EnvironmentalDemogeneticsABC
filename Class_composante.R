@@ -104,7 +104,7 @@ setMethod(
             mod = NULL
             for(i in 1:getNbModel(.Object)) {
                 print(paste("========== Composante : ",name,", model n°", i," =========="))
-                mod = c(mod, model(name,i, getMethodComp(.Object)), "STANDARD")
+                mod = c(mod, model(name,i, getMethodComp(.Object), "STANDARD"))
             }
         }
         

@@ -56,24 +56,56 @@ setMethod(
 
         # repeat while the given number is incorrect
         flag = -1
-        while(flag == -1) {          
-            choice_number = as.integer(readline(paste("[Type 0 to quit] How many models for the component",name,"?")))
-            if(choice_number!=0 && choice_number>0 && !is.na(choice_number)) {
-                .Object@nbModel = choice_number
-                flag = 1
+        while(flag == -1) {  
+            if(name == "niche_r" || name == "niche_k" || name == "generation"){
+                vec = 1:getNb_stacks(.Object)
+                vec2 = getNames_stacks(.Object)
+                vec3 = NULL
+                compteur = 0
+                sortie = 0
+                mod = NULL
+                while (compteur < getNb_stacks(.Object) && sortie == 0){
+                    cat("Which variable do you wan't to build ? (type 0 if you don't wan't to build any other model)\n")
+                    print(vec3)
+                    print(is.null(vec3))
+                    if(is.null(vec3)){
+                        cat(paste(vec,":", vec2),"\n")
+                    } else {
+                        cat(paste(vec,":", vec2[-vec3]),"\n")
+                    }
+                    scanner = as.integer(readline())
+                    if((scanner<getNb_stacks(.Object) && scanner>0) && !is.na(scanner)) {
+                        vec3 = c(vec3, scanner)
+                        .Object@nbModel = .Object@nbModel + 1
+                        mod = c(mod, model(name,compteur+1, getMethodComp(.Object)))
+                        compteur = compteur + 1
+                    }
+                    else if(scanner==0 && !is.na(scanner)) {
+                        sortie = 1
+                    }
+                    else {
+                        print("ERROR: Your entry is incorrect, please try again")
+                    } 
+                }
+            } else {
+                choice_number = as.integer(readline(paste("[Type 0 to quit] How many models for the component",name,"?")))
+                if(choice_number!=0 && choice_number>0 && !is.na(choice_number)) {
+                    .Object@nbModel = choice_number
+                    flag = 1
+                }
+                else if(choice_number==0 && !is.na(choice_number)) {
+                    stop("You have stopped the program")
+                }
+                else {
+                    print("ERROR: Your entry is incorrect, please try again")
+                } 
             }
-            else if(choice_number==0 && !is.na(choice_number)) {
-                stop("You have stopped the program")
+            
+            mod = NULL
+            for(i in 1:getNbModel(.Object)) {
+                print(paste("========== Composante : ",name,", model n°", i," =========="))
+                mod = c(mod, model(name,i, getMethodComp(.Object)))
             }
-            else {
-                print("ERROR: Your entry is incorrect, please try again")
-            } 
-        }
-        
-        mod = NULL
-        for(i in 1:getNbModel(.Object)) {
-            print(paste("========== Composante : ",name,", model n°", i," =========="))
-            mod = c(mod, model(name,i, getMethodComp(.Object)))
         }
         
         .Object@listModel = mod
@@ -143,6 +175,32 @@ setMethod(
     signature="Composante",
     definition=function(object) {
         return(object@method)
+    }
+)
+
+setGeneric(
+    name="getNb_stacks",
+    def=function(object) {standardGeneric("getNb_stacks")}
+)
+
+setMethod(
+    f="getNb_stacks", 
+    signature="Composante",
+    definition=function(object) {
+        return(object@nb_stacks)
+    }
+)
+
+setGeneric(
+    name="getNames_stacks",
+    def=function(object) {standardGeneric("getNames_stacks")}
+)
+
+setMethod(
+    f="getNames_stacks", 
+    signature="Composante",
+    definition=function(object) {
+        return(object@names_stacks)
     }
 )
 

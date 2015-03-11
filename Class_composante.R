@@ -293,9 +293,9 @@ setMethod(
                         cat("How many models do you want to add ?")
                         nbToAdd = as.integer(readline())
                         if(is.na(nbToAdd) || nbToAdd<1){
-                            cat("ERROR: Your entry is incorrect, please try again")
+                            cat("ERROR: Your entry is incorrect, please try again.\n")
                         } else if(getNb_stacks(object) < getNbModel(object)+nbToAdd) {
-                            cat("ERROR: You can not have more models than stacks.")
+                            cat("ERROR: You can not have more models than stacks.\n")
                         } else {    
                             flag = 1
                             object = addModel(object, nbToAdd)
@@ -305,7 +305,7 @@ setMethod(
                     cat("How many models do you want to add ?")
                     nbToAdd = as.integer(readline())
                     if(is.na(nbToAdd) || nbToAdd<1){
-                        print("ERROR: Your entry is incorrect, please try again")
+                        print("ERROR: Your entry is incorrect, please try again.\n")
                     } else {    
                         flag = 1
                         object = addModel(object, nbToAdd)

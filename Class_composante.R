@@ -214,6 +214,10 @@ setMethod(
     f="addModel",
     signature="Composante",
     definition=function(object, nbToAdd) {
+        if(getNameComp(object) == "niche_k" || getNameComp(object) == "niche_r" || getNameComp(object) == "generation") {
+            cat("Which model do you want to add?")
+            cat()
+        }
         for(i in 1:nbToAdd) {
             object@nbModel = getNbModel(object)+1
             
@@ -221,7 +225,6 @@ setMethod(
             object@listModel = c(object@listModel, newMod)
         }
         rm(newMod)
-        validObject(object)
         return(object)
     }
 )

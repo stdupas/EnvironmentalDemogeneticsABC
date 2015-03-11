@@ -12,7 +12,8 @@ setClass(
         type_combinaison = "character",
         independance = "ParamModel",
         nb_stacks = "numeric",
-        names_stacks = "character"
+        names_stacks = "character",
+        remain_layers = "character"
     ),
     validity=function(object) {
         if(object@nbModel <= 0) {
@@ -82,6 +83,7 @@ setMethod(
                     print("ERROR: Your entry is incorrect, please try again")
                 } 
             }
+            .Object@remain_layers = vec2
         } else {
             
             # repeat while the given number is incorrect

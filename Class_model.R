@@ -90,8 +90,8 @@ setMethod(
 )
 
 
-model = function(composante_name, model_num, method){
-  new(Class = "Model", composante_name=composante_name, model_num=model_num, method=method)
+model = function(composante_name, model_num, method, nameStack){
+  new(Class = "Model", composante_name=composante_name, model_num=model_num, method=method, nameStack = nameStack)
 }
 
 

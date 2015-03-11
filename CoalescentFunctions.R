@@ -230,10 +230,10 @@ simSpatialCoal <- function(nbSimul, ParamList, rasterStack, nicheMeth, GeneticDa
         fname = paste(getwd(),"/SimulResults/", "Genetics_", x , ".txt", sep="")
         write.table(geneticResults, file=fname)
         
-        # Send progress update
-        writeBin(1/numJobs, f)
-        
       })) # end of system.time
+      
+      # Send progress update
+      writeBin(1/numJobs, f)
       
     } # END OF FUNCTION IN MCLAPPLY
     ,

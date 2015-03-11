@@ -216,14 +216,30 @@ setMethod(
     signature="Composante",
     definition=function(object, nbToAdd) {
         if(getNameComp(object) == "niche_k" || getNameComp(object) == "niche_r" || getNameComp(object) == "generation") {
-            cat("Which layer do you want to add?")
-            cat()
-        }
-        for(i in 1:nbToAdd) {
-            object@nbModel = getNbModel(object)+1
+            flag = -1
+            while(flag == -1) {
+                cat("[Type 0 to quit] Which layer do you want to add?\n")
+                cat(paste(1:length(object@remain_layers), ":", object@remain_layers))
+                scanner = as.integer(readline())
+                if(is.na(scanner) || scanner>length(object@remain_layers) || scanner<0){
+                    print("ERROR: Your entry is incorrect, please try again")
+                } else if(scanner == 0){
+                    stop("You have stopped the program")
+                }else{
+                    object@nbModel = getNbModel(object)+1
+                    newMod = model(getNameComp(object), getNbModel(object), getMethodComp(object), object@remain_layers[scanner])
+                    object@listModel = c(object@listModel, newMod)
+                    flag = 1
+                }
+            }
             
-            newMod = model(getNameComp(object), getNbModel(object), getMethodComp(object))
-            object@listModel = c(object@listModel, newMod)
+            
+        } else {
+            for(i in 1:nbToAdd) {
+                object@nbModel = getNbModel(object)+1
+                newMod = model(getNameComp(object), getNbModel(object), getMethodComp(object), "STANDARD")
+                object@listModel = c(object@listModel, newMod)
+            }
         }
         rm(newMod)
         return(object)

@@ -44,26 +44,31 @@ setMethod("getResultPrior", "ParamList",
             cat("ERROR: Your method doesn't allow any prior result")
         } else if(comp == "niche_r") {
             if(param[1] == 0) {
-                return(getResult_prior(object@niche_r@independance))
+                res = getResult_prior(object@niche_r@independance)
             } else {
-                return(getResult_prior(object@niche_r@listModel[[param[1]]]@param_model[[param[2]]]))
+                res = getResult_prior(object@niche_r@listModel[[param[1]]]@param_model[[param[2]]])
             }
-        } else if(com == "niche_k") {
+        } else if(comp == "niche_k") {
             if(param[1] == 0) {
-                return(getResult_prior(object@niche_k@independance))
+                res = getResult_prior(object@niche_k@independance)
             } else {
-                return(getResult_prior(object@niche_k@listModel[[param[1]]]@param_model[[param[2]]]))
+                res = getResult_prior(object@niche_k@listModel[[param[1]]]@param_model[[param[2]]])
             }
         } else if(comp == "dispersion") {
-            return(getResult_prior(object@dispersion@listModel[[param[1]]]@param_model[[param[2]]]))
+            res = getResult_prior(object@dispersion@listModel[[param[1]]]@param_model[[param[2]]])
         } else if(comp == "mutation") {
-            return(getResult_prior(object@mutation@listModel[[param[1]]]@param_model[[param[2]]]))
+            res = getResult_prior(object@mutation@listModel[[param[1]]]@param_model[[param[2]]])
         } else if(comp == "generation") {
             if(param[1] == 0) {
-                return(getResult_prior(object@generation@independance))
+                res = getResult_prior(object@generation@independance)
             } else {
-                return(getResult_prior(object@generation@listModel[[param[1]]]@param_model[[param[2]]]))
+                res = getResult_prior(object@generation@listModel[[param[1]]]@param_model[[param[2]]])
             }
+        }
+        if(length(res) == 0) {
+            cat("ERROR: You did not compute the result prior yet.")
+        } else {
+            return(res)
         }
     }
 )

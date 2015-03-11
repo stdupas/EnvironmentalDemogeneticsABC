@@ -91,7 +91,7 @@ paramList = function(env) {
     }
     # if the environmental data is an array
     if(is.array(env)) {
-        na = dimnames(env)[3]
+        na = dimnames(env)[[3]]
         nb = dim(env)[3]
     }
     # if the environmental data is a rasterstack

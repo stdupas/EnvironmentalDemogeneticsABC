@@ -262,9 +262,7 @@ setMethod(
             # object@listModel = object@listModel[-(i-compteur)]
             # compteur = compteur+1
         # }
-        print(object@remain_layers)
         object@remain_layers = c(object@remain_layers,getNameModel(object@listModel[[numModelToDel]])[3])
-        print(object@remain_layers)
         object@listModel = object@listModel[-numModelToDel]
         object@nbModel = getNbModel(object) - length(numModelToDel)
         # Update of the models number
@@ -285,7 +283,6 @@ setMethod(
     f="setComposante", 
     signature="Composante",
     definition=function(object) {
-        print(object@remain_layers)
         flag = 0
         while(flag == 0){
             if(getNameComp(object) == "niche_k" || getNameComp(object) == "niche_r" || getNameComp(object) == "generation") {
@@ -349,7 +346,6 @@ setMethod(
                         print("ERROR: Your entry is incorrect, please try again")
                     }else{
                         flag = 1
-                        print(object@remain_layers)
                         object = delModel(object, nbToDel)
                     }
                 } else {

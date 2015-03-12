@@ -229,6 +229,7 @@ setMethod(
                     object@nbModel = getNbModel(object)+1
                     newMod = model(getNameComp(object), getNbModel(object), getMethodComp(object), object@remain_layers[scanner])
                     object@listModel = c(object@listModel, newMod)
+                    object@remain_layers = object@remain_layers[-scanner]
                     flag = 1
                 }
             }

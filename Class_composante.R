@@ -11,7 +11,6 @@ setClass(
         nbModel="numeric",
         type_combinaison = "character",
         independance = "ParamModel",
-        nb_stacks = "numeric",
         names_stacks = "character",
         remain_layers = "character"
     ),
@@ -30,10 +29,9 @@ setClass(
 setMethod(
     f="initialize",
     signature="Composante",
-    definition=function(.Object, name, method, nb_stacks, names_stacks) {
+    definition=function(.Object, name, method, names_stacks) {
         .Object@name=name
         .Object@method=method
-        .Object@nb_stacks = nb_stacks
         .Object@names_stacks = names_stacks
         flag = -1
         while(flag == -1){
@@ -117,8 +115,8 @@ setMethod(
 
 
 # User-friendly constructor of composante
-composante = function(name, method, nb_stacks, names_stacks) {
-    new(Class="Composante", name=name, method = method, nb_stacks = nb_stacks, names_stacks = names_stacks)
+composante = function(name, method, names_stacks) {
+    new(Class="Composante", name=name, method = method, names_stacks = names_stacks)
 }
 
 #################################### GET METHODS ####################################
@@ -188,7 +186,7 @@ setMethod(
     f="getNb_stacks", 
     signature="Composante",
     definition=function(object) {
-        return(object@nb_stacks)
+        return(length(object@names_stacks))
     }
 )
 

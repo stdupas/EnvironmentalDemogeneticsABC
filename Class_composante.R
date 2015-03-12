@@ -313,22 +313,26 @@ setMethod(
                         cat("ERROR: You can not have more models than stacks.")
                         flag = 1
                     } else {
-                        cat("How many models do you want to add ?")
+                        cat("[Type 0 to quit] How many models do you want to add ?")
                         nbToAdd = as.integer(readline())
-                        if(is.na(nbToAdd) || nbToAdd<1){
+                        if(is.na(nbToAdd) || nbToAdd<0){
                             cat("ERROR: Your entry is incorrect, please try again.\n")
                         } else if(getNb_stacks(object) < getNbModel(object)+nbToAdd) {
                             cat("ERROR: You can not have more models than stacks.\n")
+                        } else if (nbToAdd == 0){
+                            stop("You have stopped the program")
                         } else {    
                             flag = 1
                             object = addModel(object, nbToAdd)
                         }
                     }
                 } else {
-                    cat("How many models do you want to add ?")
+                    cat("[Type 0 to quit] How many models do you want to add ?")
                     nbToAdd = as.integer(readline())
-                    if(is.na(nbToAdd) || nbToAdd<1){
+                    if(is.na(nbToAdd) || nbToAdd<0){
                         print("ERROR: Your entry is incorrect, please try again.\n")
+                    } else if (nbToAdd == 0) {
+                        stop("You have stopped the program")
                     } else {    
                         flag = 1
                         object = addModel(object, nbToAdd)
@@ -341,11 +345,13 @@ setMethod(
             while(flag == 0){
                 if(getNbModel(object) > 1) {
                     print(object)
-                    cat("Which model do you want to delete ? (You can not delete the independant model)")
+                    cat("[Type 0 to quit] Which model do you want to delete ? (You can not delete the independant model)")
                     nbToDel = as.integer(readline())
-                    if(is.na(nbToDel) || nbToDel> getNbModel(object) || nbToDel<1){
+                    if(is.na(nbToDel) || nbToDel> getNbModel(object) || nbToDel<0){
                         print("ERROR: Your entry is incorrect, please try again")
-                    }else{
+                    } else if (nbToDel == 0){
+                        stop("You have stopped the program")
+                    } else{
                         flag = 1
                         object = delModel(object, nbToDel)
                     }
@@ -358,20 +364,24 @@ setMethod(
             flag = 0
             while(flag == 0){
                 print(object)
-                cat("Which model do you want to change (except for the independant model) ? Please enter the model's number.")
+                cat("[Type 0 to quit] Which model do you want to change (except for the independant model) ? Please enter the model's number.")
                 change = as.integer(readline())
-                if(is.na(change) || change> getNbModel(object) || change<1){
+                if(is.na(change) || change> getNbModel(object) || change<0){
                     print("ERROR: Your entry is incorrect, please try again")
+                } else if (change == 0){
+                    stop("You have stopped the program")
                 }else{
                     flag = 1
                 }
             }
             flag = 0
             while(flag == 0){
-                cat("What do you want to change?\n1: Model function \n2: Model parameters")
+                cat("[Type 0 to quit] What do you want to change?\n1: Model function \n2: Model parameters")
                 choice = as.integer(readline())
-                if(is.na(choice) || choice> 2 || choice<1){
+                if(is.na(choice) || choice> 2 || choice<0){
                     print("ERROR: Your entry is incorrect, please try again")
+                } else if (choice == 0){
+                    stop("You have stopped the program")
                 }else{
                     flag = 1
                 }

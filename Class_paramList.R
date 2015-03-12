@@ -91,18 +91,16 @@ paramList = function(env) {
     # if the environmental data is an array
     if(is.array(env)) {
         na = dimnames(env)[[3]]
-        nb = dim(env)[3]
     }
     # if the environmental data is a rasterstack
     else {
         na = names(env)
-        nb = length(na)
     }
     # initialisation of the object
     if(scanner == 1) {
-        .Object = forward(nb,na)
+        .Object = forward(na)
     } else if(scanner == 2) {
-        .Object = backward(nb,na)
+        .Object = backward(na)
     }
     return(.Object)
 }

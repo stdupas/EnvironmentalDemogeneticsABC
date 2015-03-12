@@ -11,11 +11,7 @@ setClass(
         dispersion="Composante",
         mutation="Composante",
         names_stacks = "character"
-    ),
-    validity=function(object) {
-        cat("---------- ParamList : verification ----------\n")
-        # add verification if needed
-    }
+    )
 )
 
 #Function to save the ParamList

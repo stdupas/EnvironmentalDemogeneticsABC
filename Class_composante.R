@@ -259,9 +259,9 @@ setMethod(
         # numModelToDel = sort(numModelToDel)
         # Deletion of the models
         # for(i in numModelToDel) {
-            # object@remain_layers = c(object@remain_layers,getNameModel(object@listModel[[i-compteur]])[3])
-            # object@listModel = object@listModel[-(i-compteur)]
-            # compteur = compteur+1
+        # object@remain_layers = c(object@remain_layers,getNameModel(object@listModel[[i-compteur]])[3])
+        # object@listModel = object@listModel[-(i-compteur)]
+        # compteur = compteur+1
         # }
         object@remain_layers = c(object@remain_layers,getNameModel(object@listModel[[numModelToDel]])[3])
         object@listModel = object@listModel[-numModelToDel]
@@ -335,7 +335,7 @@ setMethod(
                     }
                 }
             }
-        # Delete a model
+            # Delete a model
         } else if(scanner == 2){
             flag = 0
             while(flag == 0){
@@ -353,7 +353,7 @@ setMethod(
                     stop("There is only one model left in this composante. You can not delete it.")
                 }
             }
-        # Change a model
+            # Change a model
         } else if(scanner == 3) {
             flag = 0
             while(flag == 0){
@@ -383,7 +383,7 @@ setMethod(
             else if(choice == 2) {
                 object@listModel[[change]] = setPrior(object@listModel[[change]])
             }
-        # Change the independant model
+            # Change the independant model
         } else if (scanner == 4){
             flag2 = -1
             while(flag2 == -1) {
@@ -463,7 +463,7 @@ setMethod(
                 cat("Type", getNbModel(object)+1, "to assess the independant model.\n")
                 cat("Type", getNbModel(object)+2, "to assess all models.\n")
                 
-
+                
                 flag = -1
                 while(flag == -1) {
                     choice = as.integer(readline())
@@ -494,8 +494,8 @@ setMethod(
                     object@listModel[[i]] = setResultPriorMod(object@listModel[[i]],1)
                 }
             }
-
-        # if there is no independant model            
+            
+            # if there is no independant model            
         } else {
             if(all == 0) { 
                 # ask which model the user wants to assess
@@ -503,7 +503,7 @@ setMethod(
                 print(object)
                 cat("Type", getNbModel(object)+1, "to assess all models.\n")
                 
-
+                
                 flag = -1
                 while(flag == -1) {
                     choice = as.integer(readline())

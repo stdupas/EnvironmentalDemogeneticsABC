@@ -1,5 +1,6 @@
 # Sources for needed classes
-source("Class_composante.R")
+source("Class_backward.R")
+source("Class_forward.R")
 
 # Class paramList
 setClass(

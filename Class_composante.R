@@ -256,13 +256,18 @@ setMethod(
     f="delModel",
     signature="Composante",
     definition=function(object, numModelToDel) {
-        compteur = 0
-        numModelToDel = sort(numModelToDel)
+        # compteur = 0
+        # numModelToDel = sort(numModelToDel)
         # Deletion of the models
-        for(i in numModelToDel) {
-            object@listModel = object@listModel[-(i-compteur)]
-            compteur = compteur+1
-        }
+        # for(i in numModelToDel) {
+            # object@remain_layers = c(object@remain_layers,getNameModel(object@listModel[[i-compteur]])[3])
+            # object@listModel = object@listModel[-(i-compteur)]
+            # compteur = compteur+1
+        # }
+        print(object@remain_layers)
+        object@remain_layers = c(object@remain_layers,getNameModel(object@listModel[[numModelToDel]])[3])
+        print(object@remain_layers)
+        object@listModel = object@listModel[-numModelToDel]
         object@nbModel = getNbModel(object) - length(numModelToDel)
         # Update of the models number
         for(i in 1: getNbModel(object) ) {
@@ -282,6 +287,7 @@ setMethod(
     f="setComposante", 
     signature="Composante",
     definition=function(object) {
+        print(object@remain_layers)
         flag = 0
         while(flag == 0){
             if(getNameComp(object) == "niche_k" || getNameComp(object) == "niche_r" || getNameComp(object) == "generation") {
@@ -309,6 +315,7 @@ setMethod(
                 if(getNameComp(object) == "niche_k" || getNameComp(object) == "niche_r" || getNameComp(object) == "generation") {
                     if(getNb_stacks(object) == getNbModel(object)) {
                         cat("ERROR: You can not have more models than stacks.")
+                        flag = 1
                     } else {
                         cat("How many models do you want to add ?")
                         nbToAdd = as.integer(readline())
@@ -344,6 +351,7 @@ setMethod(
                         print("ERROR: Your entry is incorrect, please try again")
                     }else{
                         flag = 1
+                        print(object@remain_layers)
                         object = delModel(object, nbToDel)
                     }
                 } else {

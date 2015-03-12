@@ -74,8 +74,10 @@ setMethod(
                     mod = c(mod, model(name,compteur, getMethodComp(.Object), vec2[vec3[compteur]]))
                     vec2 = vec2[-vec3[compteur]]
                 }
-                else if(scanner==0 && !is.na(scanner)) {
+                else if(scanner==0 && !is.na(scanner) && compteur!=0) {
                     sortie = 1
+                } else if(scanner == 0 && compteur == 0 && !is.na(scanner)){
+                    print("You must have at leats one non independant model")
                 }
                 else {
                     print("ERROR: Your entry is incorrect, please try again")

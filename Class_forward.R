@@ -19,8 +19,7 @@ setClass(
 setMethod(
     f="initialize",
     signature="Forward",
-    definition=function(.Object, nb_stacks, names_stacks) {
-        .Object@nb_stacks = nb_stacks
+    definition=function(.Object, names_stacks) {
         .Object@names_stacks = names_stacks
         flag = 0
         while(flag == 0){
@@ -39,19 +38,19 @@ setMethod(
         } else if (scanner == 2){
             .Object@method = "Likelihood"
         } 
-        .Object@niche_r = composante("niche_r", getForwardMethod(.Object), getForwardNb_stacks(.Object), getForwardNames_stacks(.Object))
-        .Object@niche_k = composante("niche_k", getForwardMethod(.Object), getForwardNb_stacks(.Object), getForwardNames_stacks(.Object))
-        .Object@dispersion = composante("dispersion", getForwardMethod(.Object), getForwardNb_stacks(.Object), getForwardNames_stacks(.Object))
-        .Object@mutation = composante("mutation", getForwardMethod(.Object), getForwardNb_stacks(.Object), getForwardNames_stacks(.Object))
-        .Object@generation = composante("generation", getForwardMethod(.Object), getForwardNb_stacks(.Object), getForwardNames_stacks(.Object))
+        .Object@niche_r = composante("niche_r", getForwardMethod(.Object), getForwardNames_stacks(.Object))
+        .Object@niche_k = composante("niche_k", getForwardMethod(.Object), getForwardNames_stacks(.Object))
+        .Object@dispersion = composante("dispersion", getForwardMethod(.Object), getForwardNames_stacks(.Object))
+        .Object@mutation = composante("mutation", getForwardMethod(.Object), getForwardNames_stacks(.Object))
+        .Object@generation = composante("generation", getForwardMethod(.Object), getForwardNames_stacks(.Object))
         validObject(.Object)
         return(.Object)
     }
 )
 
 # User-friendly constructor of forward
-forward = function(nb_stacks, names_stacks) {
-    new(Class="Forward", nb_stacks = nb_stacks, names_stacks = names_stacks)
+forward = function(names_stacks) {
+    new(Class="Forward", names_stacks = names_stacks)
 }
 
 # Change any thing in the forward object
@@ -118,20 +117,6 @@ setMethod(
     signature = "Forward",
     definition = function(object){
         return(object@names_stacks)
-    }
-)
-
-
-setGeneric(
-    name="getForwardNb_stacks",
-    def=function(object) {standardGeneric("getForwardNb_stacks")}
-)
-
-setMethod(
-    f = "getForwardNb_stacks",
-    signature = "Forward",
-    definition = function(object){
-        return(object@nb_stacks)
     }
 )
 

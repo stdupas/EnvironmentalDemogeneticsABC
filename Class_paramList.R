@@ -9,7 +9,6 @@ setClass(
         niche_k="Composante",
     	dispersion="Composante",
     	mutation="Composante",
-        nb_stacks = "numeric",
         names_stacks = "character"
     ),
     validity=function(object) {

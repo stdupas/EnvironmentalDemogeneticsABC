@@ -17,8 +17,7 @@ setClass(
 setMethod(
     f="initialize",
     signature="Backward",
-    definition=function(.Object, nb_stacks, names_stacks) {
-        .Object@nb_stacks = nb_stacks
+    definition=function(.Object, names_stacks) {
         .Object@names_stacks = names_stacks
         flag = 0
         while(flag == 0){
@@ -40,18 +39,18 @@ setMethod(
   #      } else if (scanner == 3){
    #         .Object@method = "Likelihood"
         }
-        .Object@niche_r = composante("niche_r", getBackwardMethod(.Object), getBackwardNb_stacks(.Object), getBackwardNames_stacks(.Object))
-        .Object@niche_k = composante("niche_k", getBackwardMethod(.Object), getBackwardNb_stacks(.Object), getBackwardNames_stacks(.Object))
-        .Object@dispersion = composante("dispersion", getBackwardMethod(.Object), getBackwardNb_stacks(.Object), getBackwardNames_stacks(.Object))
-        .Object@mutation = composante("mutation", getBackwardMethod(.Object), getBackwardNb_stacks(.Object), getBackwardNames_stacks(.Object))
+        .Object@niche_r = composante("niche_r", getBackwardMethod(.Object), getBackwardNames_stacks(.Object))
+        .Object@niche_k = composante("niche_k", getBackwardMethod(.Object), getBackwardNames_stacks(.Object))
+        .Object@dispersion = composante("dispersion", getBackwardMethod(.Object), getBackwardNames_stacks(.Object))
+        .Object@mutation = composante("mutation", getBackwardMethod(.Object), getBackwardNames_stacks(.Object))
         validObject(.Object)
         return(.Object)
     }
 )
 
 # User-friendly constructor of backward
-backward = function(nb_stacks, names_stacks) {
-    new(Class="Backward", nb_stacks = nb_stacks, names_stacks = names_stacks)
+backward = function(names_stacks) {
+    new(Class="Backward", names_stacks = names_stacks)
 }
 
 # Change any thing in the model
@@ -116,19 +115,6 @@ setMethod(
     }
 )
 
-
-setGeneric(
-    name="getBackwardNb_stacks",
-    def=function(object) {standardGeneric("getBackwardNb_stacks")}
-)
-
-setMethod(
-    f = "getBackwardNb_stacks",
-    signature = "Backward",
-    definition = function(object){
-        return(object@nb_stacks)
-    }
-)
 
 # Function to assess the prior values
 setGeneric(

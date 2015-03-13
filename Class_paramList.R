@@ -32,43 +32,39 @@ loadParamList = function(file){
 
 #Function to get the "result_prior"
 #Args: object paramList, component name, c(model number, parameter model) or 0 for independant model
-setGeneric("getResultPrior",
-           function(object,comp,param){standardGeneric("getResultPrior")})
+getResultPrior = function(object,comp,param){
+    if(object@method == "Bayesian" || object@method == "Likelihood") {
+        cat("ERROR: Your method doesn't allow any prior result")
+    } else if(comp == "niche_r") {
+        if(param[1] == 0) {
+            res = getResult_prior(object@niche_r@independance)
+        } else {
+            res = getResult_prior(object@niche_r@listModel[[param[1]]]@param_model[[param[2]]])
+        }
+    } else if(comp == "niche_k") {
+        if(param[1] == 0) {
+            res = getResult_prior(object@niche_k@independance)
+        } else {
+            res = getResult_prior(object@niche_k@listModel[[param[1]]]@param_model[[param[2]]])
+        }
+    } else if(comp == "dispersion") {
+        res = getResult_prior(object@dispersion@listModel[[param[1]]]@param_model[[param[2]]])
+    } else if(comp == "mutation") {
+        res = getResult_prior(object@mutation@listModel[[param[1]]]@param_model[[param[2]]])
+    } else if(comp == "generation") {
+        if(param[1] == 0) {
+            res = getResult_prior(object@generation@independance)
+        } else {
+            res = getResult_prior(object@generation@listModel[[param[1]]]@param_model[[param[2]]])
+        }
+    }
+    if(length(res) == 0) {
+        cat("ERROR: You did not compute the result prior yet.")
+    } else {
+        return(res)
+    }
+}
 
-setMethod("getResultPrior", "ParamList",
-          function(object,comp,param){
-              if(object@method == "Bayesian" || object@method == "Likelihood") {
-                  cat("ERROR: Your method doesn't allow any prior result")
-              } else if(comp == "niche_r") {
-                  if(param[1] == 0) {
-                      res = getResult_prior(object@niche_r@independance)
-                  } else {
-                      res = getResult_prior(object@niche_r@listModel[[param[1]]]@param_model[[param[2]]])
-                  }
-              } else if(comp == "niche_k") {
-                  if(param[1] == 0) {
-                      res = getResult_prior(object@niche_k@independance)
-                  } else {
-                      res = getResult_prior(object@niche_k@listModel[[param[1]]]@param_model[[param[2]]])
-                  }
-              } else if(comp == "dispersion") {
-                  res = getResult_prior(object@dispersion@listModel[[param[1]]]@param_model[[param[2]]])
-              } else if(comp == "mutation") {
-                  res = getResult_prior(object@mutation@listModel[[param[1]]]@param_model[[param[2]]])
-              } else if(comp == "generation") {
-                  if(param[1] == 0) {
-                      res = getResult_prior(object@generation@independance)
-                  } else {
-                      res = getResult_prior(object@generation@listModel[[param[1]]]@param_model[[param[2]]])
-                  }
-              }
-              if(length(res) == 0) {
-                  cat("ERROR: You did not compute the result prior yet.")
-              } else {
-                  return(res)
-              }
-          }
-)
 
 # Constructor of paramList
 paramList = function(env) {

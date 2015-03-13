@@ -2,6 +2,18 @@
 source("Class_model.R")
 
 # Class composante
+
+############### Creation of class "Composante" ###############
+# method: a string containing the method used by the paramList (ABC, Bayesian, Likelihood)
+# name: a string containing the name of the component (niche_k, niche_r, dispersion, mutation or generation)
+# listModel: a list of paramModel, one for each parameter
+# nbModel: a integer containting the number of model in listModel
+# type_combinaison: a string containing the type of combinaison (Additive or Multiplicative)
+# independance: a ParamModel representing the case with no environnemental variable 
+#               (only the component niche_k, niche_r and generation have one)
+# names_stacks: a list of string of the name of all the environnement variables in the study 
+# remain_layers: a list of string of the name of all the environnement variables that weren't build
+
 setClass(
     Class="Composante", 
     representation=representation(
@@ -25,6 +37,15 @@ setClass(
     }
 )
 
+############### Initiator ###############
+# Function to initialize an object of class "Composante"
+# Args:
+#       name: a string containing the name of the component (niche_k, niche_r, dispersion, mutation, generation)
+#       method: a string containing the method used by the paramList (ABC, Bayesian, Likelihood)
+#       nameStack: name of the model from array or rasterStack, or "STANDARD"
+#           if the component is independant of environmental data
+# Example:
+#       myComposante = composante("niche_r","ABC", c("BIO12", "BIO1"))
 
 setMethod(
     f="initialize",
@@ -75,7 +96,7 @@ setMethod(
                 else if(scanner==0 && !is.na(scanner) && compteur!=0) {
                     sortie = 1
                 } else if(scanner == 0 && compteur == 0 && !is.na(scanner)){
-                    print("You must have at leats one non independant model")
+                    print("You must have at least one non independant model")
                 }
                 else {
                     print("ERROR: Your entry is incorrect, please try again")
@@ -202,6 +223,8 @@ setMethod(
         return(object@names_stacks)
     }
 )
+
+
 
 # Function to add model(s) in the composante (used by the function in paramList)
 setGeneric(

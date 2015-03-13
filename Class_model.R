@@ -1,7 +1,13 @@
-#Class of Model
+############### CLASS: "Model" ###############
 
 source("Class_paramModel.R")
 
+############### Creation of class "Model" ###############
+    # method: a string containing the method used by the paramList (ABC, Bayesian, Likelihood)
+    # name: a vector containing (component name, number of the model, model name based on names from stack or array)
+    # type_model: a string containing the function used for the model
+    # param_model: a list containing objects of class ParamModel (an object for each parameters of the model function)
+    # param_name: a vector containing the names of the function's parameters
 setClass(
     Class = "Model",
     representation = representation(
@@ -18,7 +24,7 @@ setClass(
         param_name = character(0)
     ),
     validity = function(object){
-        #Will be changed in order to check if type_model match a known model function
+        # Check if type_model match a known model function
         if(is.null(getType_model(object))){
             stop("[ Model : verification ] type_model does not match any know model function")
         } else{
@@ -29,7 +35,18 @@ setClass(
     
 )
 
-#Initiateur
+
+############### Initiator ###############
+    # Function to initialize an object of class "Model"
+    # Args:
+    #       composante_name: a string containing the name of the component where the model is 
+    #           (niche_r, niche_k, dispersion, mutation, generation)
+    #       model_num: an integer containing the number of the actual model
+    #       method: a string containing the method used by the paramList (ABC, Bayesian, Likelihood)
+    #       nameStack: name of the model from array or rasterStack, or "STANDARD"
+    #           if the component is independant of environmental data
+    # Example:
+    #       myModel = model("niche_r", 1, "ABC", "BIO12")
 setMethod(
     f = "initialize",
     signature = "Model",
@@ -43,7 +60,6 @@ setMethod(
         } else {
             possible = which(data_fct[,1]==composante_name)
         }
-        
         
         # print the possible functions in order (with a number to know which one to use)
         possible_number = 1:length(possible)
@@ -88,14 +104,18 @@ setMethod(
         return(.Object)
     }
 )
-
-
+    # User-friendly constructor
 model = function(composante_name, model_num, method, nameStack){
     new(Class = "Model", composante_name=composante_name, model_num=model_num, method=method, nameStack = nameStack)
 }
 
 
-#Function to get the "type_model" attribut
+#############################################
+############### Get functions ###############
+#############################################
+
+############### getType_Model ###############
+    # Function to get the "type_model" attribut (model function's name)
 setGeneric("getType_model",
            function(object){standardGeneric("getType_model")})
 
@@ -105,7 +125,8 @@ setMethod("getType_model", "Model",
           }
 )
 
-#Function to get the "param_name" attribut
+############### getParam_nameMod ###############
+    # Function to get the "param_name" attribut (parameters' names)
 setGeneric("getParam_nameMod",
            function(object){standardGeneric("getParam_nameMod")})
 
@@ -115,7 +136,8 @@ setMethod("getParam_nameMod", "Model",
           }
 )
 
-#Function to get the "name" attribut
+############### getNameModel ###############
+    # Function to get the "name" attribut
 setGeneric("getNameModel",
            function(object){standardGeneric("getNameModel")})
 
@@ -125,7 +147,8 @@ setMethod("getNameModel", "Model",
           }
 )
 
-#Function to get the "method" attribut
+############### getMethodMod ###############
+    # Function to get the "method" attribut
 setGeneric("getMethodeMod",
            function(object){standardGeneric("getMethodeMod")})
 
@@ -135,7 +158,13 @@ setMethod("getMethodeMod", "Model",
           }
 )
 
-#Function to update the number of models
+
+#############################################
+############### Set functions ###############
+#############################################
+
+############### setNumModel ###############
+    # Function to update the number of models
 setGeneric(
     name="setNumModel",
     def=function(object, nb) {standardGeneric("setNumModel")}
@@ -150,24 +179,12 @@ setMethod(
     }
 )
 
-# Function to print the parameters of the model functions
-setMethod(
-    f="show", 
-    signature="Model",
-    definition=function(object) {
-        for(i in 1:length(getParam_nameMod(object))) {
-            cat("          ",getParam_nameMod(object)[i],": ")
-            print(object@param_model[[i]])
-        }
-    }
-)
-
-# Function to change the type of model (function to use for the model)
+############### setTypeModel ###############
+    # Function to change the type of model
 setGeneric(
     name="setTypeModel",
     def=function(object) {standardGeneric("setTypeModel")}
 )
-
 
 setMethod(
     f="setTypeModel",
@@ -180,12 +197,12 @@ setMethod(
     }
 )
 
-# Function to change a prior
+############### setPrior ###############
+    # Function to change a prior
 setGeneric(
     name="setPrior",
     def=function(object) {standardGeneric("setPrior")}
 )
-
 
 setMethod(
     f="setPrior",
@@ -232,12 +249,12 @@ setMethod(
     }
 )
 
-# Function to assess the prior values for one model
+############### setResultPrior ###############
+    # Function to compute the prior values for one model
 setGeneric(
     name="setResultPriorMod",
     def=function(object, all) {standardGeneric("setResultPriorMod")}
 )
-
 
 setMethod(
     f="setResultPriorMod",
@@ -276,3 +293,22 @@ setMethod(
         return(object)
     }
 )
+
+
+#############################################
+############### Show functions ##############
+#############################################
+
+############### show ###############
+    # Function to print the parameters of the model functions
+setMethod(
+    f="show", 
+    signature="Model",
+    definition=function(object) {
+        for(i in 1:length(getParam_nameMod(object))) {
+            cat("          ",getParam_nameMod(object)[i],": ")
+            print(object@param_model[[i]])
+        }
+    }
+)
+

@@ -97,3 +97,24 @@ paramList = function(env) {
     return(.Object)
 }
 
+# Function to assess the priors
+setResultPrior = function(object) {
+    if(class(object)[1] == "Backward") {
+        return(setResultPriorBack(object))
+    } else if(class(object)[1] == "Forward") {
+        return(setResultPriorFor(object))
+    } else {
+        stop("The specified object is not valid.")
+    }
+}
+
+# Function to change the parameters in paramList
+setParamList = function(object) {
+    if(class(object)[1] == "Backward") {
+        return(setBackward(object))
+    } else if(class(object)[1] == "Forward") {
+        return(setForward(object))
+    } else {
+        stop("The specified object is not valid.")
+    }
+}

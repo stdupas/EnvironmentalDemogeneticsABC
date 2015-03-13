@@ -1,4 +1,12 @@
-#Class of paramModel
+############### CLASS: "ParamModel" ###############
+
+############### Creation of class "ParamModel" ###############
+    # method: a string containing the method used by the paramList (ABC, Bayesian, Likelihood)
+    # name: a vector containing ("model:", number of the model)
+    # type_prior: a string containing the function used for the prior
+    # param_prio: a list containing the value of each parameter
+    # param_name: a vector containing the names of the parameters
+    # result_prior: a vector containing the priors values
 setClass(
     Class = "ParamModel",
     representation = representation(
@@ -27,7 +35,11 @@ setClass(
 )
 
 
-#Initiateur
+############### Initiator ###############
+    # Function to initialize an object of class "ParamModel"
+    # Args:
+    #       model_num: an integer containing the number of the actual model
+    #       method: a string containing the method used by the paramList (ABC, Bayesian, Likelihood)
 setMethod(
     f = "initialize",
     signature = "ParamModel",
@@ -84,14 +96,18 @@ setMethod(
     }
 )
 
-#UserFriendly constructor
+    # User-friendly constructor
 paramModel = function(model_num, method ){
     new(Class = "ParamModel", model_num = model_num, method = method)
 }
 
-############################## GET METHODS ####################################
 
-#Function to get the "type_prior" attribut
+#############################################
+############### Get functions ###############
+#############################################
+
+############### getType_Prior ###############
+    # Function to get the "type_prior" attribut (prior function)
 setGeneric("getType_prior",
            function(object){standardGeneric("getType_prior")})
 
@@ -101,7 +117,8 @@ setMethod("getType_prior", "ParamModel",
           }
 )
 
-#Function to get the "param_prior" attribut
+############### getParam_Prior ###############
+    # Function to get the "param_prior" attribut
 setGeneric("getParam_prior",
            function(object){standardGeneric("getParam_prior")})
 
@@ -111,7 +128,8 @@ setMethod("getParam_prior", "ParamModel",
           }
 )
 
-#Function to get the "name" attribut
+############### getNameParamModel ###############
+    # Function to get the "name" attribut
 setGeneric("getNameParamModel",
            function(object){standardGeneric("getNameParamModel")})
 
@@ -121,7 +139,8 @@ setMethod("getNameParamModel", "ParamModel",
           }
 )
 
-#Function to get the "result_prior" attribut
+############### getResult_Prior ###############
+    # Function to get the "result_prior" attribut
 setGeneric("getResult_prior",
            function(object){standardGeneric("getResult_prior")})
 
@@ -131,7 +150,8 @@ setMethod("getResult_prior", "ParamModel",
           }
 )
 
-#Function to get the "method" attribut
+############### getParamMethod ###############
+    # Function to get the "method" attribut
 setGeneric("getParamMethod",
            function(object){standardGeneric("getParamMethod")})
 
@@ -141,7 +161,8 @@ setMethod("getParamMethod", "ParamModel",
           }
 )
 
-#Function to get the "param_name" attribut
+############### getParam_name ###############
+    # Function to get the "param_name" attribut
 setGeneric("getParam_name",
            function(object){standardGeneric("getParam_name")})
 
@@ -151,8 +172,13 @@ setMethod("getParam_name", "ParamModel",
           }
 )
 
-######################################## SET METHODS ###################################
-# Function to update type_prior
+
+#############################################
+############### Set functions ###############
+#############################################
+
+############### setType_prior ###############
+    # Function to update type_prior
 setGeneric(
     name="setType_prior",
     def=function(object) {standardGeneric("setType_prior")}
@@ -173,8 +199,8 @@ setMethod(
     }
 )
 
-
-# Function to update param_prior
+############### setParam_prior ###############
+    # Function to update param_prior
 setGeneric(
     name="setParam_prior",
     def=function(object) {standardGeneric("setParam_prior")}
@@ -218,8 +244,8 @@ setMethod(
     }
 )
 
-
-#Function to change the Result_prior
+############### setResult_prior ###############
+    # Function to change the Result_prior
 setGeneric("setResult_prior",
            function(object){standardGeneric("setResult_prior")})
 
@@ -230,8 +256,8 @@ setMethod("setResult_prior", "ParamModel",
           }
 )
 
-
-#Function to clean the Result_prior
+############### delResult_prior ###############
+    # Function to clean the Result_prior
 setGeneric("delResult_prior",
            function(object){standardGeneric("delResult_prior")})
 
@@ -243,7 +269,28 @@ setMethod("delResult_prior", "ParamModel",
 )
 
 
+#############################################
+############### Show functions ##############
+#############################################
 
+############### show ###############
+    # Function to print the parameters of the prior functions
+setMethod(
+    f="show", 
+    signature="ParamModel",
+    definition=function(object) {
+        param = paste(getParam_name(object),"=",getParam_prior(object))
+        cat(getType_prior(object),"(",param,")\n")
+    }
+)
+
+
+#############################################
+############## Static functions #############
+#############################################
+
+############### findFunctionFromFile ###############
+    # Function to find a given function in the file "functions.txt"
 findFunctionFromFile = function(model_type,fct_name){
     data_fct = read.table("functions.txt", sep = ";", header = TRUE)
     if(!is.element(fct_name, data_fct[,2])){
@@ -259,13 +306,3 @@ findFunctionFromFile = function(model_type,fct_name){
     }
 }
 
-
-# Function to print the parameters of the prior functions
-setMethod(
-    f="show", 
-    signature="ParamModel",
-    definition=function(object) {
-        param = paste(getParam_name(object),"=",getParam_prior(object))
-        cat(getType_prior(object),"(",param,")\n")
-    }
-)

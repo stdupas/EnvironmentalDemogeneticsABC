@@ -6,9 +6,10 @@ setClass(
         generation="Composante"
     ),
     contains="ParamList",
-    validity=function(object) {
-        # add verification if needed
-    }
+    #Slot:
+    #   method: a string that indicates how the composante will be build.
+    #           "ABC", "Bayesian", "Likelihood"
+    #   generation: an object of class composante 
 )
 
 # Constructor of forward
@@ -16,6 +17,12 @@ setMethod(
     f="initialize",
     signature="Forward",
     definition=function(.Object, names_stacks) {
+        # Function to initiate the construction of an object of classe Forward
+        # Args:
+        #     names_stacks: a list of character with all the names of the environmental variables
+        #Return:
+        #   .Object: an object of class Forward   
+        
         .Object@names_stacks = names_stacks
         flag = 0
         while(flag == 0){

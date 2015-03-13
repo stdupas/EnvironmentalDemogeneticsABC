@@ -1,3 +1,6 @@
+# Sources for needed classes
+source("Class_composante.R")
+
 # Class backward
 setClass(
     Class="Backward", 
@@ -5,9 +8,10 @@ setClass(
     representation=representation(
         method = "character"
     ),
-    validity=function(object) {
-        # add verification if needed
-    }
+    #Slot:
+    #   method: a string that indicates how the composante will be build.
+    #           "ABC", "Bayesian", "Likelihood"
+
 )
 
 # Constructor of backward
@@ -15,6 +19,12 @@ setMethod(
     f="initialize",
     signature="Backward",
     definition=function(.Object, names_stacks) {
+        # Function to initiate the construction of an object of classe Backward
+        # Args:
+        #     names_stacks: a list of character with all the names of the environmental variables
+        #Return:
+        #   .Object: an object of class Backward   
+        
         .Object@names_stacks = names_stacks
         flag = 0
         while(flag == 0){

@@ -43,8 +43,21 @@ loadParamList = function(file){
 }
 
 #Function to get the "result_prior"
-#Args: object paramList, component name, c(model number, parameter model) or 0 for independant model
 getResultPrior = function(object,comp,param){
+    # Function that asks the user which prior results he wants and then returns it
+    # Args:
+    #     object: a paramList object where the wanted prior results are
+    #     comp: the name of the composante where the wanted prior results are
+    #     param: a vector containing the model number and the number of the parameter model
+    #            where the wanted prior results are. or 0 if the wanted prior results are in
+    #            the independant model
+    #Return:
+    #   object: a list contaning te prior results asked
+    # Example:
+    #     getResultPrior(my_paramlist, "niche_k", c(1,2))
+    #       returns the prior results of the sencond hyper_parameter of the first model of the component niche_k 
+    #       in the paramList my_paramlist
+    
     if(object@method == "Bayesian" || object@method == "Likelihood") {
         cat("ERROR: Your method doesn't allow any prior result")
     } else if(comp == "niche_r") {
@@ -117,6 +130,15 @@ paramList = function(env) {
 
 # Function to assess the priors
 setResultPrior = function(object) {
+    # Function that asks the user which prior results he wants to generate
+    # Args:
+    #     object: a paramList object
+    #Return:
+    #   setResultPrior...(object): a paramList containing the same informations that object
+    #                              but also a full result_prior slot
+    #EXample:
+    #   my_paramlist = setResultPrior(my_paramlist)
+    `
     if(class(object)[1] == "Backward") {
         return(setResultPriorBack(object))
     } else if(class(object)[1] == "Forward") {
@@ -128,6 +150,14 @@ setResultPrior = function(object) {
 
 # Function to change the parameters in paramList
 setParamList = function(object) {
+    # Function that asks the user whhat he wants to change
+    # Args:
+    #     object: a paramList object
+    #Return:
+    #   set...(object): a paramList which is the modified object
+    #EXample:
+    #   my_paramlist = setParamList(my_paramlist)
+    
     if(class(object)[1] == "Backward") {
         return(setBackward(object))
     } else if(class(object)[1] == "Forward") {

@@ -1,3 +1,5 @@
+library("argosfilter")
+
 distanceMatrixFromRaster =
 function(object){
 	# Computes a pairwise distance matrix from a raster object

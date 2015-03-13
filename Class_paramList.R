@@ -19,6 +19,11 @@ setGeneric("saveParamList",
 
 setMethod("saveParamList", "ParamList",
           function(object, file){
+              # Function to save a paramList object into a RDS file
+              # Args:
+              #     file: a string containing the name of the file where the paramList will be saved
+              # Example:
+              #     saveParamList("debug.rds")
               saveRDS(object, file)
           }
 )
@@ -26,6 +31,13 @@ setMethod("saveParamList", "ParamList",
 
 #Function to load the ParamList
 loadParamList = function(file){
+    # Function to load a paramList object from a RDS file
+    # Args:
+    #     file: a string containing the name of the file where the paramList will be load
+    #Return:
+    #   object: the paramList in the file
+    # Example:
+    #     loadParamList("debug.rds")
     object = readRDS(file)
     return(object)
 }
@@ -68,6 +80,12 @@ getResultPrior = function(object,comp,param){
 
 # Constructor of paramList
 paramList = function(env) {
+    # Function to initiate the construction of an object of classe paramList
+    # Args:
+    #     env: A rasterStack or an Array that contains the differnets environnement variables
+    #Return:
+    #   .Object: an object of class paramList   
+
     flag = -1
     while(flag == -1) {
         cat("[Type 0 to quit] What do you want to do?\n1: Forward\n2: Backward\n")

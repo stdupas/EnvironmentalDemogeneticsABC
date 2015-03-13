@@ -11,6 +11,14 @@ setClass(
         mutation="Composante",
         names_stacks = "character"
     )
+    
+    #Slot:
+    #   niche_r: an object of class composante 
+    #   niche_k: an object of class composante 
+    #   dispersion: an object of class composante 
+    #   mutation: an object of class composante 
+    #   names_stacks: the list of all the environnement variables in the study 
+    
 )
 
 #Function to save the ParamList

@@ -146,7 +146,7 @@ setResultPrior = function(object) {
     #                              but also a full result_prior slot
     #EXample:
     #   my_paramlist = setResultPrior(my_paramlist)
-    `
+
     if(class(object)[1] == "Backward") {
         return(setResultPriorBack(object))
     } else if(class(object)[1] == "Forward") {

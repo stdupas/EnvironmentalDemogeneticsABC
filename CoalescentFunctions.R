@@ -1,10 +1,11 @@
-simSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initialGenetValue, stepValueOfLoci, cores){
+simSpatialCoal <- function(nbSimul, ParamList, rasterStack, nicheMeth, GeneticData, initialGenetValue, stepValueOfLoci, cores){
   # Estimates the parameters of a model (spatial, niche, coalescence) in an abc framework
   #
   # Args:
   #   nbSimul: the number of simulations wanted for abc estimation. need to be equal to the number of simulation specified in ParamList
   #   ParamList: the R object describing the model, constructed by askListOfParameters function
   #   rasterStack: the raster object describing environment used for niche modelling and dispersion computations
+  #   nicheMeth : the mean function to be applied over environmental variables to get a unique response : "arithmetic" or "geometric"
   #   GeneticData: a matrix giving in row the individuals, in columns the coordinates and the loci : names and order have to be : x, y, ... and names of loci
   #   initialGenetValue: a vector giving the genetic value attributed to the ancestor gene.
   #   stepValueOfLoci: a vector giving the assumed step value for each locus, given in the same order as in GeneticData
@@ -40,6 +41,14 @@ simSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
   # where are the sampled data ?
   localizationData <- cellFromXY(object = rasterStack, xy = GeneticData[, c("x", "y")])
   #names(localizationData)=1:length(localizationData)
+  if(anyNA(localizationData)){ 
+    stop("unknown localizations (NA) in simSpatialCoal. Please verify if genetic data coordinates are inside raster extent")
+  }
+  
+  # Compute distance matrix in kilometers
+  distMat <- distanceMatrixFromRaster(object = rasterStack)/1000
+  
+  
   
   local({
     
@@ -74,90 +83,154 @@ simSpatialCoal <- function(nbSimul, ParamList, rasterStack, GeneticData, initial
                                            stepValueOfLoci,
                                            localizationData){
       
-      geneticResults <- matrix(data=NA, nrow=nrow(GeneticData), ncol=numberOfLoci)
-      
-      # Get the mutation rate
-      mutationRate <- ParamList[["Mutation"]][["mutationRate"]][["Values"]][x]
-      
-      # Get the carrying capacity map :
-      rasK <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = ParamList, sublist="NicheK"), 
-                                          rasterStack = rasterStack,
-                                          args = getArgsListNiche(simulation = x, ParamList = ParamList, sublist="NicheK"))
-      rasK <- round(rasK)
-      # Prevent impossible transition :
-      if( cellStats(x = rasK, stat = sum) == 0){
-        stop(paste("The parameters values for niche models led to null carrying capacity over all cells of the landscape :
-                   coalescence is impossible to simulate"))
-      }
-      
-      # Get growth rate map :
-      rasR <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = ParamList, sublist="NicheR"), 
-                                          rasterStack = rasterStack,
-                                          args = getArgsListNiche(simulation = x, ParamList = ParamList, sublist="NicheR"))
-      # Prevent impossible transition :
-      if( cellStats(x = rasK, stat = sum) == 0){
-        stop(paste("The parameters values for niche models led to null growth rate over all cells of the landscape : 
-                   coalescence is impossible to simulate"))
-      }
-      
-      # Get migration matrix :
-      kernelMatrix <- dispersionFunctionForRasterLayer(dispersionFunction=getFunctionDispersion(ParamList),
-                                                       rasterLayer=rasterStack[[1]], 
-                                                       args=getArgsListDispersion(simulation = x, ParamList = ParamList))
-      
-      migrationMatrix <- migrationRateMatrix(kernelMatrix)
-      
-      # Get transition matrix :
-      transitionBackward <- transitionMatrixBackward(r = values(rasR), K = values(rasK), migration = migrationMatrix)
-
-      
-      ### LOOP ON LOCI >>>>>>>>>>>>>>>>>
-      
-      for(locus in 1:numberOfLoci){ # locus=1
+      system.time(local({
+        setTimeLimit(elapsed = 3600, transient = TRUE)
         
-        # Get the stepValue of the locus under concern
-        stepValue <- stepValueOfLoci[locus]
+        geneticResults <- matrix(data=NA, nrow=nrow(GeneticData), ncol=numberOfLoci)
         
-        maxCoalEvent <- length(localizationData) - 1
+        # Get the mutation rate
+        mutationRate <- ParamList[["Mutation"]][["mutationRate"]][["Values"]][x]
         
-        # coalescent informations : (time of coalescence, Child 1, Child 2, Parent, Branch Length, mutation nbr, resultant, genet values)
-        coal <- matrix(data = NA, nrow = maxCoalEvent, ncol = 8)    
+        # Get the carrying capacity map :
+        rasK <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = ParamList, sublist="NicheK"), 
+                                            rasterStack = rasterStack,
+                                            args = getArgsListNiche(simulation = x, ParamList = ParamList, sublist="NicheK"),
+                                            meth = nicheMeth)
+        rasK <- round(rasK)
+        # Prevent impossible transition :
+        if( cellStats(x = rasK, stat = sum) == 0){
+          stop(paste("The parameters values for niche models led to null carrying capacity over all cells of the landscape :
+                     coalescence is impossible to simulate"))
+        }
         
-        # launch the coalescent
-        coal[,c(1:4)] <- coalescentCore(tipDemes = localizationData, 
-                                                     transitionBackward = transitionBackward, 
-                                                     N = round(values(rasK)))
+        # Get growth rate map :
+        rasR <- nicheFunctionForRasterStack(functionList = getFunctionListNiche(ParamList = ParamList, sublist="NicheR"), 
+                                            rasterStack = rasterStack,
+                                            args = getArgsListNiche(simulation = x, ParamList = ParamList, sublist="NicheR"),
+                                            meth = nicheMeth)
+        # Prevent impossible transition :
+        if( cellStats(x = rasK, stat = sum) == 0){
+          stop(paste("The parameters values for niche models led to null growth rate over all cells of the landscape : 
+                     coalescence is impossible to simulate"))
+        }
         
-        # add branch length
-        coal[,5] <- c(coal[,1][-1] - coal[,1][-nrow(coal)], NA)
+        # Get migration matrix :
+        kernelMatrix <- computeDispersionKernel(dispersionFunction = getFunctionDispersion(ParamList),
+                                                distanceMatrix = distMat, 
+                                                args=getArgsListDispersion(simulation = x, ParamList = ParamList))
         
-        # add mutation number
-        coal[,6] <- vapply(X = coal[,5],
-                           FUN = function(x){rpois(n = 1, lambda = mutationRate*x)},
-                           FUN.VALUE = c(1))
+        migrationMatrix <- migrationRateMatrix(kernelMatrix)
         
-        # add resultant 
-        coal[,7] <- resultantFunction(nbrMutations = coal[,6],
-                                      stepValue = stepValue,
-                                      mutationModel = getFunctionMutation(ParamList = ParamList),
-                                      args = getArgsListMutation(simulation = x, ParamList = ParamList ))
+        # Get transition matrix :
+        transitionBackward <- transitionMatrixBackward(r = values(rasR), K = values(rasK), migration = migrationMatrix)
         
-        # add genetic values
-        coal[nrow(coal),8] <- initialGenetValue
-        for(i in seq(from = nrow(coal)-1, to = 1)){ coal[i,8] <- coal[i+1,8] + coal[i,7] }
+        # number of  tipNodes
+        numNodes <- length(localizationData)
         
-        # Record the genetic data
-        n2 <- which(coal[,2] %in% seq(from = 1, to = length(localizationData)))
-        n3 <- which(coal[,3] %in% seq(from = 1, to = length(localizationData)))
-        geneticResults[coal[n2, 2], locus] <- coal[n2, 8]
-        geneticResults[coal[n3, 3], locus] <- coal[n3, 8]
+        # Compute the maximal number of coalescence events
+        maxCoalEvent <- numNodes - 1
         
+        ### LOOP ON LOCI >>>>>>>>>>>>>>>>>
         
-      } # END OF LOOP OVER LOCI <<<<<<<<<<<<<
-      
-      # write results of genetic data 
-      fname = paste(getwd(),"/SimulResults/", "Genetics_", x , ".txt", sep="")
-      write.table(geneticResults, file=fname)
+        for(locus in 1:numberOfLoci){ # locus=1
+          
+          # Get the stepValue of the locus under concern
+          stepValue <- stepValueOfLoci[locus]
+          
+          # coalescent informations : (time of coalescence, Child 1, Child 2, Parent, Branch Length, mutation nbr, resultant, genet values)
+          coal <- matrix(data = NA, nrow = maxCoalEvent, ncol = 8)    
+          
+          # launch the coalescent
+          coal[,c(1:4)] <- coalescentCore(tipDemes = localizationData, 
+                                          transitionBackward = transitionBackward, 
+                                          N = round(values(rasK)))
+          
+          # Create a matrice for branches (in columns : Child/Parent/Branch length/Number of mutation/Resultant)
+          branchMat <- matrix(NA, nrow = (maxCoalEvent)*2, ncol = 5)
+          
+          # Fill child -> Parent information (decoupling children nodes)
+          branchMat[,c(1,2)] <- rbind(coal[,c(2,4)] , coal[,c(3,4)])
+          
+          # time of apparition of child node
+          timeC <- vapply(X = branchMat[,1],
+                          FUN = function(x, coal){
+                            # find position in coalescence table
+                            line <- which(coal[, 4] == x)
+                            if(length(line) == 1){
+                              # it's ok : get time
+                              t <- coal[line, 1] 
+                            }else if(length(line) == 0) {
+                              # node is an initial nod (tip node)
+                              t <- 0                          
+                            }else{
+                              # it's really NOT ok
+                              stop("error in filling branch lengths in coalescent : 
+                                   several times of apparition for one node seem to appear : 
+                                   please verify code")
+                            }
+                            return(t)
+                            },
+                          coal = coal,
+                          FUN.VALUE = c(1))
+          
+          # time of apparition of parent node
+          timeP <- vapply(X = branchMat[,2],
+                          FUN = function(x, coal){
+                            # find position in coalescence table
+                            line <- which(coal[, 4] == x)
+                            if(length(line) == 1){
+                              # it's ok : get time
+                              t <- coal[line, 1] 
+                            }else if(length(line) == 0) {
+                              # node is an initial nod (tip node)
+                              t <- 0                          
+                            }else{
+                              # it's really NOT ok
+                              stop("error in filling branch lengths in coalescent : 
+                                   several times of apparition for one node seem to appear : 
+                                   please verify code")
+                            }
+                            return(t)
+                            },
+                          coal = coal,
+                          FUN.VALUE = c(1))
+          
+          # add branch length
+          branchMat[,3] <- timeP - timeC        
+          
+          # add mutation number
+          branchMat[,4] <- vapply(X = branchMat[,3],
+                                  FUN = function(x){rpois(n = 1, lambda = mutationRate*x)},
+                                  FUN.VALUE = c(1))
+          
+          # add resultant 
+          branchMat[,5] <- resultantFunction(nbrMutations = branchMat[,4],
+                                             stepValue = stepValue,
+                                             mutationModel = getFunctionMutation(ParamList = ParamList),
+                                             args = getArgsListMutation(simulation = x, ParamList = ParamList ))
+          
+          # add genetic values
+          values <- rep(NA, times = numNodes + maxCoalEvent)
+          values[length(values)] <- initialGenetValue
+          for(n in seq(from = length(values)-1, to =1, by = -1 )){
+            # find the line of the focal node
+            focal <- which(branchMat[,1] == n)
+            # find the resultant
+            res <- branchMat[focal, 5]
+            # find the genetic value of the parent
+            values[n] <- values[branchMat[focal, 2]] +res
+          }
+          
+          # Record the genetic data
+          geneticResults[,locus] <- values[1:numNodes]        
+          
+                          } # END OF LOOP OVER LOCI <<<<<<<<<<<<<
+        
+        # write results of genetic data 
+        fname = paste(getwd(),"/SimulResults/", "Genetics_", x , ".txt", sep="")
+        write.table(geneticResults, file=fname)
+        
+      })) # end of system.time
       
       # Send progress update
       writeBin(1/numJobs, f)
@@ -276,6 +349,32 @@ coalescentCore <- function(tipDemes, transitionBackward, N){
   return(coalescent)
 }
 
+timeFinder <- function(x, coal){
+  # Find time at which a node appeared for the first time. Function used to compute branch length
+  #
+  # Args:
+  #   x : the ID of the node
+  #   coal : the table returned by coalescentCore
+  #
+  # Returns :
+  #   The time at which the node x appeared for the first time
+  
+  # find position in coalescence table
+  line <- which(coal[, 4] == x)
+  if(length(line) == 1){
+    # it's ok : get time
+    t <- coal[line, 1] 
+  }else if(length(line) == 0) {
+    # node is an initial nod (tip node)
+    t <- 0                          
+  }else{
+    # it's really NOT ok
+    stop("error in filling branch lengths in coalescent : 
+                                 several times of apparition for one node seem to appear : 
+                                 please verify code")
+  }
+  return(t)
+}
 
 coalescent_2_newick <- function(coalescent)
 {

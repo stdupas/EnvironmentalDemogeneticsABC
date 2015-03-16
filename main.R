@@ -16,34 +16,27 @@ library(parallel)
 
 ###### Environmental data :
 
-# Data2 <- data.frame(BIO1=c(200,120,300,400),BIO12=c(1000,350,2000,2900))
-Data2 <- data.frame(BIO1=c(300,400),BIO12=c(2000,1500))
-# Make raster stack with two layers according to the environmental variables of the dataframe
-bio <- stack(list("BIO1"=raster(matrix(Data2$BIO1,nrow=1,ncol=2),xmn=0,xmx=2,ymn=0,ymx=1),
-                  "BIO12"=raster(matrix(Data2$BIO12,nrow=1,ncol=2),xmn=0,xmx=2,ymn=0,ymx=1)))
+load("bio.RData")
 
 ###### Genetic data :
 
 # load fake GeneticData 
-genetic <- read.table("GeneticData.txt", header=TRUE)
-genetic[,"x"] <- rep(0.5, times = 10)
-genetic[,"y"] <- rep(0.5, times = 10)
+load("dataSet.RData")
 
 # genetic value of the ancestor
 ancestor <- 200
 
 # assuming we have the step values for each locus
-steps <- c(1,2,3,4,5,4,4,4,4,4)
-length(steps)
+load("steps.RData")
 
-# ParamList <- askListOfParameters(rasterStack=bio, nb_simulations=100)
-# save(ParamList, file = "Exemples/OnePop/ParamList.RData")
+###### Model :
 
-# Or load it from working directory
 load("ParamList.RData")
 
+
+##### 
 # launch simulations
-simSpatialCoal(nbSimul=10000, ParamList=ParamList, rasterStack=bio, GeneticData=genetic, initialGenetValue=ancestor,
+simSpatialCoal(nbSimul=1000000, ParamList=ParamList, rasterStack=bio, nicheMeth = "arithmetic", GeneticData=dataSet, initialGenetValue=ancestor,
                stepValueOfLoci= steps, cores=detectCores())
 
 # analyse the results, computes summary statistics

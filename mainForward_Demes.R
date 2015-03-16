@@ -18,6 +18,7 @@ source("PriorFunctions.R")
 #source("MarkovProcess.R")
 #source("GeneticDataSimulation.R")
 source("forwardModels.R")
+source("readNetCDF.R")
 
 ### Sourcing Libraries
 library(raster)
@@ -25,7 +26,7 @@ library(ape)
 library(stringr)
 library(lattice)
 library(parallel)
-#library(lubridate)
+library(lubridate)
 
 ########### Parameters initialisation  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
@@ -35,6 +36,8 @@ library(parallel)
 startingDate = as.Date("2001-01-01")
 stoppingDate = as.Date("2003-01-01")
 Dates <- as.Date(startingDate:stoppingDate,origin="1970-01-01");length(Dates)
+
+
 EnvData = array(c(rep( sample((12:57)*10,400,replace=TRUE),731),rep(sample((15:290)*10,400,replace=TRUE),731)),dim=c(400,731,2),dimnames = list(1:400,as.character(Dates),c("BIO1","BIO12")))
 rasterStack <- stack(list("BIO1"=raster(matrix(EnvData[,1,1],nrow=20,ncol=20),xmn=0,xmx=20,ymn=0,ymx=20),
                           "BIO12"=raster(matrix(EnvData[,1,2],nrow=20,ncol=20),xmn=0,xmx=20,ymn=0,ymx=20)))
@@ -59,10 +62,20 @@ release <- data.frame(individualNb=1:10,
                               max=bbox(rasterStack)[1,2]),
                       y=runif(10,min=bbox(rasterStack)[2,1],
                               max=bbox(rasterStack)[2,2]),
-                      birthDate=as.Date(as.Date("2001/01/03"):as.Date("2001/01/12"),origin="1970-01-01")
-                      )
+                      birthDate=as.Date(as.Date("2001/01/03"):as.Date("2001/01/12"),origin="1970-01-01"),
+                      size=1)
 individuals = release[,c("individualNb","birthDate")]
 individuals$demeNb <- cellFromXY(object = rasterStack, xy = release[, c("x", "y")])
+
+recovery <- data.frame(individualNb=1:3000,
+                       x=runif(3000,min=bbox(rasterStack)[1,1],
+                               max=bbox(rasterStack)[1,2]),
+                       y=runif(3000,min=bbox(rasterStack)[2,1],
+                               max=bbox(rasterStack)[2,2]),
+                       birthDate=as.Date("2001/01/01")+days(sample(100:730,3000,replace=TRUE)),
+                       size=sample(1:10,3000,replace=TRUE)
+                       )
+
 
 # where are the sampled data ?
 localizationData <- individuals$demeNb

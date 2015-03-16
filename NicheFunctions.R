@@ -186,12 +186,31 @@ linearPositiveTwoParameters <- function(x, X0, slope)
   #
   # Args:
   #   x: numeric providing the values of variable to calculate reaction norm
-  #   X0: value of the function at x=0
+  #   X0: value of X at Y=0
   #   slope: the value of the slope of the function
   #
   # Returns:
   #   The value of the reaction norm
   return((slope*x-slope*X0)*(slope*x-slope*X0>0))
+}
+
+linearTreeParameters <- function(x, X0, Xopt, Yopt)
+{
+  # Computes a linear response between points (X0,zero) and (Xopt,Yopt)
+  #
+  # Args:
+  #   x: numeric providing the values of variable to calculate reaction norm
+  #   X0: value of X at Y=0
+  #   slope: the value of the slope of the function
+  #   Yopt : the maximum value attained by the function
+  #
+  # Returns:
+  #   The value of the reaction norm
+  if ((Xopt-X0)!=0) {slope = Yopt/(Xopt-X0)  
+                     Y <- (slope*x-slope*X0)  
+                     Y <- (Y<=Yopt) * Y*(Y>=0) + Yopt*(Y>Yopt)
+  } else { Y <- Yopt*(x>Xopt)}
+  return(Y)
 }
 
 logLinearPositiveTwoParameters <- function(x, X0, slope)
@@ -244,7 +263,7 @@ nicheFunctionForRasterStack <- function(functionList, rasterStack, args, meth){
   #   nichesFunctions: an ordered list containing the names of the niche functions which are called. Must be in the same order as rasterLayer and args
   #   rasterStack: the rasterstack of environmental values used to compute niche function.
   #   args : an ordered list containing  the lists of arguments necessary to call each niche function.
-  #   meth : the mean function to be applied to combine the various environmental responses : "arithmetic" or "geometric"
+  #   meth : the mean function to be applied to combine the various environmental responses : "arithmetic", "geometric" "sum" or "product"
   # 
   # Returns:
   #   A raster with values corresponding to the norm reaction
@@ -258,14 +277,14 @@ nicheFunctionForRasterStack <- function(functionList, rasterStack, args, meth){
   reactionNorm <- stack(lapply(X, function(x){do.call(x[[2]], c(x[[1]], x[[3]]))}))
   
   # Combine the response with a mean function
-  if(meth == "arithmetic"){
-    response <- calc(reactionNorm, mean)
-  }else if(meth == "geometric"){
-    response <- calc(reactionNorm, geometricMean)
-  }else{
-    stop("In nicheFunctionForRasterStack, the meth arguments does not match")
-  }
-
+  
+  response = switch(meth,
+                    arithmetic = calc(reactionNorm, mean),
+                    geometric = calc(reactionNorm,geometricMean),
+                    Sum = calc(reactionNorm, sum),
+                    product = calc(reactionNorm, prod)
+  )
+  if (is.null(response)) stop("In nicheFunctionForRasterStack, the meth arguments does not match")
   return(response)
   
   # Ex:*
@@ -274,8 +293,8 @@ nicheFunctionForRasterStack <- function(functionList, rasterStack, args, meth){
   # rasterStack <- stack(list("BIO1"=raster(matrix(Data2$BIO1,nrow=1,ncol=4),xmn=0,xmx=4,ymn=0,ymx=1),
   #                                         "BIO12"=raster(matrix(Data2$BIO12,nrow=1,ncol=4),xmn=0,xmx=4,ymn=0,ymx=1)))
   # args <- list(list(Xmin=0, Xmax=10, Xopt=5, Yopt=1),list(X0=0, slope=1/2))
-  # nicheFunctionForRasterStack(functionList, rasterStack, args)
-  
+  # meth <- "Sum"
+  # nicheFunctionForRasterStack(functionList, rasterStack, args, meth)
 }
 
 nicheFunctionForArray2 <- function(functionList, Array, args){

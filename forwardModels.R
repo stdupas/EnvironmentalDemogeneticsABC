@@ -281,64 +281,130 @@ generateDemeSizeSerie <- function(release,
 demeSizes  
 }
 
-demeSizeArray <- function(Table, minDate, maxDate, BY="day")
+demeSizeArray <- function(release, minDate, maxDate, BY="day")
 {
   #
   # construction of expected deme sizes array
   #
-  Table$demeNb <- cellFromXY(object = rasterStack, xy = Table[, c("x", "y")])
-  Table$demeSize <- 1
+  release$demeSize <- 1
   Dates = as.Date(as.Date(minDate):as.Date(maxDate),origin="1970-01-01")
   demeSizes <- array(0,dim=c(nrow(EnvData),length(Dates)),dimnames = list(1:nrow(EnvData),as.character(Dates)))
-  Table <- aggregation(Table,BY=c("birthDate","demeNb"),methodes=c("Paste","Mean","Mean","Name","Name","Sum"))
-  for (i in rownames(Table))
-  {demeSizes[Table[i,"demeNb"],as.character(Table[i,"birthDate"])] <- Table[i,"demeSize"]}
+  release <- aggregation(release,BY=c("birthDate","demeNb"),methodes=c("Mean","Mean","Sum","Name","Name","Sum"))
+  for (i in rownames(release))
+  {demeSizes[release[i,"demeNb"],as.character(release[i,"birthDate"])] <- release[i,"demeSize"]}
 demeSizes  
 }
 
-
-likelihood <- function(release,
-                       recovery,
-                       rasterStack,
-                       EnvData,
-                       dispersionFunction,
-                       dispersionParameters,
-                       nicheKFunctionList,
-                       nicheRFunctionList,
-                       nicheKParametersList,
-                       nicheRParametersList,
-                       generationTimeParameters
-                       )
-{
-  kernelMatrix <- dispersionFunctionForRasterLayer(dispersionFunction=dispersionFunction,
-                                                   rasterLayer=rasterStack[[1]],
-                                                   args=dispersionParameters)
-  migrationMatrix <- forwardMigrationRateMatrixFromKernel(kernelMatrix)
-  rm(kernelMatrix)
-  generationTime <- generationTimeParameters$mean
-  generationTimeSD <- generationTimeParameters$mean*generationTimeParameters$SD
-  minDates = min(release$birthDate)
-  maxDates = min(max(recovery$birthDate),max(as.Date(colnames(EnvData))))
-  Dates <- as.Date(as.Date(minDates):as.Date(maxDates),origin="1970/01/01")
+table2arrayFromArrayModel <- function(Table=release,arrayModel=EnvData,Dates)
+{ 
   #
-  # construction of observed recovery array and expected recovery
+  # construction of expected recovery array in the same grid as EnvData with subset of dates
+  # Args:
+  # Table : a table with columns "demeNb" corresponding to EnvData line
+  #                              "size" corresponding to number of individual observed
+  #                              "birthDate"corrsponding to date of observation
   #
-  recovery$demeNb <- cellFromXY(object = rasterStack, xy = recovery[, c("x", "y")])
-  expectedRecoverySizes <- array(0,dim=c(nrow(EnvData),length(Dates)),dimnames = list(1:nrow(EnvData),as.character(Dates)))
-  recovery <- aggregation(recovery,BY=c("birthDate","demeNb"),methodes=c("Mean","Mean","Name","Sum","Name"))
-  recovery <- recovery[which(as.Date(recovery$birthDate)<=as.Date("2003/12/31")),]
-  for (i in rownames(recovery))
-  {expectedRecoverySizes[recovery[i,"demeNb"],as.character(recovery[i,"birthDate"])] <- recovery[i,"size"]}
-  # construction of likelihood with expected recovery
-  for (Date in colnames(expectedRecoverySizes)) # Date = colnames(expectedRecoverySizes)[1]
-  {
-    values(rasterStack) <- EnvData[,Date,]
-    K <- values(nicheFunctionForRasterStack(functionList = nicheKFunctionList, 
-                                            rasterStack = rasterStack,
-                                            args = nicheKParametersList))#meth="arithmetic"
-    # competition: cuts deme sizes to K
-    expectedRecoverySizes[,Date] <- (expectedRecoverySizes[,Date]>K)*K + (expectedRecoverySizes[,Date]<=K)*expectedRecoverySizes[,Date]
-    
-  }
+  demeSizes <- array(0,dim=c(nrow(EnvData),length(Dates)),dimnames = list(1:nrow(EnvData),as.character(Dates)))
+  for (i in rownames(Table))
+  {demeSizes[recovery[i,"demeNb"],as.character(Table[i,"birthDate"])] <- Table[i,"size"]}
+demeSizes
+}
   
+
+
+likelihood <- function(dispersionParameters = list(alpha=50,beta=2),
+                       nicheKParametersList=list(pr=list(X0=0,Xopt=267.1267,Yopt=5),
+                                                 tasmax=list(X0=273.1523,Xopt=321.9696,Yopt=1),
+                                                 tasmin=list(X0=268.2348,Xopt=304.5951,Yopt=1)),
+                       nicheRParametersList=list(pr=list(X0=0,Xopt=267.1267,Yopt=20),
+                                                 tasmax=list(X0=273.1523,Xopt=321.9696,Yopt=1),
+                                                 tasmin=list(X0=268.2348,Xopt=304.5951,Yopt=1)),
+                       generationTimeParameters=list(mean=25,SD=3)
+)
+{
+  
+  #
+  # building migration matrix
+  #
+  
+  dispersionKernel <- fatTail1(distMat, dispersionParameters$alpha, dispersionParameters$beta)
+  migrationMatrix <- migrationRateMatrix(dispersionKernel)  
+  
+  rm(dispersionKernel)
+  
+  #
+  # Probability density of generation time inthe interval [mean-3SD,mean+3SD]
+  #
+  
+  generationTimeInterval <- (generationTimeParameters$mean-3*round(generationTimeParameters$SD)):(generationTimeParameters$mean+3*round(generationTimeParameters$SD))
+  generationTimeDensity <- dnorm(generationTimeInterval,generationTimeParameters$mean,generationTimeParameters$SD)
+  generationTimeReducedInterval <- 1:length(generationTimeInterval)
+  
+  # construction of likelihood with expected recovery
+    for (i in 1:(ncol(demeSizes)-max(generationTimeInterval))) # Date = colnames(demeSizes)[1]
+    {
+      values(rasterStack) <- EnvData[,i,]
+      K <- values(nicheFunctionForRasterStack(functionList = nicheKFunctionList, 
+                                              rasterStack = rasterStack,
+                                              args = nicheKParametersList,
+                                              meth = "product")
+      )
+      R <- values(nicheFunctionForRasterStack(functionList = nicheRFunctionList, 
+                                              rasterStack = rasterStack,
+                                              args = nicheRParametersList,
+                                              meth = "product")
+      )
+      R[is.na(R)]<-0
+      K[is.na(K)]<-0
+      # reproduction: multiplies by r
+      reproducedAtDate <- demeSizes[,i]*R
+      # competition: cuts deme sizes to K
+      competedAtDate <- (reproducedAtDate>K)*K + (reproducedAtDate<=K)*reproducedAtDate
+      # migration: moves as adult after development (after generation time interval)
+      competedAtDate <- competedAtDate%*%migrationMatrix
+      demeSizes[,i+generationTimeInterval] <- demeSizes[,i+generationTimeInterval]+t(competedAtDate)%*%t(generationTimeDensity)
+    }
+  logLikelihood <- sum(dpois(recovery[,"size"],demeSizes[recovery[,"demeNb"],as.character(recovery[,"birthDate"])],log=TRUE))
+}
+
+
+likelihoodShort <- function(dispersionRate = .025,dispersionDistance=100,
+                            K.pr.X0=0,K.pr.Xopt=267.1267,K.pr.Yopt=5,K.generationTime=25,K.generationTimeSD=3,
+                            R.pr.X0=0,R.pr.Xopt=267.1267,R.pr.Yopt=5,R.generationTime=25,R.generationTimeSD=3)
+{
+  
+  #
+  # building migration matrix
+  #
+  
+  migrationMatrix <- (!(distMat == 0)&(distMat < dispersionDistance))*dispersionRate + (distMat==0)*(1-dispersionRate*4)
+  migrationMatrix <- migrationMatrix/colSums(migrationMatrix)
+    
+  #
+  # Probability density of generation time inthe interval [mean-3SD,mean+3SD]
+  #
+  
+  generationTimeInterval <- (generationTime-3*round(generationTimeSD)):(generationTime+3*round(generationTimeSD))
+  generationTimeDensity <- dnorm(generationTimeInterval,generationTime,generationTimeSD)
+  generationTimeReducedInterval <- 1:length(generationTimeInterval)
+  
+  # construction of likelihood with expected recovery
+  system.time(
+    for (i in 1:(ncol(demeSizes)-max(generationTimeInterval))) # Date = colnames(demeSizes)[1]
+    {
+      K <- linearTreeParameters(EnvData[,i,"pr"],K.pr.X0,K.pr.Xopt,K.pr.Yopt)
+      R <- linearTreeParameters(EnvData[,i,"pr"],R.pr.X0,R.pr.Xopt,R.pr.Yopt)
+      R[is.na(R)]<-0
+      K[is.na(K)]<-0
+      # reproduction: multiplies by r
+      reproducedAtDate <- demeSizes[,i]*R
+      # competition: cuts deme sizes to K
+      competedAtDate <- (reproducedAtDate>K)*K + (reproducedAtDate<=K)*reproducedAtDate
+      # migration: moves as adult after development (after generation time interval)
+      competedAtDate <- competedAtDate%*%migrationMatrix
+      demeSizes[,i+generationTimeInterval] <- demeSizes[,i+generationTimeInterval]+t(competedAtDate)%*%t(generationTimeDensity)
+    }
+  )
+  logLikelihood <- sum(dpois(recovery[,"size"],demeSizes[recovery[,"demeNb"],as.character(recovery[,"birthDate"])],log=TRUE))
+logLikelihood
 }

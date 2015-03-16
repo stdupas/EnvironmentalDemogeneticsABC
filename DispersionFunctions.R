@@ -161,7 +161,7 @@ computeDispersionKernel <- function(dispersionFunction, distanceMatrix, args){
   
   # Apply dispersionFunction
   dispersion <- apply(X=distanceMatrix, 
-                      MARGIN=c(1,2), 
+                      MARGIN=2, 
                       FUN=dispersionFunctionForValue,
                       dispersionFunction=dispersionFunction,
                       args=args)

@@ -372,14 +372,16 @@ likelihoodShort <- function(dispersionRate = .025,dispersionDistance=100,
                             K.pr.X0=0,K.pr.Xopt=267.1267,K.pr.Yopt=5,K.generationTime=25,K.generationTimeSD=3,
                             R.pr.X0=0,R.pr.Xopt=267.1267,R.pr.Yopt=5,R.generationTime=25,R.generationTimeSD=3)
 {
+    print("==============================")
   
   #
   # building migration matrix
   #
-  
+  generationTime = K.generationTime
+  generationTimeSD = K.generationTimeSD
   migrationMatrix <- (!(distMat == 0)&(distMat < dispersionDistance))*dispersionRate + (distMat==0)*(1-dispersionRate*4)
   migrationMatrix <- migrationMatrix/colSums(migrationMatrix)
-    
+
   #
   # Probability density of generation time inthe interval [mean-3SD,mean+3SD]
   #

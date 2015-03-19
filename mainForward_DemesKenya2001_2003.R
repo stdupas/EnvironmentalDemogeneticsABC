@@ -82,14 +82,16 @@ nicheRFunctionList=list(pr="linearTreeParameters",
 #                       size=sample(1:10,3000,replace=TRUE)
 #                       )
 
-distMat <- distanceMatrixFromRaster(object = rasterStack)
+distMat <- distanceMatrixFromRaster2(object = rasterStack)
 demeSizes <- array(0,dim=c(nrow(EnvData),length(Dates)),dimnames = list(1:nrow(EnvData),as.character(Dates)))
-demeSizes[,as.character(birthDates)] <- 1
+demeSizes[,as.character(birthDates)] <- 10
 EnvData <- EnvData[,colnames(demeSizes),]
 
+EnvDatabis = computeMeanEnvData(EnvData, "pr", 15)
 likelihoodShort()
 
 test = nlm(f = likelihoodShort,p=c(dispersionRate = .025,dispersionDistance=100,
-                          K.pr.X0=-5,K.pr.Xopt=267.1267,K.pr.Yopt=10,K.generationTime=25,K.generationTimeSD=3,
-                          R.pr.X0=-5,R.pr.Xopt=267.1267,R.pr.Yopt=10,R.generationTime=25,R.generationTimeSD=3))
+                          K.pr.X0=-5,K.pr.Xopt=267.1267,K.pr.Yopt=10,
+                          R.pr.X0=-5,R.pr.Xopt=267.1267,R.pr.Yopt=10,
+                          generationTime=25,generationTimeSD=3))
 

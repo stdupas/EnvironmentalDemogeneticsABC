@@ -26,8 +26,13 @@ nc2EnvDataAndRasterStack <- function(ncDirectory=paste(wd,"ForwardSimulData/",se
     if (any((dim(rasterLayer)%%aggregationParam)[1:2]!=c(0,0))) {        
       cellsToRemove <- dim(rasterLayer)[1:2]%%aggregationParam 
       rasterLayer2 <- crop(rasterLayer,extent(as.vector(extent(rasterLayer))-c(0,res(rasterLayer)[1]*(cellsToRemove[1]),0,res(rasterLayer)[2]*(cellsToRemove[2]))))
-    } else {rasterLayer2 <- rasterLayer}
-    rasterAgg <- aggregate(rasterLayer2,aggregationParam)} else {rasterAgg <- rasterLayer}
+    } else {
+        rasterLayer2 <- rasterLayer
+    }
+    rasterAgg <- aggregate(rasterLayer2,aggregationParam)
+  } else {
+      rasterAgg <- rasterLayer
+  }
 
   nCell <- ncell(rasterAgg) #length(latitude)*length(longitude)/(aggregationParam^2)
   EnvData <- array(NA,

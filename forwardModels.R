@@ -368,45 +368,90 @@ likelihood <- function(dispersionParameters = list(alpha=50,beta=2),
 }
 
 
-likelihoodShort <- function(dispersionRate = .025,dispersionDistance=100,
-                            K.pr.X0=0,K.pr.Xopt=267.1267,K.pr.Yopt=5,K.generationTime=25,K.generationTimeSD=3,
-                            R.pr.X0=0,R.pr.Xopt=267.1267,R.pr.Yopt=5,R.generationTime=25,R.generationTimeSD=3)
+likelihoodShort <- function(dispersionRate = .025,dispersionDistance=1000,
+                            K.pr.X0=0,K.pr.Xopt=50,K.pr.Yopt=25,
+                            R.pr.X0=0,R.pr.Xopt=50,R.pr.Yopt=5,
+                            generationTime=25,generationTimeSD=3,
+                            dvlpTime=25,dvlpTimeSD=3)
 {
     print("==============================")
-  
-  #
-  # building migration matrix
-  #
-  generationTime = K.generationTime
-  generationTimeSD = K.generationTimeSD
-  migrationMatrix <- (!(distMat == 0)&(distMat < dispersionDistance))*dispersionRate + (distMat==0)*(1-dispersionRate*4)
-  migrationMatrix <- migrationMatrix/colSums(migrationMatrix)
-
-  #
-  # Probability density of generation time inthe interval [mean-3SD,mean+3SD]
-  #
-  
-  generationTimeInterval <- (generationTime-3*round(generationTimeSD)):(generationTime+3*round(generationTimeSD))
-  generationTimeDensity <- dnorm(generationTimeInterval,generationTime,generationTimeSD)
-  generationTimeReducedInterval <- 1:length(generationTimeInterval)
-  
-  # construction of likelihood with expected recovery
-  system.time(
-    for (i in 1:(ncol(demeSizes)-max(generationTimeInterval))) # Date = colnames(demeSizes)[1]
+    dispersionRate = .025;dispersionDistance=1000;    K.pr.X0=0;K.pr.Xopt=50;K.pr.Yopt=25;    R.pr.X0=0;R.pr.Xopt=50;R.pr.Yopt=5;    generationTime=25;generationTimeSD=3;    dvlpTime=4;dvlpTimeSD=3
+    
+    #Matrice contenant les individus à l'extérieur des mais.
+    parentSizes <- array(0,dim=c(nrow(EnvData),length(Dates)),dimnames = list(1:nrow(EnvData),as.character(Dates)))
+    parentSizes[,as.character(birthDates)] <- 5
+    
+    #Matrice des individus à l'intérieur des mais.
+    larveSizes <- array(0,dim=c(nrow(EnvData),length(Dates)),dimnames = list(1:nrow(EnvData),as.character(Dates)))
+    larveSizes[,] <- 0
+     
+    #
+    # building migration matrix
+    #
+    migrationMatrix <- (!(distMat == 0)&(distMat < dispersionDistance))*dispersionRate + (distMat==0)*(1-dispersionRate*4)
+    migrationMatrix <- migrationMatrix/colSums(migrationMatrix)
+    
+    #
+    # Probability density of generation time inthe interval [mean-3SD,mean+3SD]
+    #
+    
+    generationTimeInterval <- (generationTime-3*round(generationTimeSD)):(generationTime+3*round(generationTimeSD))
+    generationTimeDensity <- dnorm(generationTimeInterval,generationTime,generationTimeSD)
+    
+    dvlpTimeInterval <- (dvlpTime-3*round(dvlpTimeSD)):(dvlpTime+3*round(dvlpTimeSD))
+    dvlpTimeDensity <- dnorm(dvlpTimeInterval,dvlpTime,dvlpTimeSD)
+    # construction of likelihood with expected recovery
+    for (i in 16:(ncol(larveSizes)-max(generationTimeInterval))) # Date = colnames(demeSizes)[1]
     {
-      K <- linearTreeParameters(EnvData[,i,"pr"],K.pr.X0,K.pr.Xopt,K.pr.Yopt)
-      R <- linearTreeParameters(EnvData[,i,"pr"],R.pr.X0,R.pr.Xopt,R.pr.Yopt)
-      R[is.na(R)]<-0
-      K[is.na(K)]<-0
-      # reproduction: multiplies by r
-      reproducedAtDate <- demeSizes[,i]*R
-      # competition: cuts deme sizes to K
-      competedAtDate <- (reproducedAtDate>K)*K + (reproducedAtDate<=K)*reproducedAtDate
-      # migration: moves as adult after development (after generation time interval)
-      competedAtDate <- competedAtDate%*%migrationMatrix
-      demeSizes[,i+generationTimeInterval] <- demeSizes[,i+generationTimeInterval]+t(competedAtDate)%*%t(generationTimeDensity)
+        K <- linearTreeParameters(EnvDatabis[,i,"pr"],K.pr.X0,K.pr.Xopt,K.pr.Yopt)
+        R <- linearTreeParameters(EnvDatabis[,i,"pr"],R.pr.X0,R.pr.Xopt,R.pr.Yopt)
+        R[is.na(R)]<-0
+        K[is.na(K)]<-0
+
+        
+        # reproduction: multiplies by r
+        #  reproducedAtDate <- demeSizes[,i]*R
+        
+        # migration: moves as adult after development (after generation time interval)
+        # migratedAtDate <- reproducedAtDate%*%migrationMatrix
+        # competition: cuts deme sizes to K
+        #competedAtDate <- (migratedAtDate>K)*K + (migratedAtDate<=K)*migratedAtDate
+        #generation = sample(generationTimeInterval, 1, prob = generationTimeDensity)
+        #demeSizes[,i+generation] <- ((demeSizes[,i+generation]+competedAtDate+demeSizes[,i])>K)*K + ((demeSizes[,i+generation]+competedAtDate+demeSizes[,i])<=K)*(demeSizes[,i+generation]+competedAtDate+demeSizes[,i])
+        
+        #      demeSizes[,i+generationTimeInterval] <- demeSizes[,i+generationTimeInterval]+t(competedAtDate)%*%t(generationTimeDensity)
+        
+        #Migration des adultes
+        migratedAtDate = parentSizes[,(i-1)]%*%migrationMatrix
+        parentSizes[,i] = parentSizes[,i] + migratedAtDate[1,]
+        parentSizes[which(parentSizes[,i]<0),i] = 0
+        
+        #Reproduction des adultes
+        nbNaissances = parentSizes[,i]*R
+        ################## ATTENTION C'EST PAS BEAU ##########################
+        nbNaissances[ which(larveSizes[,i-1] + nbNaissances + larveSizes[,i] >=K) ] = K - larveSizes[,i-1] - larveSizes[,i]
+        #####################################################################
+        larveSizes[,i] = larveSizes[,i-1] + nbNaissances + larveSizes[,i]
+        larveSizes[which(larveSizes[,i]<0),i] = 0
+        
+        #Programmation de leur eclosion en papillon
+        generation = sample(generationTimeInterval, 1, prob = generationTimeDensity)
+        larveSizes[,i+generation] =  larveSizes[,(i-1)+generation] - nbNaissances
+        parentSizes[,i+generation] = parentSizes[,(i-1)+generation] + nbNaissances
+        
+        #Programmation de leur mort
+        tempsVie = sample(dvlpTimeInterval, 1, prob = dvlpTimeDensity)
+        #Attention, suprression des adultes dans leur deme de naissance, ne prends pas en compte la migration, c'est pas bien...
+        if(i+generation+tempsVie <= dim(parentSizes)[2]){
+            parentSizes[,i+tempsVie+generation] = parentSizes[,(i-1)+tempsVie+generation] - nbNaissances
+        }
+        
     }
-  )
-  logLikelihood <- sum(dpois(recovery[,"size"],demeSizes[recovery[,"demeNb"],as.character(recovery[,"birthDate"])],log=TRUE))
-logLikelihood
+   result = NULL
+    for (j in 1:length(recovery[,"size"])){
+        result = c(result,larveSizes[recovery[j,"demeNb"],as.character(recovery[j,"birthDate"])])
+    }
+    logLikelihood <- sum(dpois(recovery[,"size"] , result,log=TRUE))
+   print(logLikelihood)
+   logLikelihood
 }

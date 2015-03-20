@@ -51,9 +51,12 @@ release$size=1
 release$demeNb <-  cellFromXY(object = rasterStack, xy = release[, c("x", "y")])
 #release <- aggregation(release,BY=c("birthDate","demeNb"),methodes=c("Mean","Mean","Name","Sum","Name"))
 
-recovery <- read.table("/Users/Stagiaire/ForwardSimulData/Stemborer_Kenya2001_2005.csv")
-recovery <- recovery[,c("Long_dec","Lat_dec","Diss_Date","B._fusca", "B.fusca_density")]
-recovery$B._fusca = recovery$B._fusca*recovery$B.fusca_density
+########################## VERIFIER FORMAT FICHIER CSV #########################################
+recovery <- read.csv("/Users/Stagiaire/ForwardSimulData/Stemborer_Kenya2001_2005.csv", header = TRUE, sep = ";")
+recovery <- recovery[,c("Long_dec","Lat_dec","Diss_Date","B._fusca", "no._plants")]
+recovery$no._plants = as.numeric(paste(recovery$no._plants))
+recovery = recovery[-which(is.na(recovery$no._plants)),]
+recovery$B._fusca = as.numeric(recovery$B._fusca)/recovery$no._plants
 recovery = recovery[,c("Long_dec","Lat_dec","Diss_Date","B._fusca")]
 colnames(recovery) <- c("x","y","birthDate","size")
 recovery$birthDate <- as.Date(as.character(recovery$birthDate),format="%d/%m/%y")

@@ -52,7 +52,9 @@ release$demeNb <-  cellFromXY(object = rasterStack, xy = release[, c("x", "y")])
 #release <- aggregation(release,BY=c("birthDate","demeNb"),methodes=c("Mean","Mean","Name","Sum","Name"))
 
 recovery <- read.table("/Users/Stagiaire/ForwardSimulData/Stemborer_Kenya2001_2005.csv")
-recovery <- recovery[,c("Long_dec","Lat_dec","Diss_Date","B._fusca")]
+recovery <- recovery[,c("Long_dec","Lat_dec","Diss_Date","B._fusca", "B.fusca_density")]
+recovery$B._fusca = recovery$B._fusca*recovery$B.fusca_density
+recovery = recovery[,c("Long_dec","Lat_dec","Diss_Date","B._fusca")]
 colnames(recovery) <- c("x","y","birthDate","size")
 recovery$birthDate <- as.Date(as.character(recovery$birthDate),format="%d/%m/%y")
 recovery$demeNb <- cellFromXY(object = rasterStack, xy = recovery[, c("x", "y")])

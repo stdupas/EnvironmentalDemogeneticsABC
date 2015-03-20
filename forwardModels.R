@@ -375,11 +375,16 @@ likelihoodShort <- function(dispersionRate = .025,dispersionDistance=1000,
                             dvlpTime=25,dvlpTimeSD=3)
 {
     print("==============================")
-    dispersionRate = .025;dispersionDistance=1000;    K.pr.X0=0;K.pr.Xopt=50;K.pr.Yopt=25;    R.pr.X0=0;R.pr.Xopt=50;R.pr.Yopt=5;    generationTime=25;generationTimeSD=3;    dvlpTime=4;dvlpTimeSD=3
+    dispersionRate = .025;dispersionDistance=1;    
+    K.pr.X0=0;K.pr.Xopt=38.40947;K.pr.Yopt=520;    
+    R.pr.X0=0;R.pr.Xopt=38.40947;R.pr.Yopt=5;    
+    generationTime=25;generationTimeSD=3;    
+    dvlpTime=7;dvlpTimeSD=1
     
     #Matrice contenant les individus à l'extérieur des mais.
     parentSizes <- array(0,dim=c(nrow(EnvData),length(Dates)),dimnames = list(1:nrow(EnvData),as.character(Dates)))
-    parentSizes[,as.character(birthDates)] <- 5
+    parentSizes[,as.character(birthDates)] <- 1
+    #parentSizes[,16] <- 1
     
     #Matrice des individus à l'intérieur des mais.
     larveSizes <- array(0,dim=c(nrow(EnvData),length(Dates)),dimnames = list(1:nrow(EnvData),as.character(Dates)))
@@ -429,7 +434,9 @@ likelihoodShort <- function(dispersionRate = .025,dispersionDistance=1000,
         #Reproduction des adultes
         nbNaissances = parentSizes[,i]*R
         ################## ATTENTION C'EST PAS BEAU ##########################
-        nbNaissances[ which(larveSizes[,i-1] + nbNaissances + larveSizes[,i] >=K) ] = K - larveSizes[,i-1] - larveSizes[,i]
+        tmp = larveSizes[,i-1] + nbNaissances + larveSizes[,i]
+        ind = which(tmp >= K)
+        nbNaissances[ ind ] = K[ind] - larveSizes[ind,i-1] - larveSizes[ind,i]
         #####################################################################
         larveSizes[,i] = larveSizes[,i-1] + nbNaissances + larveSizes[,i]
         larveSizes[which(larveSizes[,i]<0),i] = 0

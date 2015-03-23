@@ -54,7 +54,6 @@ release$demeNb <-  cellFromXY(object = rasterStack, xy = release[, c("x", "y")])
 ########################## VERIFIER FORMAT FICHIER CSV #########################################
 recovery <- read.csv("/Users/Stagiaire/ForwardSimulData/Stemborer_Kenya2001_2005.csv", header = TRUE, sep = ";")
 recovery <- recovery[,c("Long_dec","Lat_dec","Diss_Date","B._fusca", "no._plants")]
-recovery$no._plants = as.numeric(paste(recovery$no._plants))
 recovery = recovery[-which(is.na(recovery$no._plants)),]
 recovery$B._fusca = as.numeric(recovery$B._fusca)/recovery$no._plants
 recovery = recovery[,c("Long_dec","Lat_dec","Diss_Date","B._fusca")]
@@ -95,8 +94,9 @@ EnvData <- EnvData[,colnames(demeSizes),]
 EnvDatabis = computeMeanEnvData(EnvData, "pr", 15)
 likelihoodShort()
 
-test = nlm(f = likelihoodShort,p=c(dispersionRate = .025,dispersionDistance=100,
-                          K.pr.X0=-5,K.pr.Xopt=267.1267,K.pr.Yopt=10,
-                          R.pr.X0=-5,R.pr.Xopt=267.1267,R.pr.Yopt=10,
-                          generationTime=25,generationTimeSD=3))
+test = nlm(f = likelihoodShort,p=c(dispersionRate = .025,dispersionDistance=1,
+                                K.pr.X0=0,K.pr.Xopt=38.40947,K.pr.Yopt=11.53846,
+                                R.pr.X0=0,R.pr.Xopt=38.40947,R.pr.Yopt=1,
+                                generationTime=25,generationTimeSD=3, 
+                                dvlpTime=5, dvlpTimeSD=1))
 

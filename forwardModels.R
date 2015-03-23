@@ -412,16 +412,16 @@ likelihoodShort <- function(dispersionRate = .025,dispersionDistance=100,
 
 
 
-likelihoodShortTest <- function(dispersionRate = .025,dispersionDistance=1000,
+likelihoodShortTest <- function(#dispersionRate = .025,dispersionDistance=100,
                                 K.pr.X0=0,K.pr.Xopt=50,K.pr.Yopt=25,
-                                R.pr.X0=0,R.pr.Xopt=50,R.pr.Yopt=5,
-                                generationTime=25,generationTimeSD=3,
-                                dvlpTime=25,dvlpTimeSD=3)
+                                R.pr.X0=0,R.pr.Xopt=50,R.pr.Yopt=5)
+                                # generationTime=25,generationTimeSD=3,
+                                # dvlpTime=25,dvlpTimeSD=3)
 {
     print("==============================")
-    dispersionRate = .025;dispersionDistance=1;    
-    K.pr.X0=0;K.pr.Xopt=38.40947;K.pr.Yopt=11.53846;    
-    R.pr.X0=0;R.pr.Xopt=38.40947;R.pr.Yopt=1;    
+    dispersionRate = .025;dispersionDistance=100;    
+    # K.pr.X0=0;K.pr.Xopt=38.40947;K.pr.Yopt=11.53846;    
+    # R.pr.X0=0;R.pr.Xopt=38.40947;R.pr.Yopt=1;    
     generationTime=25;generationTimeSD=3;    
     dvlpTime=5;dvlpTimeSD=1
     
@@ -498,13 +498,18 @@ likelihoodShortTest <- function(dispersionRate = .025,dispersionDistance=1000,
         }
         
     }
+
     result = NULL
     for (j in 1:length(recovery[,"size"])){
         result = c(result,larveSizes[recovery[j,"demeNb"],as.character(recovery[j,"birthDate"])])
     }
 
+    # Si recovery est > 0 et si result est egal à 0, dpois retourne -Inf
+    # Il faut donc convertir les 0 de result en 0.0001 (ou autre different de 0)
     result[which(result == 0)] = 0.0001
 
+    # Si recovery n'est pas un integer, dpois retourne -Inf
+    # Il faut donc arrondir les valeurs de recovery
     logLikelihood <- sum(dpois(round(recovery[,"size"]) , result,log=TRUE))
     print(logLikelihood)
     logLikelihood

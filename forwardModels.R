@@ -420,10 +420,10 @@ likelihoodShortTest <- function(dispersionRate = .025,dispersionDistance=1000,
 {
     print("==============================")
     dispersionRate = .025;dispersionDistance=1;    
-    K.pr.X0=0;K.pr.Xopt=38.40947;K.pr.Yopt=520;    
-    R.pr.X0=0;R.pr.Xopt=38.40947;R.pr.Yopt=5;    
+    K.pr.X0=0;K.pr.Xopt=38.40947;K.pr.Yopt=11.53846;    
+    R.pr.X0=0;R.pr.Xopt=38.40947;R.pr.Yopt=1;    
     generationTime=25;generationTimeSD=3;    
-    dvlpTime=7;dvlpTimeSD=1
+    dvlpTime=5;dvlpTimeSD=1
     
     #Matrice contenant les individus à l'extérieur des mais.
     parentSizes <- array(0,dim=c(nrow(EnvData),length(Dates)),dimnames = list(1:nrow(EnvData),as.character(Dates)))
@@ -452,8 +452,8 @@ likelihoodShortTest <- function(dispersionRate = .025,dispersionDistance=1000,
     # construction of likelihood with expected recovery
     for (i in 16:(ncol(larveSizes)-max(generationTimeInterval))) # Date = colnames(demeSizes)[1]
     {
-        K <- linearTreeParameters(EnvDatabis[,i,"pr"],K.pr.X0,K.pr.Xopt,K.pr.Yopt)
-        R <- linearTreeParameters(EnvDatabis[,i,"pr"],R.pr.X0,R.pr.Xopt,R.pr.Yopt)
+        K <- linearTreeParameters(EnvData2[,i,"pr"],K.pr.X0,K.pr.Xopt,K.pr.Yopt)
+        R <- linearTreeParameters(EnvData2[,i,"pr"],R.pr.X0,R.pr.Xopt,R.pr.Yopt)
         R[is.na(R)]<-0
         K[is.na(K)]<-0
         
@@ -502,7 +502,10 @@ likelihoodShortTest <- function(dispersionRate = .025,dispersionDistance=1000,
     for (j in 1:length(recovery[,"size"])){
         result = c(result,larveSizes[recovery[j,"demeNb"],as.character(recovery[j,"birthDate"])])
     }
-    logLikelihood <- sum(dpois(recovery[,"size"] , result,log=TRUE))
+
+    result[which(result == 0)] = 0.0001
+
+    logLikelihood <- sum(dpois(round(recovery[,"size"]) , result,log=TRUE))
     print(logLikelihood)
     logLikelihood
 }

@@ -94,7 +94,7 @@ EnvData <- EnvData[,colnames(demeSizes),]
 EnvDatabis = computeMeanEnvData(EnvData, "pr", 15)
 likelihoodShort()
 
-test = nlm(f = likelihoodShort,p=c(dispersionRate = .025,dispersionDistance=1,
+test = nlm(f = likelihoodShortTest,p=c(dispersionRate = .025,dispersionDistance=1,
                                 K.pr.X0=0,K.pr.Xopt=38.40947,K.pr.Yopt=11.53846,
                                 R.pr.X0=0,R.pr.Xopt=38.40947,R.pr.Yopt=1,
                                 generationTime=25,generationTimeSD=3, 

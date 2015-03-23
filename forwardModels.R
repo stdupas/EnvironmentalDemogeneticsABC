@@ -412,6 +412,12 @@ likelihoodShort <- function(dispersionRate = .025,dispersionDistance=100,
 
 
 
+
+############################################################################
+########################## TEST FUNCTIONS ##################################
+############################################################################
+
+
 likelihoodShortTest <- function(#dispersionRate = .025,dispersionDistance=100,
                                 K.pr.X0=0,K.pr.Xopt=38.40947,K.pr.Yopt=11.53846,
                                 R.pr.X0=0,R.pr.Xopt=38.40947,R.pr.Yopt=1)
@@ -419,8 +425,18 @@ likelihoodShortTest <- function(#dispersionRate = .025,dispersionDistance=100,
                                 # dvlpTime=25,dvlpTimeSD=3)
 {
     print("==============================")
-    result = expectedInd(K.pr.X0=0,K.pr.Xopt=38.40947,K.pr.Yopt=11.53846,
+
+    larveSizes = expectedInd(K.pr.X0=0,K.pr.Xopt=38.40947,K.pr.Yopt=11.53846,
                                 R.pr.X0=0,R.pr.Xopt=38.40947,R.pr.Yopt=1)
+
+    result = NULL
+    for (j in 1:length(recovery[,"size"])){
+        result = c(result,larveSizes[recovery[j,"demeNb"],as.character(recovery[j,"birthDate"])])
+    }
+
+    # Si recovery est > 0 et si result est egal à 0, dpois retourne -Inf
+    # Il faut donc convertir les 0 de result en 0.0001 (ou autre different de 0)
+    result[which(result == 0)] = 0.0001
 
     # Si recovery n'est pas un integer, dpois retourne -Inf
     # Il faut donc arrondir les valeurs de recovery
@@ -429,8 +445,8 @@ likelihoodShortTest <- function(#dispersionRate = .025,dispersionDistance=100,
     logLikelihood
 }
 
-# Fonction qui calcule le nombre d'individus attendus, retourne "result"
-expectedInd = function(#dispersionRate = .025,dispersionDistance=100,
+# Fonction qui calcule le nombre d'individus attendus, retourne "larveSizes"
+expectedInd <- function(#dispersionRate = .025,dispersionDistance=100,
                                 K.pr.X0=0,K.pr.Xopt=38.40947,K.pr.Yopt=11.53846,
                                 R.pr.X0=0,R.pr.Xopt=38.40947,R.pr.Yopt=1)
                                 # generationTime=25,generationTimeSD=3,
@@ -502,14 +518,5 @@ expectedInd = function(#dispersionRate = .025,dispersionDistance=100,
         }
         
     }
-
-    result = NULL
-    for (j in 1:length(recovery[,"size"])){
-        result = c(result,larveSizes[recovery[j,"demeNb"],as.character(recovery[j,"birthDate"])])
-    }
-
-    # Si recovery est > 0 et si result est egal à 0, dpois retourne -Inf
-    # Il faut donc convertir les 0 de result en 0.0001 (ou autre different de 0)
-    result[which(result == 0)] = 0.0001
-    return(result)
+    return(larveSizes)
 }

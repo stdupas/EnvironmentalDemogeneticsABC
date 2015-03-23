@@ -413,12 +413,29 @@ likelihoodShort <- function(dispersionRate = .025,dispersionDistance=100,
 
 
 likelihoodShortTest <- function(#dispersionRate = .025,dispersionDistance=100,
-                                K.pr.X0=0,K.pr.Xopt=50,K.pr.Yopt=25,
-                                R.pr.X0=0,R.pr.Xopt=50,R.pr.Yopt=5)
+                                K.pr.X0=0,K.pr.Xopt=38.40947,K.pr.Yopt=11.53846,
+                                R.pr.X0=0,R.pr.Xopt=38.40947,R.pr.Yopt=1)
                                 # generationTime=25,generationTimeSD=3,
                                 # dvlpTime=25,dvlpTimeSD=3)
 {
     print("==============================")
+    result = expectedInd(K.pr.X0=0,K.pr.Xopt=38.40947,K.pr.Yopt=11.53846,
+                                R.pr.X0=0,R.pr.Xopt=38.40947,R.pr.Yopt=1)
+
+    # Si recovery n'est pas un integer, dpois retourne -Inf
+    # Il faut donc arrondir les valeurs de recovery
+    logLikelihood <- sum(dpois(round(recovery[,"size"]) , result,log=TRUE))
+    print(logLikelihood)
+    logLikelihood
+}
+
+# Fonction qui calcule le nombre d'individus attendus, retourne "result"
+expectedInd = function(#dispersionRate = .025,dispersionDistance=100,
+                                K.pr.X0=0,K.pr.Xopt=38.40947,K.pr.Yopt=11.53846,
+                                R.pr.X0=0,R.pr.Xopt=38.40947,R.pr.Yopt=1)
+                                # generationTime=25,generationTimeSD=3,
+                                # dvlpTime=25,dvlpTimeSD=3)
+{
     dispersionRate = .025;dispersionDistance=100;    
     # K.pr.X0=0;K.pr.Xopt=38.40947;K.pr.Yopt=11.53846;    
     # R.pr.X0=0;R.pr.Xopt=38.40947;R.pr.Yopt=1;    
@@ -457,19 +474,6 @@ likelihoodShortTest <- function(#dispersionRate = .025,dispersionDistance=100,
         R[is.na(R)]<-0
         K[is.na(K)]<-0
         
-        
-        # reproduction: multiplies by r
-        #  reproducedAtDate <- demeSizes[,i]*R
-        
-        # migration: moves as adult after development (after generation time interval)
-        # migratedAtDate <- reproducedAtDate%*%migrationMatrix
-        # competition: cuts deme sizes to K
-        #competedAtDate <- (migratedAtDate>K)*K + (migratedAtDate<=K)*migratedAtDate
-        #generation = sample(generationTimeInterval, 1, prob = generationTimeDensity)
-        #demeSizes[,i+generation] <- ((demeSizes[,i+generation]+competedAtDate+demeSizes[,i])>K)*K + ((demeSizes[,i+generation]+competedAtDate+demeSizes[,i])<=K)*(demeSizes[,i+generation]+competedAtDate+demeSizes[,i])
-        
-        #      demeSizes[,i+generationTimeInterval] <- demeSizes[,i+generationTimeInterval]+t(competedAtDate)%*%t(generationTimeDensity)
-        
         #Migration des adultes
         migratedAtDate = parentSizes[,(i-1)]%*%migrationMatrix
         parentSizes[,i] = parentSizes[,i] + migratedAtDate[1,]
@@ -507,10 +511,5 @@ likelihoodShortTest <- function(#dispersionRate = .025,dispersionDistance=100,
     # Si recovery est > 0 et si result est egal à 0, dpois retourne -Inf
     # Il faut donc convertir les 0 de result en 0.0001 (ou autre different de 0)
     result[which(result == 0)] = 0.0001
-
-    # Si recovery n'est pas un integer, dpois retourne -Inf
-    # Il faut donc arrondir les valeurs de recovery
-    logLikelihood <- sum(dpois(round(recovery[,"size"]) , result,log=TRUE))
-    print(logLikelihood)
-    logLikelihood
+    return(result)
 }

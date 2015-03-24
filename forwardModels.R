@@ -420,15 +420,20 @@ likelihoodShort <- function(dispersionRate = .025,dispersionDistance=100,
 
 
 likelihoodShortTest <- function(#dispersionRate = .025,dispersionDistance=100,
-                                K.pr.X0=0,K.pr.Xopt=38.40947,K.pr.Yopt=11.53846,
-                                R.pr.X0=0,R.pr.Xopt=38.40947,R.pr.Yopt=1)
+                                p=c(0,38.40947,11.53846,0,38.40947,1))
                                 # generationTime=25,generationTimeSD=3,
                                 # dvlpTime=25,dvlpTimeSD=3)
 {
-    print("==============================")
 
-    larveSizes = expectedInd(K.pr.X0,K.pr.Xopt,K.pr.Yopt,
-                                R.pr.X0,R.pr.Xopt,R.pr.Yopt)    
+    names(p)=c("K.pr.X0","K.pr.Xopt","K.pr.Yopt","R.pr.X0","R.pr.Xopt","R.pr.Yopt")
+    
+    print("==============================")
+    ############# A RETIRER ###################
+    cat("X0",p["K.pr.X0"],"Xop",p["K.pr.Xopt"],"Yop",p["K.pr.Yopt"],"\n")
+    cat("X0",p["R.pr.X0"],"Xop",p["R.pr.Xopt"],"Yop",p["R.pr.Yopt"],"\n")
+
+    larveSizes = expectedInd(p["K.pr.X0"],p["K.pr.Xopt"],p["K.pr.Yopt"],
+                                p["R.pr.X0"],p["R.pr.Xopt"],p["R.pr.Yopt"])    
 
     result = NULL
     for (j in 1:length(recovery2[,"size"])){

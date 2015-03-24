@@ -91,8 +91,12 @@ demeSizes <- array(0,dim=c(nrow(EnvData),length(Dates)),dimnames = list(1:nrow(E
 demeSizes[,as.character(birthDates)] <- 10
 EnvData <- EnvData[,colnames(demeSizes),]
 
-EnvDatabis = computeMeanEnvData(EnvData, "pr", 15)
+EnvData2 = computeMeanEnvData(EnvData, "pr", 15)
+
+recovery2 = buildDataSet()
+
 likelihoodShort()
+
 
 test = nlm(f = likelihoodShortTest,p=c(dispersionRate = .025,dispersionDistance=1,
                                 K.pr.X0=0,K.pr.Xopt=38.40947,K.pr.Yopt=11.53846,

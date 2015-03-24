@@ -429,18 +429,27 @@ likelihoodShortTest <- function(#dispersionRate = .025,dispersionDistance=100,
     larveSizes = expectedInd(K.pr.X0=0,K.pr.Xopt=38.40947,K.pr.Yopt=11.53846,
                                 R.pr.X0=0,R.pr.Xopt=38.40947,R.pr.Yopt=1)
 
+
+    recovery2 = buildDataSet()
+
     result = NULL
-    for (j in 1:length(recovery[,"size"])){
-        result = c(result,larveSizes[recovery[j,"demeNb"],as.character(recovery[j,"birthDate"])])
+    for (j in 1:length(recovery2[,"size"])){
+        result = c(result,larveSizes[recovery2[j,"demeNb"],as.character(recovery2[j,"birthDate"])])
     }
 
     # Si recovery est > 0 et si result est egal à 0, dpois retourne -Inf
     # Il faut donc convertir les 0 de result en 0.0001 (ou autre different de 0)
     result[which(result == 0)] = 0.0001
 
+    print(recovery2[,"size"])
+    print("==============================")
+    print(round(result))
+    print("==============================")
+    print(round(recovery2[,"size"]-result))
+
     # Si recovery n'est pas un integer, dpois retourne -Inf
     # Il faut donc arrondir les valeurs de recovery
-    logLikelihood <- sum(dpois(round(recovery[,"size"]) , result,log=TRUE))
+    logLikelihood <- sum(dpois(round(recovery2[,"size"]) , result,log=TRUE))
     print(logLikelihood)
     logLikelihood
 }
@@ -525,8 +534,19 @@ buildDataSet <- function() {
     possibleData = expectedInd(K.pr.X0=0,K.pr.Xopt=38.40947,K.pr.Yopt=11.53846,
                                 R.pr.X0=0,R.pr.Xopt=38.40947,R.pr.Yopt=1)
 
-    choice = sample(1:1436, 600, replace=FALSE, prob=NULL)
-    
+    choiceDate = sample(16:1402, 600, replace=FALSE, prob=NULL)
+    choiceDeme = sample(1:729, 600, replace=TRUE, prob=NULL)
 
+    pData = NULL
+    for(i in 1:600) {
+        pData = rbind(pData, possibleData[choiceDeme[i], choiceDate[i]]) 
+    }
 
+    sizes = rpois(600, pData)
+    dates = colnames(possibleData[,choiceDate])
+
+    dataSet = cbind.data.frame(as.Date(dates),as.numeric(sizes),as.integer(choiceDeme))
+    colnames(dataSet) = c("birthDate", "size", "demeNb")
+
+    return(dataSet)
 }

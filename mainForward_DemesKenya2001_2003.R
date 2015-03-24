@@ -91,7 +91,7 @@ demeSizes <- array(0,dim=c(nrow(EnvData),length(Dates)),dimnames = list(1:nrow(E
 demeSizes[,as.character(birthDates)] <- 10
 EnvData <- EnvData[,colnames(demeSizes),]
 
-EnvDatabis = computeMeanEnvData(EnvData, "pr", 15)
+EnvData2 = computeMeanEnvData(EnvData, "pr", 15)
 likelihoodShort()
 
 test = nlm(f = likelihoodShortTest,p=c(dispersionRate = .025,dispersionDistance=1,

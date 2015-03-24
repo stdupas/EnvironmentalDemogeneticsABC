@@ -418,6 +418,7 @@ likelihoodShort <- function(dispersionRate = .025,dispersionDistance=100,
 ############################################################################
 
 
+
 likelihoodShortTest <- function(#dispersionRate = .025,dispersionDistance=100,
                                 K.pr.X0=0,K.pr.Xopt=38.40947,K.pr.Yopt=11.53846,
                                 R.pr.X0=0,R.pr.Xopt=38.40947,R.pr.Yopt=1)
@@ -426,11 +427,8 @@ likelihoodShortTest <- function(#dispersionRate = .025,dispersionDistance=100,
 {
     print("==============================")
 
-    larveSizes = expectedInd(K.pr.X0=0,K.pr.Xopt=38.40947,K.pr.Yopt=11.53846,
-                                R.pr.X0=0,R.pr.Xopt=38.40947,R.pr.Yopt=1)
-
-
-    recovery2 = buildDataSet()
+    larveSizes = expectedInd(K.pr.X0,K.pr.Xopt,K.pr.Yopt,
+                                R.pr.X0,R.pr.Xopt,R.pr.Yopt)    
 
     result = NULL
     for (j in 1:length(recovery2[,"size"])){

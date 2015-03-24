@@ -100,6 +100,6 @@ test = nlm(f = likelihoodShortTest,p=c(dispersionRate = .025,dispersionDistance=
                                 generationTime=25,generationTimeSD=3, 
                                 dvlpTime=5, dvlpTimeSD=1))
 
-testShort = nlm(f = likelihoodShortTest,p=c(K.pr.X0=0,K.pr.Xopt=38.40947,K.pr.Yopt=11.53846,
-                                R.pr.X0=0,R.pr.Xopt=38.40947,R.pr.Yopt=1),
-                                print.level=2, ndigit=2, gradtol=0.001, steptol=0.001)
+testShort = nlm(f = likelihoodShortTest,p=c(K.pr.X0=5,K.pr.Xopt=30,K.pr.Yopt=15,
+                                R.pr.X0=5,R.pr.Xopt=30,R.pr.Yopt=3),
+                                print.level=2, ndigit=3)

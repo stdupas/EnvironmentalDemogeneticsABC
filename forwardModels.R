@@ -441,12 +441,6 @@ likelihoodShortTest <- function(#dispersionRate = .025,dispersionDistance=100,
     # Il faut donc convertir les 0 de result en 0.0001 (ou autre different de 0)
     result[which(result == 0)] = 0.0001
 
-    print(recovery2[,"size"])
-    print("==============================")
-    print(round(result))
-    print("==============================")
-    print(round(recovery2[,"size"]-result))
-
     # Si recovery n'est pas un integer, dpois retourne -Inf
     # Il faut donc arrondir les valeurs de recovery
     logLikelihood <- sum(dpois(round(recovery2[,"size"]) , result,log=TRUE))

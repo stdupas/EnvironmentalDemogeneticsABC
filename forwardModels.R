@@ -520,3 +520,13 @@ expectedInd <- function(#dispersionRate = .025,dispersionDistance=100,
     }
     return(larveSizes)
 }
+
+buildDataSet <- function() {
+    possibleData = expectedInd(K.pr.X0=0,K.pr.Xopt=38.40947,K.pr.Yopt=11.53846,
+                                R.pr.X0=0,R.pr.Xopt=38.40947,R.pr.Yopt=1)
+
+    choice = sample(1:1436, 600, replace=FALSE, prob=NULL)
+    
+
+
+}

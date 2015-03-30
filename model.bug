@@ -69,7 +69,7 @@ model {
             R[i,j] <- Y.Rbis[i,j] 
             #equals(Y.Rbis[i,j],not(NA)) * 
 
-            larveSizes[j,i] <- K[i,j]*R[i,j]
+            larveSizes[j,i] ~ dpois(K[i,j]*R[i,j])
         }
 
         K.pr.X0[i] ~ dnorm(0,1)

@@ -1,94 +1,110 @@
+var
+    nDemes,     # nombre de demes (729) 
+    nDates,     # nombre de dates dans larveSizes  
+    Demes,      # vecteur contenant des numeros de demes (recovery)
+    Dates,      # vecteur contenant des numeros de dates (recovery)
+    birthDates, # vecteurs contenant les numeros de dates de naissance
+
+    x.K[nDates,nDemes], 
+    x.R[nDates,nDemes],
+    slope.K[nDates,nDemes],
+    slope.R[nDates,nDemes],
+
+    parentSizes[nDates,nDemes, nDates],
+    larveSizes[nDates,nDemes, nDates],
+    migrationMatrix[nDemes,nDemes];
+
+
+
 model {
 
+    # ------------------------------------------------------------
+    # PRIORS
     #
+
+    K.pr.X0 ~ dnorm(0,1)
+    K.pr.Xopt ~ dnorm(1,38)
+    K.pr.Yopt ~ dnorm(11,5)
+
+
+    R.pr.X0 ~ dnorm(0,1)
+    R.pr.Xopt ~ dnorm(1,38)
+    R.pr.Yopt ~ dnorm(5,2)
+
+
+
+    # ------------------------------------------------------------
+    # CALCUL DES ATTENDUS
+    #
+
     # Initialisation des parametres
-    #
 
-    #dispersionRate <- 0.025
-    #dispersionDistance <- 100
-    #generationTime <- 25
-    #generationTimeSD <- 3
-    #dvdlpTime <- 5
-    #dvlpTimeSD <- 1
+    dispersionRate <- 0.025
+    dispersionDistance <- 100
+    generationTime <- 25
+    generationTimeSD <- 3
+    dvlpTime <- 5
+    dvlpTimeSD <- 1
 
-    #
-    # Initialisation des matrices parents et larves 
-    #
-
-    #parentSizes[1:nDemes, 1:nDates] <- 1
-    #larveSizes[1:nDemes, 1:nDates] <- 0
-
-    #
     # Initialisation de la matrice de migration
-    #
 
-    # A recuperer en data (de R)
-    # migrationMatrix
+    for(i in 1:nDemes) {
+        for(j in 1:nDemes) {
+            migrationMatrix[i,j] <- ifelse(equals(distMat[i,j],0), 0, 1) * step(dispersionDistance-distMat[i,j]) * dispersionRate + equals(distMat[i,j],0) * (1-dispersionRate*4)
+        }
+    }
 
-    #
     # Temps de generation
-    #
 
-    #generationTimeInterval <- (generationTime-3*round(generationTimeSD)):(generationTime+3*round(generationTimeSD))
-    #generationTime ~ dnorm(generationTimeInterval,generationTime,generationTimeSD)
+    #maxGen <- (generationTime+3*round(generationTimeSD))-(generationTime-3*round(generationTimeSD))+1
+    for(i in 1:maxGen) {
+        generationTimeInterval[i] <- generationTime-3*round(generationTimeSD)+i-1
+    }
+    generationTimeDensity ~ dnorm(generationTime,generationTimeSD)
 
-    #
     # Temps de developpement
-    #
 
-    #dvlpTimeInterval <- (dvlpTime-3*round(dvlpTimeSD)):(dvlpTime+3*round(dvlpTimeSD))
-    #dvlpTimeDensity ~ dnorm(dvlpTimeInterval,dvlpTime,dvlpTimeSD)    
+    #maxDvlp <- (dvlpTime+3*round(dvlpTimeSD))-(dvlpTime-3*round(dvlpTimeSD))+1
+    for(i in 1:maxDvlp) {
+        dvlpTimeInterval[i] <- dvlpTime-3*round(dvlpTimeSD)+i-1
+    }
+    dvlpTimeDensity ~ dnorm(dvlpTime,dvlpTimeSD)    
 
-    #
     # Calcul des individus attendus
-    #
 
-    for(i in 1:nDates) {
+    for(i in 2:nDates) {
 
-        #
         # Evaluation de K et R
-        #
-
-        #K[1:nDemes] <- 0
-        #R[1:nDemes] <- 0
 
         # pour le step: mettre le plus grand en premier
         for(j in 1:nDemes) {
             x.K[i,j] <- EnvData[j,i,1]
-            slope.K[i,j] <- K.pr.Yopt[i]/(K.pr.Xopt[i]-K.pr.X0[i])
-            Y.K[i,j] <- (slope.K[i,j] * x.K[i,j] - slope.K[i,j] * K.pr.X0[i])
-            Y.Kbis[i,j] <- ifelse((K.pr.Xopt[i]-K.pr.X0[i])!=0, step(K.pr.Yopt[i]-Y.K[i,j])*Y.K[i,j]*step(Y.K[i,j])+K.pr.Yopt[i]*step(Y.K[i,j]-K.pr.Yopt[i]), K.pr.Yopt[i]*step(x.K[i,j]-K.pr.Xopt[i]))
-            K[i,j] <- Y.Kbis[i,j] 
-            #equals(Y.Kbis[i,j],not(NA)) * 
+            slope.K[i,j] <- K.pr.Yopt/(K.pr.Xopt-K.pr.X0)
+            Y.K[i,j] <- (slope.K[i,j] * x.K[i,j] - slope.K[i,j] * K.pr.X0)
+            Y.Kbis[i,j] <- ifelse((K.pr.Xopt-K.pr.X0)!=0, step(K.pr.Yopt-Y.K[i,j])*Y.K[i,j]*step(Y.K[i,j])+K.pr.Yopt*step(Y.K[i,j]-K.pr.Yopt), K.pr.Yopt*step(x.K[i,j]-K.pr.Xopt))
+            #K[i,j] <- ifelse(equals(Y.Kbis[i,j],NA), 0, 1) * Y.Kbis[i,j]
+            # FORMATER LES DONNEES POUR ENLEVER LES NA
 
 
             x.R[i,j] <- EnvData[j,i,1]
-            slope.R[i,j] <- R.pr.Yopt[i]/(R.pr.Xopt[i]-R.pr.X0[i])
-            Y.R[i,j] <- (slope.R[i,j] * x.R[i,j] - slope.R[i,j] * R.pr.X0[i])
-            Y.Rbis[i,j] <- ifelse((R.pr.Xopt[i]-R.pr.X0[i])!=0, step(R.pr.Yopt[i]-Y.R[i,j])*Y.R[i,j]*step(Y.R[i,j])+R.pr.Yopt[i]*step(Y.R[i,j]-R.pr.Yopt[i]), R.pr.Yopt[i]*step(x.R[i,j]-R.pr.Xopt[i]))
-            R[i,j] <- Y.Rbis[i,j] 
-            #equals(Y.Rbis[i,j],not(NA)) * 
-
-            larveSizes[j,i] ~ dpois(K[i,j]*R[i,j])
+            slope.R[i,j] <- R.pr.Yopt/(R.pr.Xopt-R.pr.X0)
+            Y.R[i,j] <- (slope.R[i,j] * x.R[i,j] - slope.R[i,j] * R.pr.X0)
+            Y.Rbis[i,j] <- ifelse((R.pr.Xopt-R.pr.X0)!=0, step(R.pr.Yopt-Y.R[i,j])*Y.R[i,j]*step(Y.R[i,j])+R.pr.Yopt*step(Y.R[i,j]-R.pr.Yopt), R.pr.Yopt*step(x.R[i,j]-R.pr.Xopt))
+            #R[i,j] <- ifelse(equals(Y.Rbis[i,j],NA), 0, 1) * Y.Rbis[i,j]          
         }
 
-        K.pr.X0[i] ~ dnorm(0,1)
-        K.pr.Xopt[i] ~ dnorm(1,38)
-        K.pr.Yopt[i] ~ dnorm(11,5)
-
-
-        R.pr.X0[i] ~ dnorm(0,1)
-        R.pr.Xopt[i] ~ dnorm(1,38)
-        R.pr.Yopt[i] ~ dnorm(5,2)
-
-        #
         # Migration des adultes
-        #
-
-
-
+        migrationAtDate[i] = parentSizes[,(i-1),] 
     }
 
+
+
+
+
+
+    # ------------------------------------------------------------
+    # LIKELIHOOD
+    #
 
 
       

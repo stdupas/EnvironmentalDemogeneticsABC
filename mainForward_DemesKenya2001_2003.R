@@ -96,6 +96,15 @@ EnvData2 = computeMeanEnvData(EnvData, "pr", 15)
 
 recovery2 = buildDataSet()
 
+for ( i in 1:dim(EnvData2)[1]){
+    for (j in 1:dim(EnvData2)[2]){
+        for (k in 1:dim(EnvData2)[3]){
+            if(is.na(EnvData2[i,j,k]) == TRUE){
+                EnvData2[i,j,k] = 0
+            }
+        }
+    }
+}
 
 
 

@@ -96,21 +96,7 @@ EnvData2 = computeMeanEnvData(EnvData, "pr", 15)
 
 recovery2 = buildDataSet()
 
-############# Boucle de visualisation fastidieuse ###############
-x = seq(30,45, 0.1)
-y = seq(3,18, 0.1)
-z = NULL
-for ( i in 1: length(x)){
-    zbis = NULL
-    print(i)
-    print("============")
-    for( j in 1: length(y)){
-        print(j)
-        zbis = c(zbis, likelihoodShortTest(c(x[i], y[j])))
-    }
-    z = rbind(z, zbis)
-}
-##########################
+
 
 
 likelihoodShort()

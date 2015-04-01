@@ -108,7 +108,6 @@ for ( i in 1:dim(EnvData2)[1]){
 
 recovery2 = buildDataSet()
 
-recoverybis[2] = recovery2[2]
 reco = match(recovery2[,1], Dates)
 recoverybis = cbind(reco, recovery2[,2], recovery2[,3])
 

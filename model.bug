@@ -3,7 +3,7 @@ var
     nDates,     # nombre de dates dans larveSizes  
     Demes,      # vecteur contenant des numeros de demes (recovery)
     Dates,      # vecteur contenant des numeros de dates (recovery)
-    birthDates, # vecteurs contenant les numeros de dates de naissance
+    nReco,     # nombre de lignes dans recovery
 
     x.K[nDates,nDemes], 
     x.R[nDates,nDemes],
@@ -11,6 +11,7 @@ var
     slope.R[nDates,nDemes],
 
     parentSizes[nDates,nDemes],
+    parentSizesMigr[nDates,nDemes],
     larveSizes[nDates,nDemes],
     migrationMatrix[nDemes,nDemes];
 
@@ -31,8 +32,7 @@ model {
     R.pr.Xopt ~ dnorm(1,38)
     R.pr.Yopt ~ dnorm(5,2)
 
-    generation ~ dnorm(generationTime, generationTimeSD)
-    tempsVie ~ dnorm(dvlpTime, dvlpTimeSD) 
+
 
 
 
@@ -57,16 +57,22 @@ model {
         }
     }
 
-    # Initialisation de la matrice des parents et des larves
+    # Initialisation des variables
 
     for(i in 1:nDemes) {
-        parentSizes[1,i] <- 1#dnorm(1,0)
-        larveSizes[1,i] <- 0#dnorm(0,0)
+        parentSizes[1,i] <- 1
+        parentSizesMigr[1,i] <- 1
+        larveSizes[1,i] <- 0
+        K[1,i] <- 0.01
+        R[1,i] <- 0.01
+        generation[1,i] <- 25
+        tempsVie[1,i] <- 5
     }
+
+ 
 
 
     # Calcul des individus attendus
-
     for(i in 2:nDates) {
 
         # Evaluation de K et R
@@ -90,24 +96,28 @@ model {
             #R[i,j] <- ifelse(equals(Y.Rbis[i,j],NA), 0, 1) * Y.Rbis[i,j]          
         }        
 
+        # Migration, reproduction et mort
+
+        parentSizesMigr[i,] <- ifelse(parentSizes[i-1,] + (parentSizes[i-1,]%*%migrationMatrix) < 0, 0, parentSizes[i-1,] + (parentSizes[i-1,]%*%migrationMatrix))
 
         
 
-        # Migration des adultes
-
-        parentSizes[i,] <- ifelse(parentSizes[i-1,] + (parentSizes[i-1,]%*%migrationMatrix) < 0, 0, parentSizes[i-1,] + (parentSizes[i-1,]%*%migrationMatrix))
-
-
-
         for(j in 1:nDemes) {
-            larveSizes[i,j] <- ifelse(i-round(generation)<=0, larveSizes[i-1,j], larveSizes[i-1,j] + larveSizes[i-1,j] * R[i,j] - larveSizes[i-round(generation),j] * R[i-round(generation),j])
-            parentSizes[i,j] <- ifelse(i-round(generation)<=0 && i-round(tempsVie)<=0, parentSizes[i-1,j], parentSizes[i-1,j] + larveSizes[i-round(generation),j] * R[i-round(generation),j] - parentSizes[i-round(tempsVie),j] * R[i-round(tempsVie),j])
+            generation[i,j] <- 25
+            tempsVie[i,j] <- 5
+            larveSizes[i,j] <- larveSizes[i-1,j] + larveSizes[i-1,j] * R[i,j] - larveSizes[ifelse((i-round(generation[i,j]))<=0,i-1,(i-round(generation[i,j]))),j] * R[ifelse((i-round(generation[i,j]))<=0,i-1,(i-round(generation[i,j]))),j]
+            parentSizes[i,j] <- parentSizesMigr[i-1,j] + larveSizes[ifelse((i-round(generation[i,j]))<=0,i-1,(i-round(generation[i,j]))),j] * R[ifelse((i-round(generation[i,j]))<=0,i-1,(i-round(generation[i,j]))),j] - parentSizesMigr[ifelse((i-round(tempsVie[i,j]))<=0,i-1,(i-round(tempsVie[i,j]))),j] * R[ifelse((i-round(tempsVie[i,j]))<=0,i-1,(i-round(tempsVie[i,j]))),j]
         }
 
     }
 
+#Comparaison entre recovery et larve sizes pour ne garder que les adequats
+    for (i in 1:nReco){
+        sims[i] <- larveSizes[recovery[i,1], recovery[i,3]]
+    }
 
 
+#formatage sous forme de ligne
 
 
 
@@ -115,6 +125,9 @@ model {
     # LIKELIHOOD
     #
 
+    for(i in 1:nReco) {
+        sizes[i] ~ dpois(sims[i])
+    }
 
       
 

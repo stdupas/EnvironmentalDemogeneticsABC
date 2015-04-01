@@ -106,7 +106,33 @@ for ( i in 1:dim(EnvData2)[1]){
     }
 }
 
+recovery2 = buildDataSet()
 
+recoverybis[2] = recovery2[2]
+reco = match(recovery2[,1], Dates)
+recoverybis = cbind(reco, recovery2[,2], recovery2[,3])
+
+
+
+library('rjags')
+
+dispersionRate = .025;dispersionDistance=100;    
+# K.pr.X0=0;K.pr.Xopt=38.40947;K.pr.Yopt=11.53846;    
+# R.pr.X0=0;R.pr.Xopt=38.40947;R.pr.Yopt=1;    
+generationTime=25;generationTimeSD=3;    
+dvlpTime=5;dvlpTimeSD=1
+
+
+jags <- jags.model('model.bug',
+                   data = list('nDates' = length(Dates),
+                               'nDemes' = dim(EnvData2)[1],
+                               'EnvData' = EnvData2,
+                               'distMat' = distMat,
+                               'recovery' = recoverybis,
+                               'nReco' = length(reco),
+                               'sizes' = recovery2[,2]),
+                   n.chains = 4,
+                   n.adapt = 100)
 
 likelihoodShort()
 

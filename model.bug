@@ -126,7 +126,7 @@ model {
     #
 
     for(i in 1:nReco) {
-        sizes[i] ~ dpois(sims[i])
+        sizes[i] ~ dpois(exp(sims[i]))
     }
 
       

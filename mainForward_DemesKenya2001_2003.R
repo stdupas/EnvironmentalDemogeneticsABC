@@ -96,42 +96,6 @@ EnvData2 = computeMeanEnvData(EnvData, "pr", 15)
 
 recovery2 = buildDataSet()
 
-for ( i in 1:dim(EnvData2)[1]){
-    for (j in 1:dim(EnvData2)[2]){
-        for (k in 1:dim(EnvData2)[3]){
-            if(is.na(EnvData2[i,j,k]) == TRUE){
-                EnvData2[i,j,k] = 0
-            }
-        }
-    }
-}
-
-recovery2 = buildDataSet()
-
-reco = match(recovery2[,1], Dates)
-recoverybis = cbind(reco, recovery2[,2], recovery2[,3])
-
-
-
-library('rjags')
-
-dispersionRate = .025;dispersionDistance=100;    
-# K.pr.X0=0;K.pr.Xopt=38.40947;K.pr.Yopt=11.53846;    
-# R.pr.X0=0;R.pr.Xopt=38.40947;R.pr.Yopt=1;    
-generationTime=25;generationTimeSD=3;    
-dvlpTime=5;dvlpTimeSD=1
-
-
-jags <- jags.model('model.bug',
-                   data = list('nDates' = length(Dates),
-                               'nDemes' = dim(EnvData2)[1],
-                               'EnvData' = EnvData2,
-                               'distMat' = distMat,
-                               'recovery' = recoverybis,
-                               'nReco' = length(reco),
-                               'sizes' = recovery2[,2]),
-                   n.chains = 4,
-                   n.adapt = 100)
 
 likelihoodShort()
 

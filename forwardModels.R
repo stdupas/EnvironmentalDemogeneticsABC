@@ -435,18 +435,15 @@ likelihoodShortTest <- function(#dispersionRate = .025,dispersionDistance=100,
     #larveSizes = expectedInd(p["K.pr.X0"],p["K.pr.Xopt"],p["K.pr.Yopt"],
      #                           p["R.pr.X0"],p["R.pr.Xopt"],p["R.pr.Yopt"])    
     K.pr.X0 = 0
-   # K.pr.Xopt = 38.40947
-#    K.pr.Yopt = 11.53846
+    K.pr.Xopt = 38.40947
+    K.pr.Yopt = 11.53846
     R.pr.X0 = 0
     R.pr.Xopt = 38.40947
     R.pr.Yopt = 1
-    larveSizes = expectedInd(K.pr.X0, p[1], p[2],
+    larveSizes = expectedInd(K.pr.X0, K.pr.Xopt, K.pr.Yopt,
                                R.pr.X0,R.pr.Xopt,R.pr.Yopt)  
-    
-    result = NULL
-    for (j in 1:length(recovery2[,"size"])){
-        result = c(result,larveSizes[recovery2[j,"demeNb"],as.character(recovery2[j,"birthDate"])])
-    }
+
+    result = larveSizes[cbind(recovery2[,"demeNb"], as.character(recovery2[,"birthDate"]))]
 
     # Si recovery est > 0 et si result est egal à 0, dpois retourne -Inf
     # Il faut donc convertir les 0 de result en 0.0001 (ou autre different de 0)

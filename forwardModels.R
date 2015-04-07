@@ -416,12 +416,69 @@ likelihoodShort <- function(dispersionRate = .025,dispersionDistance=100,
 ############################################################################
 ########################## TEST FUNCTIONS ##################################
 ############################################################################
+GrosGibbs <- function(){
+    
+    start = rbind( c(0,1), c(35,4), c(10,1), c(0,1), c(35, 4), c(1,1))
+    scale = c(1,1,1,1,1,1)
+    indice = 10
+    nbPar = 6
+    
+    ndv = array(0, dim = c(indice, dim(start)[1]))
+    post0 = logPostDens(start[])
+    start0 = start
+    print("j'ai fini 8")
+    for(i in 1:indice){
+        cat("\n")
+        for(j in 1:nbPar){
+            cat("*")
+            start1 = start0
+            start1[j,1] = start0[j,1] + rnorm(1) * scale[j]
+            post1 = logPostDens(start1)
+            t = runif(1) < exp(post1 - post0)
+            start0[j,1] = start1[j,1] *(t==1) + start0[j,1] *(t==0)
+            post0 = post1 * (t==1) + post0 * (t == 0)
+            ndv[i,j] = start0[j,1]
+            
+        }
+    }
+    return(ndv)
+}
 
+logPostDens <- function(start){
+    KX0 = start[1,]
+    KXopt = start[2,] 
+    KYopt = start[3,]
+    RX0 = start[4,] 
+    RXopt  = start[5,]
+    RYopt = start[6,]
+    
+      K.pr.X0 = rnorm(1, mean = KX0[1], sd = KX0[2])
+      K.pr.Xopt = rnorm(1, mean =KXopt[1], sd = KXopt[2])
+      K.pr.Yopt = rnorm(1, mean = KYopt[1], sd = KYopt[2])
+      R.pr.X0 = rnorm(1, mean = RX0[1], sd = RX0[2])
+      R.pr.Xopt = rnorm(1, mean =RXopt[1], sd = RXopt[2])
+      R.pr.Yopt = rnorm(1, mean = RYopt[1], sd = RYopt[2])
+      loglike = log(likelihoodShortTest(K.pr.X0,K.pr.Xopt,K.pr.Yopt,
+                                        R.pr.X0,R.pr.Xopt,R.pr.Yopt))
+      
+      K.pr.X0 = dnorm(K.pr.X0 , mean = KX0[1], sd = KX0[2])
+      K.pr.Xopt = dnorm(K.pr.Xopt , mean =KXopt[1], sd = KXopt[2])
+      K.pr.Yopt = dnorm(K.pr.Yopt , mean = KYopt[1], sd = KYopt[2])
+      R.pr.X0 = dnorm(R.pr.X0 ,mean = RX0[1], sd = RX0[2])
+      R.pr.Xopt = dnorm(R.pr.Xopt, mean = RXopt[1], sd = RXopt[2])
+      R.pr.Yopt = dnorm(R.pr.Yopt,  mean = RYopt[1], sd = RYopt[2])
+      logprior = sum(sapply(c(K.pr.X0,K.pr.Xopt,K.pr.Yopt,
+                         R.pr.X0,R.pr.Xopt,R.pr.Yopt),
+                        FUN = log))
+      
+      return(loglike + logprior)
+
+}
 
 
 likelihoodShortTest <- function(#dispersionRate = .025,dispersionDistance=100,
                                 K.pr.X0=0,K.pr.Xopt=38.40947,K.pr.Yopt=11.53846,
-                                R.pr.X0=0,R.pr.Xopt=38.40947,R.pr.Yopt=1
+                                R.pr.X0=0,R.pr.Xopt=38.40947,R.pr.Yopt=1)
                                 # generationTime=25,generationTimeSD=3,
                                 # dvlpTime=25,dvlpTimeSD=3)
 {
@@ -445,7 +502,6 @@ likelihoodShortTest <- function(#dispersionRate = .025,dispersionDistance=100,
     # Il faut donc arrondir les valeurs de recovery
     #logLikelihood <- -sum(dpois(round(recovery2[,"size"]) , result,log=TRUE))
     meanLikelihood = mean(dpois(round(recovery2[,"size"]), result))
-    print(meanLikelihood)
     meanLikelihood
 }
 

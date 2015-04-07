@@ -420,7 +420,8 @@ likelihoodShort <- function(dispersionRate = .025,dispersionDistance=100,
 
 
 likelihoodShortTest <- function(#dispersionRate = .025,dispersionDistance=100,
-    p=c(0,0))
+    -                                K.pr.X0=0,K.pr.Xopt=38.40947,K.pr.Yopt=11.53846,
+    -                                R.pr.X0=0,R.pr.Xopt=38.40947,R.pr.Yopt=1
                                 # generationTime=25,generationTimeSD=3,
                                 # dvlpTime=25,dvlpTimeSD=3)
 {
@@ -434,12 +435,12 @@ likelihoodShortTest <- function(#dispersionRate = .025,dispersionDistance=100,
 
     #larveSizes = expectedInd(p["K.pr.X0"],p["K.pr.Xopt"],p["K.pr.Yopt"],
      #                           p["R.pr.X0"],p["R.pr.Xopt"],p["R.pr.Yopt"])    
-    K.pr.X0 = 0
-    K.pr.Xopt = 38.40947
-    K.pr.Yopt = 11.53846
-    R.pr.X0 = 0
-    R.pr.Xopt = 38.40947
-    R.pr.Yopt = 1
+  #  K.pr.X0 = 0
+  #  K.pr.Xopt = 38.40947
+  #  K.pr.Yopt = 11.53846
+  #  R.pr.X0 = 0
+  #  R.pr.Xopt = 38.40947
+  #  R.pr.Yopt = 1
     larveSizes = expectedInd(K.pr.X0, K.pr.Xopt, K.pr.Yopt,
                                R.pr.X0,R.pr.Xopt,R.pr.Yopt)  
 

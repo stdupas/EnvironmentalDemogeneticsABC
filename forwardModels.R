@@ -425,16 +425,7 @@ likelihoodShortTest <- function(#dispersionRate = .025,dispersionDistance=100,
                                 # generationTime=25,generationTimeSD=3,
                                 # dvlpTime=25,dvlpTimeSD=3)
 {
- #   p = c(p[1],38.40947,11.53846,p[2],38.40947,1)
-  #  names(p)=c("K.pr.X0","K.pr.Xopt","K.pr.Yopt","R.pr.X0","R.pr.Xopt","R.pr.Yopt")
-    
-   # print("==============================")
-    ############# A RETIRER ###################
-    #cat("X0",p["K.pr.X0"],"Xop",p["K.pr.Xopt"],"Yop",p["K.pr.Yopt"],"\n")
-    #cat("X0",p["R.pr.X0"],"Xop",p["R.pr.Xopt"],"Yop",p["R.pr.Yopt"],"\n")
-
-    #larveSizes = expectedInd(p["K.pr.X0"],p["K.pr.Xopt"],p["K.pr.Yopt"],
-     #                           p["R.pr.X0"],p["R.pr.Xopt"],p["R.pr.Yopt"])    
+ 
   #  K.pr.X0 = 0
   #  K.pr.Xopt = 38.40947
   #  K.pr.Yopt = 11.53846
@@ -452,9 +443,10 @@ likelihoodShortTest <- function(#dispersionRate = .025,dispersionDistance=100,
 
     # Si recovery n'est pas un integer, dpois retourne -Inf
     # Il faut donc arrondir les valeurs de recovery
-    logLikelihood <- -sum(dpois(round(recovery2[,"size"]) , result,log=TRUE))
-    print(logLikelihood)
-    logLikelihood
+   #logLikelihood <- -sum(dpois(round(recovery2[,"size"]) , result,log=TRUE))
+   meanLikelihood = mean(dpois(round(recovery2[,"size"], result)))
+    print(meanLikelihood)
+   meanLikelihood
 }
 
 # Fonction qui calcule le nombre d'individus attendus, retourne "larveSizes"

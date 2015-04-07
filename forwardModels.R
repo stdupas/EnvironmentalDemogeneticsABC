@@ -443,10 +443,10 @@ likelihoodShortTest <- function(#dispersionRate = .025,dispersionDistance=100,
 
     # Si recovery n'est pas un integer, dpois retourne -Inf
     # Il faut donc arrondir les valeurs de recovery
-   #logLikelihood <- -sum(dpois(round(recovery2[,"size"]) , result,log=TRUE))
-   meanLikelihood = mean(dpois(round(recovery2[,"size"], result)))
+    #logLikelihood <- -sum(dpois(round(recovery2[,"size"]) , result,log=TRUE))
+    meanLikelihood = mean(dpois(round(recovery2[,"size"]), result))
     print(meanLikelihood)
-   meanLikelihood
+    meanLikelihood
 }
 
 # Fonction qui calcule le nombre d'individus attendus, retourne "larveSizes"

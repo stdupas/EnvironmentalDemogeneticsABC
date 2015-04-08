@@ -497,32 +497,34 @@ logPostDens <- function(start){
 
 
 likelihoodShortTest <- function(#dispersionRate = .025,dispersionDistance=100,
-                                K.pr.X0=0,K.pr.Xopt=38.40947,K.pr.Yopt=11.53846,
-                                R.pr.X0=0,R.pr.Xopt=38.40947,R.pr.Yopt=1)
-                                # generationTime=25,generationTimeSD=3,
-                                # dvlpTime=25,dvlpTimeSD=3)
+  #K.pr.X0=0,
+  K.pr.Xopt=38.40947,K.pr.Yopt=11.53846)#,
+  #R.pr.X0=0,R.pr.Xopt=38.40947,R.pr.Yopt=1)
+  # generationTime=25,generationTimeSD=3,
+  # dvlpTime=25,dvlpTimeSD=3)
 {
- 
-  #  K.pr.X0 = 0
+  
+  K.pr.X0 = 0
   #  K.pr.Xopt = 38.40947
   #  K.pr.Yopt = 11.53846
-  #  R.pr.X0 = 0
-  #  R.pr.Xopt = 38.40947
-  #  R.pr.Yopt = 1
-    larveSizes = expectedInd(K.pr.X0, K.pr.Xopt, K.pr.Yopt,
-                               R.pr.X0,R.pr.Xopt,R.pr.Yopt)  
-
-    result = larveSizes[cbind(recovery2[,"demeNb"], as.character(recovery2[,"birthDate"]))]
-
-    # Si recovery est > 0 et si result est egal à 0, dpois retourne -Inf
-    # Il faut donc convertir les 0 de result en 0.0001 (ou autre different de 0)
-    result[which(result == 0)] = 0.0001
-
-    # Si recovery n'est pas un integer, dpois retourne -Inf
-    # Il faut donc arrondir les valeurs de recovery
-    #logLikelihood <- -sum(dpois(round(recovery2[,"size"]) , result,log=TRUE))
-    meanLikelihood = mean(dpois(round(recovery2[,"size"]), result))
-    meanLikelihood
+  R.pr.X0 = 0
+  R.pr.Xopt = 38.40947
+  R.pr.Yopt = 1
+  larveSizes = expectedInd(K.pr.X0, K.pr.Xopt, K.pr.Yopt,
+                           R.pr.X0,R.pr.Xopt,R.pr.Yopt)  
+  
+  result = larveSizes[cbind(recovery2[,"demeNb"], as.character(recovery2[,"birthDate"]))]
+  
+  # Si recovery est > 0 et si result est egal à 0, dpois retourne -Inf
+  # Il faut donc convertir les 0 de result en 0.0001 (ou autre different de 0)
+  result[which(result == 0)] = 0.0001
+  
+  # Si recovery n'est pas un integer, dpois retourne -Inf
+  # Il faut donc arrondir les valeurs de recovery
+  logLikelihood <- -sum(dpois(round(recovery2[,"size"]) , result,log=TRUE))
+  logLikelihood
+  #meanLikelihood = mean(dpois(round(recovery2[,"size"]), result))
+  #meanLikelihood
 }
 
 # Fonction qui calcule le nombre d'individus attendus, retourne "larveSizes"

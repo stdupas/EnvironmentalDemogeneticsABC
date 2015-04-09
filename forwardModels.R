@@ -416,8 +416,20 @@ likelihoodShort <- function(dispersionRate = .025,dispersionDistance=100,
 ############################################################################
 ########################## TEST FUNCTIONS ##################################
 ############################################################################
+
 GrosGibbs <- function(){
-    
+# Fonction faisant tourner un algorithme de Gibbs Sampling
+# Variables: 
+#           start: vecteur contenant les valeurs de depart des hyperparametres des priors de chaque parametre du modele
+#           scale: vecteur contenant une valeur d'echelle pour le pas de chaque parametre
+#           indice: nombre d'iterations de l'algorithme
+#           nPar: nombre de parametres a evaluer
+#           ndv: tableau (nbIterations x nbParametres) contenant la valeur des parametres a chaque iteration
+#           post0: posteriors a l'iteration (i-1), logPostDens
+#           start0: valeurs des hyperparametres a l'iteration (i-1)
+#           start1: valeurs des hyperparametres a l'iteration (i)
+#           post1: posteriors a l'iteration (i)   
+
     start = rbind( c(0,1), c(35,4), c(10,1), c(0,1), c(35, 4), c(1,1))
     scale = c(1,1,1,1,1,1)
     indice = 10
@@ -427,14 +439,22 @@ GrosGibbs <- function(){
     post0 = logPostDens(start[])
     start0 = start
     print("j'ai fini 8")
+
     for(i in 1:indice){
         cat("\n")
         for(j in 1:nbPar){
             cat("*")
             start1 = start0
+            # On pioche une valeur de pas pour faire bouger les hyperparametres a partir de start0
             start1[j,1] = start0[j,1] + rnorm(1) * scale[j]
+            # On calcule les posteriors avec les nouveaux hyperparametres
             post1 = logPostDens(start1)
+            # On decide si on garde ou non les nouvelles valeurs
+            # Les valeurs sont gardees si la valeur tiree aleatoirement dans la loi uniforme est plus petite que
+            # la difference entre le posterior au temps i et le posterior au temps i-1
+            # t est egale a 1 si les valeurs sont gardees, sinon 0
             t = runif(1) < exp(post1 - post0)
+            # Si t = 1, on garde les nouvelles valeurs, sinon on garde les anciennes valeurs
             start0[j,1] = start1[j,1] *(t==1) + start0[j,1] *(t==0)
             post0 = post1 * (t==1) + post0 * (t == 0)
             ndv[i,j] = start0[j,1]

@@ -96,6 +96,26 @@ EnvData2 = computeMeanEnvData(EnvData, "pr", 15)
 
 recovery2 = buildDataSet()
 
+LimiteLikelihood <- function(){
+    ############# Boucle de visualisation fastidieuse ###############
+    x = seq(34,42, 0.07)
+    y = seq(7,15,0.07)
+    z = NULL
+    for ( i in 1: length(x)){
+        zbis = NULL
+        cat("\n", i, ": ")
+        for( j in 1: length(y)){
+            cat("*")
+            zbis = c(zbis, likelihoodShortTest(x[i], y[j]))
+        }
+        z = rbind(z, zbis)
+    }
+    zorder = rank(z)
+    library(rgl)
+    persp3d(x,y,z,col=rainbow(as.integer(max(zorder)))[zorder])
+    filled.contour(x,y,z, color.palette = heat.colors)
+    
+}
 
 likelihoodShort()
 

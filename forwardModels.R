@@ -413,11 +413,15 @@ likelihoodShort <- function(dispersionRate = .025,dispersionDistance=100,
 
 
 
-############################################################################
-########################## TEST FUNCTIONS ##################################
-############################################################################
+#############################################################
+#############################################################
+##                                                         ##
+##                      TESTS FUNCTIONS                    ##
+##                                                         ##
+#############################################################
+#############################################################
 
-GrosGibbs <- function(){
+GrosGibbs <- function(thining=50){
 # Fonction faisant tourner un algorithme de Gibbs Sampling
 # Variables: 
 #           start: vecteur contenant les valeurs de depart des parametres
@@ -430,14 +434,17 @@ GrosGibbs <- function(){
 #           start1: valeurs des hyperparametres a l'iteration (i)
 #           post1: posteriors a l'iteration (i)   
 
-    start = c(2, 33, 9, 2, 33, 1)
+    start = c(2, 33, 9, 2, 33, 2)
     scale = c(0.2,0.2,0.2,0.2,0.2,0.2)
-    indice = 50
+    indice = 2
     nbPar = length(start)
     
     ndv = array(0, dim = c(indice, nbPar))
     post0 = logPostDens(start)
     start0 = start
+
+    indiceMax = 0
+    postMax = post0
 
     for(i in 1:indice){
         cat("\n", i, ":")
@@ -457,9 +464,14 @@ GrosGibbs <- function(){
             start0[j] = start1[j] *(t==1) + start0[j] *(t==0)
             post0 = post1 * (t==1) + post0 * (t == 0)          
             ndv[i,j] = start0[j]
+
+            if((i%%thining == 0) && (postMax < post0)) {
+                indiceMax = i
+                postMax = post0
+            }
         }
     }
-    return(ndv)
+    return(list(ndv,indiceMax,postMax))
 }
 
 logPostDens <- function(start){

@@ -420,7 +420,7 @@ likelihoodShort <- function(dispersionRate = .025,dispersionDistance=100,
 GrosGibbs <- function(){
 # Fonction faisant tourner un algorithme de Gibbs Sampling
 # Variables: 
-#           start: vecteur contenant les valeurs de depart des hyperparametres des priors de chaque parametre du modele
+#           start: vecteur contenant les valeurs de depart des parametres
 #           scale: vecteur contenant une valeur d'echelle pour le pas de chaque parametre
 #           indice: nombre d'iterations de l'algorithme
 #           nPar: nombre de parametres a evaluer
@@ -430,68 +430,59 @@ GrosGibbs <- function(){
 #           start1: valeurs des hyperparametres a l'iteration (i)
 #           post1: posteriors a l'iteration (i)   
 
-    start = rbind( c(0,1), c(35,4), c(10,1), c(0,1), c(35, 4), c(1,1))
-    scale = c(1,1,1,1,1,1)
-    indice = 10
-    nbPar = 6
+    start = c(2, 33, 9, 2, 33, 1)
+    scale = c(0.2,0.2,0.2,0.2,0.2,0.2)
+    indice = 3
+    nbPar = length(start)
     
-    ndv = array(0, dim = c(indice, dim(start)[1]))
-    post0 = logPostDens(start[])
+    ndv = array(0, dim = c(indice, nbPar))
+    post0 = logPostDens(start)
     start0 = start
-    print("j'ai fini 8")
 
     for(i in 1:indice){
-        cat("\n")
+        cat("\n", i, ":")
         for(j in 1:nbPar){
             cat("*")
             start1 = start0
             # On pioche une valeur de pas pour faire bouger les hyperparametres a partir de start0
-            start1[j,1] = start0[j,1] + rnorm(1) * scale[j]
+            start1[j] = start0[j] + rnorm(1) * scale[j]
             # On calcule les posteriors avec les nouveaux hyperparametres
             post1 = logPostDens(start1)
             # On decide si on garde ou non les nouvelles valeurs
             # Les valeurs sont gardees si la valeur tiree aleatoirement dans la loi uniforme est plus petite que
             # la difference entre le posterior au temps i et le posterior au temps i-1
             # t est egale a 1 si les valeurs sont gardees, sinon 0
-            t = runif(1) < exp(post1 - post0)
+            t = runif(1) < min(1,exp(post1 - post0))
             # Si t = 1, on garde les nouvelles valeurs, sinon on garde les anciennes valeurs
-            start0[j,1] = start1[j,1] *(t==1) + start0[j,1] *(t==0)
-            post0 = post1 * (t==1) + post0 * (t == 0)
-            ndv[i,j] = start0[j,1]
-            
+            start0[j] = start1[j] *(t==1) + start0[j] *(t==0)
+            post0 = post1 * (t==1) + post0 * (t == 0)          
+            ndv[i,j] = start0[j]
         }
     }
     return(ndv)
 }
 
 logPostDens <- function(start){
-    KX0 = start[1,]
-    KXopt = start[2,] 
-    KYopt = start[3,]
-    RX0 = start[4,] 
-    RXopt  = start[5,]
-    RYopt = start[6,]
-    
-      K.pr.X0 = rnorm(1, mean = KX0[1], sd = KX0[2])
-      K.pr.Xopt = rnorm(1, mean =KXopt[1], sd = KXopt[2])
-      K.pr.Yopt = rnorm(1, mean = KYopt[1], sd = KYopt[2])
-      R.pr.X0 = rnorm(1, mean = RX0[1], sd = RX0[2])
-      R.pr.Xopt = rnorm(1, mean =RXopt[1], sd = RXopt[2])
-      R.pr.Yopt = rnorm(1, mean = RYopt[1], sd = RYopt[2])
-      loglike = log(likelihoodShortTest(K.pr.X0,K.pr.Xopt,K.pr.Yopt,
-                                        R.pr.X0,R.pr.Xopt,R.pr.Yopt))
+    K.pr.X0 = start[1]
+    K.pr.Xopt = start[2]
+    K.pr.Yopt = start[3]
+    R.pr.X0 = start[4]
+    R.pr.Xopt = start[5]
+    R.pr.Yopt = start[6]
+    loglike = likelihoodShortTest(K.pr.X0,K.pr.Xopt,K.pr.Yopt,
+                                        R.pr.X0,R.pr.Xopt,R.pr.Yopt)
       
-      K.pr.X0 = dnorm(K.pr.X0 , mean = KX0[1], sd = KX0[2])
-      K.pr.Xopt = dnorm(K.pr.Xopt , mean =KXopt[1], sd = KXopt[2])
-      K.pr.Yopt = dnorm(K.pr.Yopt , mean = KYopt[1], sd = KYopt[2])
-      R.pr.X0 = dnorm(R.pr.X0 ,mean = RX0[1], sd = RX0[2])
-      R.pr.Xopt = dnorm(R.pr.Xopt, mean = RXopt[1], sd = RXopt[2])
-      R.pr.Yopt = dnorm(R.pr.Yopt,  mean = RYopt[1], sd = RYopt[2])
-      logprior = sum(sapply(c(K.pr.X0,K.pr.Xopt,K.pr.Yopt,
-                         R.pr.X0,R.pr.Xopt,R.pr.Yopt),
+    pKX0 = dunif(K.pr.X0, min=-3, max=3)+0.00000001
+    pKXopt = dunif(K.pr.Xopt, min=30, max=40)+0.00000001
+    pKYopt = dunif(K.pr.Yopt, min=7, max=12)+0.00000001
+    pRX0 = dunif(R.pr.X0, min=-3, max=3)+0.00000001
+    pRXopt  = dunif(R.pr.Xopt, min=30, max=40)+0.00000001
+    pRYopt = dunif(R.pr.Yopt, min=-2, max=4)+0.00000001
+    logprior = sum(sapply(c(pKX0,pKXopt,pKYopt,
+                        pRX0,pRXopt,pRYopt),
                         FUN = log))
       
-      return(loglike + logprior)
+    return(loglike + logprior)
 
 }
 
@@ -520,9 +511,9 @@ likelihoodShortTest <- function(#dispersionRate = .025,dispersionDistance=100,
 
     # Si recovery n'est pas un integer, dpois retourne -Inf
     # Il faut donc arrondir les valeurs de recovery
-    #logLikelihood <- -sum(dpois(round(recovery2[,"size"]) , result,log=TRUE))
-    meanLikelihood = mean(dpois(round(recovery2[,"size"]), result))
-    meanLikelihood
+    logLikelihood <- sum(dpois(round(recovery2[,"size"]) , result , log=TRUE))
+    #meanLikelihood = mean(dpois(round(recovery2[,"size"]), result))
+    return(logLikelihood)
 }
 
 # Fonction qui calcule le nombre d'individus attendus, retourne "larveSizes"
@@ -602,18 +593,18 @@ expectedInd <- function(#dispersionRate = .025,dispersionDistance=100,
 }
 
 buildDataSet <- function() {
-    possibleData = expectedInd(K.pr.X0=0,K.pr.Xopt=38.40947,K.pr.Yopt=11.53846,
-                                R.pr.X0=0,R.pr.Xopt=38.40947,R.pr.Yopt=1)
+    possibleData = expectedInd(K.pr.X0=0,K.pr.Xopt=35,K.pr.Yopt=10,
+                                R.pr.X0=0,R.pr.Xopt=35,R.pr.Yopt=1)
 
-    choiceDate = sample(16:1402, 600, replace=FALSE, prob=NULL)
-    choiceDeme = sample(1:729, 600, replace=TRUE, prob=NULL)
+    choiceDate = sample(16:1402, 2000, replace=TRUE, prob=NULL)
+    choiceDeme = sample(1:729, 2000, replace=TRUE, prob=NULL)
 
     pData = NULL
-    for(i in 1:600) {
+    for(i in 1:2000) {
         pData = rbind(pData, possibleData[choiceDeme[i], choiceDate[i]]) 
     }
 
-    sizes = rpois(600, pData)
+    sizes = rpois(2000, pData)
     dates = colnames(possibleData[,choiceDate])
 
     dataSet = cbind.data.frame(as.Date(dates),as.numeric(sizes),as.integer(choiceDeme))

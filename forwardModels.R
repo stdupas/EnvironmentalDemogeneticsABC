@@ -432,7 +432,7 @@ GrosGibbs <- function(){
 
     start = c(2, 33, 9, 2, 33, 1)
     scale = c(0.2,0.2,0.2,0.2,0.2,0.2)
-    indice = 3
+    indice = 50
     nbPar = length(start)
     
     ndv = array(0, dim = c(indice, nbPar))

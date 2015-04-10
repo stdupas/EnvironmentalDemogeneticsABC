@@ -430,9 +430,9 @@ GrosGibbs <- function(){
 #           start1: valeurs des hyperparametres a l'iteration (i)
 #           post1: posteriors a l'iteration (i)   
 
-    start = rbind(2, 33, 9, 0, 33, 1)
+    start = c(2, 33, 9, 2, 33, 1)
     scale = c(0.2,0.2,0.2,0.2,0.2,0.2)
-    indice = 2000
+    indice = 3
     nbPar = length(start)
     
     ndv = array(0, dim = c(indice, nbPar))
@@ -472,12 +472,12 @@ logPostDens <- function(start){
     loglike = likelihoodShortTest(K.pr.X0,K.pr.Xopt,K.pr.Yopt,
                                         R.pr.X0,R.pr.Xopt,R.pr.Yopt)
       
-    pKX0 = dunif(K.pr.X0, min=-3, max=3)
-    pKXopt = dunif(K.pr.Xopt, min=30, max=40)
-    pKYopt = dunif(K.pr.Yopt, min=7, max=12)
-    pRX0 = dunif(R.pr.X0, min=-3, max=3)
-    pRXopt  = dunif(R.pr.Xopt, min=30, max=40)
-    pRYopt = dunif(R.pr.Yopt, min=-2, max=4)
+    pKX0 = dunif(K.pr.X0, min=-3, max=3)+0.00000001
+    pKXopt = dunif(K.pr.Xopt, min=30, max=40)+0.00000001
+    pKYopt = dunif(K.pr.Yopt, min=7, max=12)+0.00000001
+    pRX0 = dunif(R.pr.X0, min=-3, max=3)+0.00000001
+    pRXopt  = dunif(R.pr.Xopt, min=30, max=40)+0.00000001
+    pRYopt = dunif(R.pr.Yopt, min=-2, max=4)+0.00000001
     logprior = sum(sapply(c(pKX0,pKXopt,pKYopt,
                         pRX0,pRXopt,pRYopt),
                         FUN = log))

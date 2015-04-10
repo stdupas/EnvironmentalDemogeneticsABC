@@ -98,8 +98,8 @@ recovery2 = buildDataSet()
 
 LimiteLikelihood <- function(){
     ############# Boucle de visualisation fastidieuse ###############
-    x = seq(34,42, 0.07)
-    y = seq(7,15,0.07)
+    x = seq(33,37,0.1)
+    y = seq(8,12,0.1)
     z = NULL
     for ( i in 1: length(x)){
         zbis = NULL
@@ -116,6 +116,8 @@ LimiteLikelihood <- function(){
     filled.contour(x,y,z, color.palette = heat.colors)
     
 }
+
+
 
 likelihoodShort()
 

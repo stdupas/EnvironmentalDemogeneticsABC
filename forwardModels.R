@@ -543,18 +543,24 @@ expectedInd <- function(#dispersionRate = .025,dispersionDistance=100,
     
     #Matrice contenant les individus à l'extérieur des mais.
     parentSizes <- array(0,dim=c(nrow(EnvData),length(Dates)),dimnames = list(1:nrow(EnvData),as.character(Dates)))
+
+    
     parentSizes[,as.character(birthDates)] <- 1
     #parentSizes[,16] <- 1
     
     #Matrice des individus à l'intérieur des mais.
     larveSizes <- array(0,dim=c(nrow(EnvData),length(Dates)),dimnames = list(1:nrow(EnvData),as.character(Dates)))
-    larveSizes[,] <- 0
-    
+
     #
     # building migration matrix
     #
-    migrationMatrix <- (!(distMat == 0)&(distMat < dispersionDistance))*dispersionRate + (distMat==0)*(1-dispersionRate*4)
-    migrationMatrix <- migrationMatrix/colSums(migrationMatrix)
+    migrationMatrix = Matrix(0, nrow = 729, ncol = 729, sparse = TRUE)
+    ind1 = which((distMat != 0) & (distMat < dispersionDistance))
+    ind2 = which(distMat == 0)
+    migrationMatrix[ind1] = dispersionRate
+    migrationMatrix[ind2] = 1-dispersionRate*4
+    #migrationMatrix <- (!(distMat == 0)&(distMat < dispersionDistance))*dispersionRate + (distMat==0)*(1-dispersionRate*4)
+    #migrationMatrix <- migrationMatrix/colSums(migrationMatrix)
     
     #
     # Probability density of generation time inthe interval [mean-3SD,mean+3SD]

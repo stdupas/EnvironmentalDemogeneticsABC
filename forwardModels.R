@@ -429,6 +429,7 @@ GrosGibbs <- function(thining=50){
     #           indice: nombre d'iterations de l'algorithme
     #           nPar: nombre de parametres a evaluer
     #           ndv: tableau (nbIterations x nbParametres) contenant la valeur des parametres a chaque iteration
+    #           ndp: tableau (nbIterations x nbParametres) contenant la valeur des posteriors a chaque iteration
     #           post0: posteriors a l'iteration (i-1), logPostDens
     #           start0: valeurs des hyperparametres a l'iteration (i-1)
     #           start1: valeurs des hyperparametres a l'iteration (i)
@@ -436,10 +437,11 @@ GrosGibbs <- function(thining=50){
     
     start = c(2, 27, 7, 2, 27, 2)
     scale = c(0.2,0.2,0.2,0.2,0.2,0.2)
-    indice = 6000
+    indice = 5000
     nbPar = length(start)
     
     ndv = array(0, dim = c(indice, nbPar))
+    ndp = array(0, dim = c(indice, nbPar))
     post0 = logPostDens(start)
     start0 = start
     
@@ -464,6 +466,7 @@ GrosGibbs <- function(thining=50){
             start0[j] = start1[j] *(t==1) + start0[j] *(t==0)
             post0 = post1 * (t==1) + post0 * (t == 0)          
             ndv[i,j] = start0[j]
+            ndp[i,j] = post0
             
             if((i%%thining == 0) && (postMax < post0)) {
                 indiceMax = i
@@ -471,7 +474,7 @@ GrosGibbs <- function(thining=50){
             }
         }
     }
-    return(list(ndv,indiceMax,postMax))
+    return(list(ndv,ndp,indiceMax,postMax))
 }
 
 logPostDens <- function(start){

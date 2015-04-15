@@ -614,7 +614,7 @@ buildDataSet <- function() {
                              R.pr.X0=0,R.pr.Xopt=35,R.pr.Yopt=1)
   
   choiceDate = sample(16:1402, 2000, replace=TRUE, prob=NULL)
-  choiceDeme = sample(1:729, 2000, replace=TRUE, prob=NULL)
+  choiceDeme = sample(1:dim(EnvData2)[1], 2000, replace=TRUE, prob=NULL)
   
   pData = NULL
   for(i in 1:2000) {

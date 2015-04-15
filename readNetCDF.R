@@ -1,7 +1,7 @@
 nc2EnvDataAndRasterStack <- function(ncDirectory=paste(wd,"ForwardSimulData/",sep=""),aggregationParam=4)
 {
-    ncDirectory = "/Users/Stagiaire/ForwardSimulData/"
-    aggregationParam = 10
+    ncDirectory = "/Users/legs/Documents/ForwardSimulData/"
+    aggregationParam = 20
     print("================ 1 =================")
   ncFiles=grep(".nc",list.files(ncDirectory),value=TRUE)
   nc=open.nc(paste(ncDirectory,ncFiles[1],sep=""))

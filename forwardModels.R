@@ -613,19 +613,19 @@ buildDataSet <- function() {
     possibleData = expectedInd(K.pr.X0=0,K.pr.Xopt=35,K.pr.Yopt=10,
                                R.pr.X0=0,R.pr.Xopt=35,R.pr.Yopt=1)
     
-    choiceDate = sample(16:1402, 2000, replace=TRUE, prob=NULL)
-    choiceDeme = sample(1:729, 2000, replace=TRUE, prob=NULL)
-    
-    pData = NULL
-    for(i in 1:2000) {
-        pData = rbind(pData, possibleData[choiceDeme[i], choiceDate[i]]) 
-    }
-    
-    sizes = rpois(2000, pData)
-    dates = colnames(possibleData[,choiceDate])
-    
-    dataSet = cbind.data.frame(as.Date(dates),as.numeric(sizes),as.integer(choiceDeme))
-    colnames(dataSet) = c("birthDate", "size", "demeNb")
-    
-    return(dataSet)
+  choiceDate = sample(16:1402, 2000, replace=TRUE, prob=NULL)
+  choiceDeme = sample(1:dim(EnvData2)[1], 2000, replace=TRUE, prob=NULL)
+  
+  pData = NULL
+  for(i in 1:2000) {
+    pData = rbind(pData, possibleData[choiceDeme[i], choiceDate[i]]) 
+  }
+  
+  sizes = rpois(2000, pData)
+  dates = colnames(possibleData[,choiceDate])
+  
+  dataSet = cbind.data.frame(as.Date(dates),as.numeric(sizes),as.integer(choiceDeme))
+  colnames(dataSet) = c("birthDate", "size", "demeNb")
+  
+  return(dataSet)
 }

@@ -93,6 +93,11 @@ demeSizes[,as.character(birthDates)] <- 10
 EnvData <- EnvData[,colnames(demeSizes),]
 
 EnvData2 = computeMeanEnvData(EnvData, "pr", 15)
+EnvData2 = aggregateDays(EnvData2,10,Dates)
+Dates = Dates[seq(10,length(Dates),by=10)]
+tmp = birthDates %in% Dates
+birthDates = birthDates[which(tmp == TRUE)]
+
 
 recovery2 = buildDataSet()
 

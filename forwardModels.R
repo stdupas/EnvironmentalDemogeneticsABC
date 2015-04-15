@@ -434,9 +434,9 @@ GrosGibbs <- function(thining=50){
     #           start1: valeurs des hyperparametres a l'iteration (i)
     #           post1: posteriors a l'iteration (i)   
     
-    start = c(2, 33, 9, 2, 33, 2)
+    start = c(2, 27, 7, 2, 27, 2)
     scale = c(0.2,0.2,0.2,0.2,0.2,0.2)
-    indice = 2
+    indice = 6000
     nbPar = length(start)
     
     ndv = array(0, dim = c(indice, nbPar))
@@ -500,18 +500,11 @@ logPostDens <- function(start){
 
 
 likelihoodShortTest <- function(#dispersionRate = .025,dispersionDistance=100,
-    K.pr.X0=0,K.pr.Xopt=38.40947,K.pr.Yopt=11.53846,
-    R.pr.X0=0,R.pr.Xopt=38.40947,R.pr.Yopt=1)
+    K.pr.X0=0,K.pr.Xopt=30,K.pr.Yopt=8,
+    R.pr.X0=0,R.pr.Xopt=30,R.pr.Yopt=1)
     # generationTime=25,generationTimeSD=3,
     # dvlpTime=25,dvlpTimeSD=3)
 {
-    
-    #  K.pr.X0 = 0
-    #  K.pr.Xopt = 38.40947
-    #  K.pr.Yopt = 11.53846
-    #  R.pr.X0 = 0
-    #  R.pr.Xopt = 38.40947
-    #  R.pr.Yopt = 1
     larveSizes = expectedInd(K.pr.X0, K.pr.Xopt, K.pr.Yopt,
                              R.pr.X0,R.pr.Xopt,R.pr.Yopt)  
     
@@ -536,42 +529,46 @@ expectedInd <- function(#dispersionRate = .025,dispersionDistance=100,
     # dvlpTime=25,dvlpTimeSD=3)
 {
     
-    dispersionRate = .025;dispersionDistance=100;    
-    # K.pr.X0=0;K.pr.Xopt=38.40947;K.pr.Yopt=11.53846;    
-    # R.pr.X0=0;R.pr.Xopt=38.40947;R.pr.Yopt=1;    
-    generationTime=25;generationTimeSD=3;    
-    dvlpTime=5;dvlpTimeSD=1
-    
+    dispersionRate = .025;dispersionDistance=150;    
+    # K.pr.X0=0;K.pr.Xopt=30;K.pr.Yopt=8;    
+    # R.pr.X0=0;R.pr.Xopt=30;R.pr.Yopt=1;    
+    generationTime = ceiling(25/10);
+    generationTimeSD=ceiling(3/10);    
+    dvlpTime=ceiling(5/10);
+    dvlpTimeSD=1;
+
     #Matrice contenant les individus à l'extérieur des mais.
     parentSizes <- array(0,dim=c(nrow(EnvData),length(Dates)),dimnames = list(1:nrow(EnvData),as.character(Dates)))
     parentSizes[,as.character(birthDates)] <- 1
     #parentSizes[,16] <- 1
-    
+
     #Matrice des individus à l'intérieur des mais.
     larveSizes <- array(0,dim=c(nrow(EnvData),length(Dates)),dimnames = list(1:nrow(EnvData),as.character(Dates)))
-    
+
     #
     # building migration matrix
     #
     migrationMatrix = Matrix(0, nrow = dim(distMat)[1], ncol = dim(distMat)[2], sparse = TRUE)
     ind1 = which((distMat != 0) & (distMat < dispersionDistance))
     ind2 = which(distMat == 0)
+
     migrationMatrix[ind1] = dispersionRate
     migrationMatrix[ind2] = 1-dispersionRate*4
     #migrationMatrix <- (!(distMat == 0)&(distMat < dispersionDistance))*dispersionRate + (distMat==0)*(1-dispersionRate*4)
     #migrationMatrix <- migrationMatrix/colSums(migrationMatrix)
-    
+
     #
     # Probability density of generation time inthe interval [mean-3SD,mean+3SD]
     #
     
-    generationTimeInterval <- (generationTime-3*round(generationTimeSD)):(generationTime+3*round(generationTimeSD))
+    generationTimeInterval <- (generationTime-generationTimeSD):(generationTime+generationTimeSD)
     generationTimeDensity <- dnorm(generationTimeInterval,generationTime,generationTimeSD)
-    
-    dvlpTimeInterval <- (dvlpTime-3*round(dvlpTimeSD)):(dvlpTime+3*round(dvlpTimeSD))
+
+    dvlpTimeInterval <- (dvlpTime-dvlpTimeSD):(dvlpTime+dvlpTimeSD)
     dvlpTimeDensity <- dnorm(dvlpTimeInterval,dvlpTime,dvlpTimeSD)
+
     # construction of likelihood with expected recovery
-    for (i in 16:(ncol(larveSizes)-max(generationTimeInterval))) # Date = colnames(demeSizes)[1]
+    for (i in 2:(ncol(larveSizes)-max(generationTimeInterval))) # Date = colnames(demeSizes)[1]
     {
         K <- linearTreeParameters(EnvData2[,i,"pr"],K.pr.X0,K.pr.Xopt,K.pr.Yopt)
         R <- linearTreeParameters(EnvData2[,i,"pr"],R.pr.X0,R.pr.Xopt,R.pr.Yopt)
@@ -595,6 +592,7 @@ expectedInd <- function(#dispersionRate = .025,dispersionDistance=100,
         
         #Programmation de leur eclosion en papillon
         generation = sample(generationTimeInterval, 1, prob = generationTimeDensity)
+
         larveSizes[,i+generation] =  larveSizes[,(i-1)+generation] - nbNaissances
         parentSizes[,i+generation] = parentSizes[,(i-1)+generation] + nbNaissances
         
@@ -606,22 +604,23 @@ expectedInd <- function(#dispersionRate = .025,dispersionDistance=100,
         }
         
     }
+
     return(larveSizes)
 }
 
 buildDataSet <- function() {
-    possibleData = expectedInd(K.pr.X0=0,K.pr.Xopt=35,K.pr.Yopt=10,
-                               R.pr.X0=0,R.pr.Xopt=35,R.pr.Yopt=1)
+    possibleData = expectedInd(K.pr.X0=0,K.pr.Xopt=30,K.pr.Yopt=8,
+                               R.pr.X0=0,R.pr.Xopt=30,R.pr.Yopt=1)
     
-  choiceDate = sample(16:1402, 2000, replace=TRUE, prob=NULL)
-  choiceDeme = sample(1:dim(EnvData2)[1], 2000, replace=TRUE, prob=NULL)
+  choiceDate = sample(1:(length(Dates)-5), 200, replace=TRUE, prob=NULL)
+  choiceDeme = sample(1:dim(EnvData2)[1], 200, replace=TRUE, prob=NULL)
   
   pData = NULL
-  for(i in 1:2000) {
+  for(i in 1:200) {
     pData = rbind(pData, possibleData[choiceDeme[i], choiceDate[i]]) 
   }
   
-  sizes = rpois(2000, pData)
+  sizes = rpois(200, pData)
   dates = colnames(possibleData[,choiceDate])
   
   dataSet = cbind.data.frame(as.Date(dates),as.numeric(sizes),as.integer(choiceDeme))

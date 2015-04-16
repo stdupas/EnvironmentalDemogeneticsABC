@@ -421,7 +421,7 @@ likelihoodShort <- function(dispersionRate = .025,dispersionDistance=100,
 #############################################################
 #############################################################
 
-GrosGibbs <- function(thining=50){
+GrosGibbs <- function(thining=1){
     # Fonction faisant tourner un algorithme de Gibbs Sampling
     # Variables: 
     #           start: vecteur contenant les valeurs de depart des parametres
@@ -438,10 +438,10 @@ GrosGibbs <- function(thining=50){
     #start = c(2, 27, 7, 2, 27, 2)
     #scale = c(0.2,0.2,0.2,0.2,0.2,0.2)
 
-    start = c(2, 0.4, 2, 0.01)
-    scale = c(0.2,0.02,0.2,0.002)
+    start = c(2, 0.4, 2, 0.05)
+    scale = c(0.2,0.02,0.2,0.02)
 
-    indice = 500
+    indice = 1000
     nbPar = length(start)
     
     ndv = array(0, dim = c(indice, nbPar))
@@ -509,9 +509,9 @@ logPostDens <- function(start){
                                   R.pr.X0,R.pr.slope)
     
     pKX0 = dunif(K.pr.X0, min=-3, max=3)+0.00000001
-    pKslope = dunif(K.pr.slope, min=0, max=0.5)+0.00000001
+    pKslope = dunif(K.pr.slope, min=0, max=1)+0.00000001
     pRX0 = dunif(R.pr.X0, min=-3, max=3)+0.00000001
-    pRslope  = dunif(R.pr.slope, min=0, max=0.1)+0.00000001
+    pRslope  = dunif(R.pr.slope, min=0, max=1)+0.00000001
     logprior = sum(sapply(c(pKX0,pKslope,
                             pRX0,pRslope),
                           FUN = log))
@@ -526,8 +526,8 @@ likelihoodShortTest <- function(#dispersionRate = .025,dispersionDistance=100,
     # R.pr.X0=0,R.pr.Xopt=30,R.pr.Yopt=1)
     # generationTime=25,generationTimeSD=3,
     # dvlpTime=25,dvlpTimeSD=3)
-    K.pr.X0=0, K.pr.slope=0.26,
-    R.pr.X0=0, R.pr.slope=0.033)
+    K.pr.X0=0, K.pr.slope=0.8,
+    R.pr.X0=0, R.pr.slope=0.1)
 {
     larveSizes = expectedInd(K.pr.X0,K.pr.slope,#K.pr.Xopt, K.pr.Yopt,
                              R.pr.X0,R.pr.slope)#R.pr.Xopt,R.pr.Yopt)  
@@ -551,8 +551,8 @@ expectedInd <- function(#dispersionRate = .025,dispersionDistance=100,
     # R.pr.X0,R.pr.Xopt,R.pr.Yopt)
     # generationTime=25,generationTimeSD=3,
     # dvlpTime=25,dvlpTimeSD=3)
-    K.pr.X0=0, K.pr.slope=0.26,
-    R.pr.X0=0, R.pr.slope=0.033)
+    K.pr.X0=0, K.pr.slope=0.8,
+    R.pr.X0=0, R.pr.slope=0.1)
 {
     
     dispersionRate = .025;dispersionDistance=150;    
@@ -560,7 +560,7 @@ expectedInd <- function(#dispersionRate = .025,dispersionDistance=100,
     # R.pr.X0=0;R.pr.Xopt=30;R.pr.Yopt=1;    
     generationTime = ceiling(25/10);
     generationTimeSD=ceiling(3/10);    
-    dvlpTime=ceiling(5/10);
+    dvlpTime=1+ceiling(5/10);
     dvlpTimeSD=1;
 
     #Matrice contenant les individus à l'extérieur des mais.
@@ -607,11 +607,13 @@ expectedInd <- function(#dispersionRate = .025,dispersionDistance=100,
         parentSizes[which(parentSizes[,i]<0),i] = 0
         
         #Reproduction des adultes
-        nbNaissances = parentSizes[,i]*R
+        nbNaissancesOld = parentSizes[,i]*R
+        
         ################## ATTENTION C'EST PAS BEAU ##########################
-        tmp = larveSizes[,i-1] + nbNaissances + larveSizes[,i]
+        tmp = larveSizes[,i-1] + nbNaissancesOld + larveSizes[,i]
         ind = which(tmp >= K)
-        nbNaissances[ ind ] = K[ind] - larveSizes[ind,i-1] - larveSizes[ind,i]
+        nbNaissances[ ind ] = (K[ind] - larveSizes[ind,i-1] - larveSizes[ind,i])*((K[ind] - larveSizes[ind,i-1] - larveSizes[ind,i])>0)
+        
         #####################################################################
         larveSizes[,i] = larveSizes[,i-1] + nbNaissances + larveSizes[,i]
         larveSizes[which(larveSizes[,i]<0),i] = 0
@@ -619,14 +621,14 @@ expectedInd <- function(#dispersionRate = .025,dispersionDistance=100,
         #Programmation de leur eclosion en papillon
         generation = sample(generationTimeInterval, 1, prob = generationTimeDensity)
 
-        larveSizes[,i+generation] =  larveSizes[,(i-1)+generation] - nbNaissances
-        parentSizes[,i+generation] = parentSizes[,(i-1)+generation] + nbNaissances
+        larveSizes[,i+generation] =  larveSizes[,i+generation] - nbNaissances
+        parentSizes[,i+generation] = parentSizes[,i+generation] + nbNaissances
         
         #Programmation de leur mort
         tempsVie = sample(dvlpTimeInterval, 1, prob = dvlpTimeDensity)
         #Attention, suprression des adultes dans leur deme de naissance, ne prends pas en compte la migration, c'est pas bien...
         if(i+generation+tempsVie <= dim(parentSizes)[2]){
-            parentSizes[,i+tempsVie+generation] = parentSizes[,(i-1)+tempsVie+generation] - nbNaissances
+            parentSizes[,i+tempsVie+generation] = parentSizes[,i+tempsVie+generation] - nbNaissancesOld
         }
         
     }
@@ -635,8 +637,8 @@ expectedInd <- function(#dispersionRate = .025,dispersionDistance=100,
 }
 
 buildDataSet <- function() {
-    possibleData = expectedInd(K.pr.X0=0,K.pr.slope=0.26,#K.pr.Xopt=30,K.pr.Yopt=8,
-                               R.pr.X0=0,R.pr.slope=0.033)#R.pr.Xopt=30,R.pr.Yopt=1)
+    possibleData = expectedInd(K.pr.X0=0,K.pr.slope=0.8,#K.pr.Xopt=30,K.pr.Yopt=8,
+                               R.pr.X0=0,R.pr.slope=0.1)#R.pr.Xopt=30,R.pr.Yopt=1)
     
   choiceDate = sample(1:(length(Dates)-5), 200, replace=TRUE, prob=NULL)
   choiceDeme = sample(1:dim(EnvData2)[1], 200, replace=TRUE, prob=NULL)

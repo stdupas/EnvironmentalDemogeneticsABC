@@ -608,6 +608,7 @@ expectedInd <- function(#dispersionRate = .025,dispersionDistance=100,
         
         #Reproduction des adultes
         nbNaissancesOld = parentSizes[,i]*R
+        nbNaissances = nbNaissancesOld
         
         ################## ATTENTION C'EST PAS BEAU ##########################
         tmp = larveSizes[,i-1] + nbNaissancesOld + larveSizes[,i]

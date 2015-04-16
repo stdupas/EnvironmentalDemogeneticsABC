@@ -163,7 +163,7 @@ linearTwoParameters <- function(x,X0,slope)
   #
   # Returns:
   #   The value of the reaction norm
-  return(slope*x-slope*X0)
+  return((slope*x-slope*X0)*(x>=X0))
 }
 
 LogLinearTwoParameters <- function(x,X0,slope)

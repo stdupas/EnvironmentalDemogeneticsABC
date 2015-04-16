@@ -435,9 +435,13 @@ GrosGibbs <- function(thining=50){
     #           start1: valeurs des hyperparametres a l'iteration (i)
     #           post1: posteriors a l'iteration (i)   
     
-    start = c(2, 27, 7, 2, 27, 2)
-    scale = c(0.2,0.2,0.2,0.2,0.2,0.2)
-    indice = 5000
+    #start = c(2, 27, 7, 2, 27, 2)
+    #scale = c(0.2,0.2,0.2,0.2,0.2,0.2)
+
+    start = c(2, 0.4, 2, 0.01)
+    scale = c(0.2,0.02,0.2,0.002)
+
+    indice = 500
     nbPar = length(start)
     
     ndv = array(0, dim = c(indice, nbPar))
@@ -450,7 +454,7 @@ GrosGibbs <- function(thining=50){
     
     for(i in 1:indice){
         cat("\n", i, ":")
-        for(j in 1:nbPar){
+        for(j in 1:nbPar){ 
             cat("*")
             start1 = start0
             # On pioche une valeur de pas pour faire bouger les hyperparametres a partir de start0
@@ -478,23 +482,38 @@ GrosGibbs <- function(thining=50){
 }
 
 logPostDens <- function(start){
+    # K.pr.X0 = start[1]
+    # K.pr.Xopt = start[2]
+    # K.pr.Yopt = start[3]
+    # R.pr.X0 = start[4]
+    # R.pr.Xopt = start[5]
+    # R.pr.Yopt = start[6]
+    # loglike = likelihoodShortTest(K.pr.X0,K.pr.Xopt,K.pr.Yopt,
+    #                               R.pr.X0,R.pr.Xopt,R.pr.Yopt)
+    
+    # pKX0 = dunif(K.pr.X0, min=-3, max=3)+0.00000001
+    # pKXopt = dunif(K.pr.Xopt, min=30, max=40)+0.00000001
+    # pKYopt = dunif(K.pr.Yopt, min=7, max=12)+0.00000001
+    # pRX0 = dunif(R.pr.X0, min=-3, max=3)+0.00000001
+    # pRXopt  = dunif(R.pr.Xopt, min=30, max=40)+0.00000001
+    # pRYopt = dunif(R.pr.Yopt, min=-2, max=4)+0.00000001
+    # logprior = sum(sapply(c(pKX0,pKXopt,pKYopt,
+    #                         pRX0,pRXopt,pRYopt),
+    #                       FUN = log))
+
     K.pr.X0 = start[1]
-    K.pr.Xopt = start[2]
-    K.pr.Yopt = start[3]
-    R.pr.X0 = start[4]
-    R.pr.Xopt = start[5]
-    R.pr.Yopt = start[6]
-    loglike = likelihoodShortTest(K.pr.X0,K.pr.Xopt,K.pr.Yopt,
-                                  R.pr.X0,R.pr.Xopt,R.pr.Yopt)
+    K.pr.slope = start[2]
+    R.pr.X0 = start[3]
+    R.pr.slope = start[4]
+    loglike = likelihoodShortTest(K.pr.X0,K.pr.slope,
+                                  R.pr.X0,R.pr.slope)
     
     pKX0 = dunif(K.pr.X0, min=-3, max=3)+0.00000001
-    pKXopt = dunif(K.pr.Xopt, min=30, max=40)+0.00000001
-    pKYopt = dunif(K.pr.Yopt, min=7, max=12)+0.00000001
+    pKslope = dunif(K.pr.slope, min=0, max=0.5)+0.00000001
     pRX0 = dunif(R.pr.X0, min=-3, max=3)+0.00000001
-    pRXopt  = dunif(R.pr.Xopt, min=30, max=40)+0.00000001
-    pRYopt = dunif(R.pr.Yopt, min=-2, max=4)+0.00000001
-    logprior = sum(sapply(c(pKX0,pKXopt,pKYopt,
-                            pRX0,pRXopt,pRYopt),
+    pRslope  = dunif(R.pr.slope, min=0, max=0.1)+0.00000001
+    logprior = sum(sapply(c(pKX0,pKslope,
+                            pRX0,pRslope),
                           FUN = log))
     
     return(loglike + logprior)
@@ -503,13 +522,15 @@ logPostDens <- function(start){
 
 
 likelihoodShortTest <- function(#dispersionRate = .025,dispersionDistance=100,
-    K.pr.X0=0,K.pr.Xopt=30,K.pr.Yopt=8,
-    R.pr.X0=0,R.pr.Xopt=30,R.pr.Yopt=1)
+    # K.pr.X0=0,K.pr.Xopt=30,K.pr.Yopt=8,
+    # R.pr.X0=0,R.pr.Xopt=30,R.pr.Yopt=1)
     # generationTime=25,generationTimeSD=3,
     # dvlpTime=25,dvlpTimeSD=3)
+    K.pr.X0=0, K.pr.slope=0.26,
+    R.pr.X0=0, R.pr.slope=0.033)
 {
-    larveSizes = expectedInd(K.pr.X0, K.pr.Xopt, K.pr.Yopt,
-                             R.pr.X0,R.pr.Xopt,R.pr.Yopt)  
+    larveSizes = expectedInd(K.pr.X0,K.pr.slope,#K.pr.Xopt, K.pr.Yopt,
+                             R.pr.X0,R.pr.slope)#R.pr.Xopt,R.pr.Yopt)  
     
     result = larveSizes[cbind(recovery2[,"demeNb"], as.character(recovery2[,"birthDate"]))]
     
@@ -526,10 +547,12 @@ likelihoodShortTest <- function(#dispersionRate = .025,dispersionDistance=100,
 
 # Fonction qui calcule le nombre d'individus attendus, retourne "larveSizes"
 expectedInd <- function(#dispersionRate = .025,dispersionDistance=100,
-    K.pr.X0,K.pr.Xopt,K.pr.Yopt,
-    R.pr.X0,R.pr.Xopt,R.pr.Yopt)
+    # K.pr.X0,K.pr.Xopt,K.pr.Yopt,
+    # R.pr.X0,R.pr.Xopt,R.pr.Yopt)
     # generationTime=25,generationTimeSD=3,
     # dvlpTime=25,dvlpTimeSD=3)
+    K.pr.X0=0, K.pr.slope=0.26,
+    R.pr.X0=0, R.pr.slope=0.033)
 {
     
     dispersionRate = .025;dispersionDistance=150;    
@@ -573,8 +596,8 @@ expectedInd <- function(#dispersionRate = .025,dispersionDistance=100,
     # construction of likelihood with expected recovery
     for (i in 2:(ncol(larveSizes)-max(generationTimeInterval))) # Date = colnames(demeSizes)[1]
     {
-        K <- linearTreeParameters(EnvData2[,i,"pr"],K.pr.X0,K.pr.Xopt,K.pr.Yopt)
-        R <- linearTreeParameters(EnvData2[,i,"pr"],R.pr.X0,R.pr.Xopt,R.pr.Yopt)
+        K <- linearTwoParameters(EnvData2[,i,"pr"],K.pr.X0,K.pr.slope)#K.pr.Xopt,K.pr.Yopt)
+        R <- linearTwoParameters(EnvData2[,i,"pr"],R.pr.X0,R.pr.slope)#R.pr.Xopt,R.pr.Yopt)
         R[is.na(R)]<-0
         K[is.na(K)]<-0
         
@@ -612,8 +635,8 @@ expectedInd <- function(#dispersionRate = .025,dispersionDistance=100,
 }
 
 buildDataSet <- function() {
-    possibleData = expectedInd(K.pr.X0=0,K.pr.Xopt=30,K.pr.Yopt=8,
-                               R.pr.X0=0,R.pr.Xopt=30,R.pr.Yopt=1)
+    possibleData = expectedInd(K.pr.X0=0,K.pr.slope=0.26,#K.pr.Xopt=30,K.pr.Yopt=8,
+                               R.pr.X0=0,R.pr.slope=0.033)#R.pr.Xopt=30,R.pr.Yopt=1)
     
   choiceDate = sample(1:(length(Dates)-5), 200, replace=TRUE, prob=NULL)
   choiceDeme = sample(1:dim(EnvData2)[1], 200, replace=TRUE, prob=NULL)

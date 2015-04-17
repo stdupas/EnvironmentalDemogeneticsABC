@@ -439,9 +439,9 @@ GrosGibbs <- function(thining=1){
     #scale = c(0.2,0.2,0.2,0.2,0.2,0.2)
 
     start = c(2, 0.4, 2, 0.05)
-    scale = c(0.2,0.02,0.2,0.02)
+    scale = c(0.2,0.2,0.2,0.2)
 
-    indice = 1000
+    indice = 5000
     nbPar = length(start)
     
     ndv = array(0, dim = c(indice, nbPar))
@@ -508,10 +508,10 @@ logPostDens <- function(start){
     loglike = likelihoodShortTest(K.pr.X0,K.pr.slope,
                                   R.pr.X0,R.pr.slope)
     
-    pKX0 = dunif(K.pr.X0, min=-3, max=3)+0.00000001
-    pKslope = dunif(K.pr.slope, min=0, max=1)+0.00000001
-    pRX0 = dunif(R.pr.X0, min=-3, max=3)+0.00000001
-    pRslope  = dunif(R.pr.slope, min=0, max=1)+0.00000001
+    pKX0 = dunif(K.pr.X0, min=-1, max=1)+0.00000001
+    pKslope = dunif(K.pr.slope, min=-0.2, max=1.8)+0.00000001
+    pRX0 = dunif(R.pr.X0, min=-1, max=1)+0.00000001
+    pRslope  = dunif(R.pr.slope, min=-0.9, max=1.1)+0.00000001
     logprior = sum(sapply(c(pKX0,pKslope,
                             pRX0,pRslope),
                           FUN = log))

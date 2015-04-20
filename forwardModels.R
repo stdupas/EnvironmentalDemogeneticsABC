@@ -438,10 +438,10 @@ GrosGibbs <- function(thining=1){
     #start = c(2, 27, 7, 2, 27, 2)
     #scale = c(0.2,0.2,0.2,0.2,0.2,0.2)
 
-    start = c(2, 0.4, 2, 0.5)
-    scale = c(0.02,0.02,0.02,0.02)
+    start = c(0, 4, 0, 4)
+    scale = c(0,0.2,0,0.2)
 
-    indice = 10000
+    indice = 200
     nbPar = length(start)
     
     ndv = array(0, dim = c(indice, nbPar))
@@ -508,10 +508,10 @@ logPostDens <- function(start){
     loglike = likelihoodShortTest(K.pr.X0,K.pr.slope,
                                   R.pr.X0,R.pr.slope)
     
-    pKX0 = dunif(K.pr.X0, min=-5, max=5)+10^-320
-    pKslope = dunif(K.pr.slope, min=-5.2, max=5.8)+10^-320
-    pRX0 = dunif(R.pr.X0, min=-5, max=5)+10^-320
-    pRslope  = dunif(R.pr.slope, min=-5.9, max=5.1)+10^-320
+    pKX0 = 1*(K.pr.X0==0)+10^-320#dunif(K.pr.X0, min=0, max=0)+10^-320
+    pKslope = dunif(K.pr.slope, min=0, max=10)+10^-320
+    pRX0 = 1*(R.pr.X0==0)+10^-320#dunif(R.pr.X0, min=0, max=5)+10^-320
+    pRslope  = dunif(R.pr.slope, min=0, max=10)+10^-320
     logprior = sum(sapply(c(pKX0,pKslope,
                             pRX0,pRslope),
                           FUN = log))
@@ -526,22 +526,27 @@ likelihoodShortTest <- function(#dispersionRate = .025,dispersionDistance=100,
     # R.pr.X0=0,R.pr.Xopt=30,R.pr.Yopt=1)
     # generationTime=25,generationTimeSD=3,
     # dvlpTime=25,dvlpTimeSD=3)
-    K.pr.X0=0, K.pr.slope=0.8,
-    R.pr.X0=0, R.pr.slope=0.1)
+    K.pr.X0=0, K.pr.slope=5,
+    R.pr.X0=0, R.pr.slope=5)
 {
     larveSizes = expectedInd(K.pr.X0,K.pr.slope,#K.pr.Xopt, K.pr.Yopt,
                              R.pr.X0,R.pr.slope)#R.pr.Xopt,R.pr.Yopt)  
+
     
     result = larveSizes[cbind(recovery2[,"demeNb"], as.character(recovery2[,"birthDate"]))]
     
     # Si recovery est > 0 et si result est egal à 0, dpois retourne -Inf
     # Il faut donc convertir les 0 de result en 0.0001 (ou autre different de 0)
     result[which(result == 0)] = 0.0001
+
+    # plot(result,t='l',col='red',ylim=c(0,40))
+    # par(new=T)
+    # plot(recovery2[,'size'],t='l',col='blue',ylim=c(0,40))
     
     # Si recovery n'est pas un integer, dpois retourne -Inf
     # Il faut donc arrondir les valeurs de recovery
     logLikelihood <- sum(dpois(round(recovery2[,"size"]) , result , log=TRUE))
-    #meanLikelihood = mean(dpois(round(recovery2[,"size"]), result))
+
     return(logLikelihood)
 }
 
@@ -551,8 +556,8 @@ expectedInd <- function(#dispersionRate = .025,dispersionDistance=100,
     # R.pr.X0,R.pr.Xopt,R.pr.Yopt)
     # generationTime=25,generationTimeSD=3,
     # dvlpTime=25,dvlpTimeSD=3)
-    K.pr.X0=0, K.pr.slope=0.8,
-    R.pr.X0=0, R.pr.slope=0.1)
+    K.pr.X0=0, K.pr.slope=5,
+    R.pr.X0=0, R.pr.slope=5)
 {
     
     dispersionRate = .025;dispersionDistance=150;    
@@ -620,16 +625,15 @@ expectedInd <- function(#dispersionRate = .025,dispersionDistance=100,
         larveSizes[which(larveSizes[,i]<0),i] = 0
         
         #Programmation de leur eclosion en papillon
-        generation = sample(generationTimeInterval, 1, prob = generationTimeDensity)
 
-        larveSizes[,i+generation] =  larveSizes[,i+generation] - nbNaissances
-        parentSizes[,i+generation] = parentSizes[,i+generation] + nbNaissances
+        larveSizes[,i+generationTimeInterval] =  larveSizes[,i+generationTimeInterval] - outer(nbNaissances,generationTimeDensity,"*")
+        parentSizes[,i+generationTimeInterval] = parentSizes[,i+generationTimeInterval] + outer(nbNaissances,generationTimeDensity,"*")
         
         #Programmation de leur mort
-        tempsVie = sample(dvlpTimeInterval, 1, prob = dvlpTimeDensity)
         #Attention, suprression des adultes dans leur deme de naissance, ne prends pas en compte la migration, c'est pas bien...
-        if(i+generation+tempsVie <= dim(parentSizes)[2]){
-            parentSizes[,i+tempsVie+generation] = parentSizes[,i+tempsVie+generation] - nbNaissancesOld
+        tempsVie = 2
+        if(i+max(generationTimeInterval)+tempsVie <= dim(parentSizes)[2]){
+            parentSizes[,i+tempsVie+generationTimeInterval] = parentSizes[,i+tempsVie+generationTimeInterval] - outer(nbNaissancesOld,generationTimeDensity,"*")
         }
         
     }
@@ -638,18 +642,18 @@ expectedInd <- function(#dispersionRate = .025,dispersionDistance=100,
 }
 
 buildDataSet <- function() {
-    possibleData = expectedInd(K.pr.X0=0,K.pr.slope=0.8,#K.pr.Xopt=30,K.pr.Yopt=8,
-                               R.pr.X0=0,R.pr.slope=0.1)#R.pr.Xopt=30,R.pr.Yopt=1)
+    possibleData = expectedInd(K.pr.X0=0,K.pr.slope=5,#K.pr.Xopt=30,K.pr.Yopt=8,
+                               R.pr.X0=0,R.pr.slope=5)#R.pr.Xopt=30,R.pr.Yopt=1)
     
-  choiceDate = sample(1:(length(Dates)-5), 200, replace=TRUE, prob=NULL)
-  choiceDeme = sample(1:dim(EnvData2)[1], 200, replace=TRUE, prob=NULL)
+  choiceDate = sample(1:(length(Dates)-5), 100, replace=TRUE, prob=NULL)
+  choiceDeme = sample(1:dim(EnvData2)[1], 100, replace=TRUE, prob=NULL)
   
   pData = NULL
-  for(i in 1:200) {
+  for(i in 1:100) {
     pData = rbind(pData, possibleData[choiceDeme[i], choiceDate[i]]) 
   }
   
-  sizes = rpois(200, pData)
+  sizes = rpois(100, pData)
   dates = colnames(possibleData[,choiceDate])
   
   dataSet = cbind.data.frame(as.Date(dates),as.numeric(sizes),as.integer(choiceDeme))

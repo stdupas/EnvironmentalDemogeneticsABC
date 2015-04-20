@@ -240,6 +240,11 @@ constant <- function(x,Y)
   return(Y)
 }
 
+trapezeFourParameters <- function(x, X0, Xopt, Xlim, Yopt) {
+  slope = Yopt/(Xopt-X0)
+  return(((x<X0)*0) + ((x>=X0 & x<Xopt)*((x-X0)*slope)) + ((x>=Xopt & x<=Xlim)*Yopt) + ((x>Xlim)*0))
+}
+
 ################# End of formated Niche Functions <<<<<<<<<<<<<<<<<<<<
 
 

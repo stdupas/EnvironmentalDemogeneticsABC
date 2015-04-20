@@ -544,12 +544,11 @@ expectedInd <- function(
     dvlpTime=1+ceiling(5/10);
     dvlpTimeSD=1;
 
-    #Matrice contenant les individus à l'extérieur des mais.
+    # Matrice contenant les individus à l'extérieur des mais.
     parentSizes <- array(0,dim=c(nrow(EnvData),length(Dates)),dimnames = list(1:nrow(EnvData),as.character(Dates)))
     parentSizes[,as.character(birthDates)] <- 1
-    #parentSizes[,16] <- 1
-
-    #Matrice des individus à l'intérieur des mais.
+ 
+    # Matrice des individus à l'intérieur des mais.
     larveSizes <- array(0,dim=c(nrow(EnvData),length(Dates)),dimnames = list(1:nrow(EnvData),as.character(Dates)))
 
     #
@@ -563,9 +562,8 @@ expectedInd <- function(
     migrationMatrix[ind2] = 1-dispersionRate*4
 
     #
-    # Probability density of generation time inthe interval [mean-3SD,mean+3SD]
+    # probability density of generation time inthe interval [mean-3SD,mean+3SD]
     #
-    
     generationTimeInterval <- (generationTime-generationTimeSD):(generationTime+generationTimeSD)
     generationTimeDensity <- dnorm(generationTimeInterval,generationTime,generationTimeSD)
 
@@ -582,31 +580,28 @@ expectedInd <- function(
         R[is.na(R)]<-0
         K[is.na(K)]<-0
         
-        #Migration des adultes
+        # Migration des adultes
         migratedAtDate = parentSizes[,(i-1)]%*%migrationMatrix
         parentSizes[,i] = parentSizes[,i] + migratedAtDate[1,]
         parentSizes[which(parentSizes[,i]<0),i] = 0
         
-        #Reproduction des adultes
+        # Reproduction des adultes
         nbNaissancesOld = parentSizes[,i]*R
         nbNaissances = nbNaissancesOld
         
-        ################## ATTENTION C'EST PAS BEAU ##########################
         tmp = larveSizes[,i-1] + nbNaissancesOld + larveSizes[,i]
         ind = which(tmp >= K)
         nbNaissances[ ind ] = (K[ind] - larveSizes[ind,i-1] - larveSizes[ind,i])*((K[ind] - larveSizes[ind,i-1] - larveSizes[ind,i])>0)
         
-        #####################################################################
         larveSizes[,i] = larveSizes[,i-1] + nbNaissances + larveSizes[,i]
         larveSizes[which(larveSizes[,i]<0),i] = 0
         
-        #Programmation de leur eclosion en papillon
-
+        # Programmation de leur eclosion en papillon
         larveSizes[,i+generationTimeInterval] =  larveSizes[,i+generationTimeInterval] - outer(nbNaissances,generationTimeDensity,"*")
         parentSizes[,i+generationTimeInterval] = parentSizes[,i+generationTimeInterval] + outer(nbNaissances,generationTimeDensity,"*")
         
-        #Programmation de leur mort
-        #Attention, suprression des adultes dans leur deme de naissance, ne prends pas en compte la migration, c'est pas bien...
+        # Programmation de leur mort
+        # Attention, suprression des adultes dans leur deme de naissance, ne prends pas en compte la migration, c'est pas bien...
         tempsVie = 2
         if(i+max(generationTimeInterval)+tempsVie <= dim(parentSizes)[2]){
             parentSizes[,i+tempsVie+generationTimeInterval] = parentSizes[,i+tempsVie+generationTimeInterval] - outer(nbNaissancesOld,generationTimeDensity,"*")

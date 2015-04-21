@@ -421,7 +421,7 @@ likelihoodShort <- function(dispersionRate = .025,dispersionDistance=100,
 #############################################################
 #############################################################
 
-GrosGibbs <- function(thining=1){
+GrosGibbs <- function(thining=2){
     # Fonction faisant tourner un algorithme de Gibbs Sampling
     # Variables: 
     #           start: vecteur contenant les valeurs de depart des parametres
@@ -435,7 +435,7 @@ GrosGibbs <- function(thining=1){
     #           start1: valeurs des hyperparametres a l'iteration (i)
     #           post1: posteriors a l'iteration (i)   
 
-    start = c(1.5, 13, 6, 17, 1.5, 13, 6, 13)
+    start = c(0.5, 10, 4, 20, 0.5, 10, 4, 10)
     scale = c(0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2)
 
     indice = 10
@@ -474,6 +474,10 @@ GrosGibbs <- function(thining=1){
                 postMax = post0
             }
         }
+
+        # if(i%%thining == 0) {
+        #     cat("\n",start0,"\n")
+        # }
     }
     return(list(ndv,ndp,indiceMax,postMax))
 }
@@ -616,15 +620,15 @@ buildDataSet <- function() {
     possibleData = expectedInd(K.pr.Xmin=0.5, K.pr.Xmax=10, K.pr.Xopt=4, K.pr.Yopt=20,
                                R.pr.Xmin=0.5, R.pr.Xmax=10, R.pr.Xopt=4, R.pr.Yopt=10)
     
-    choiceDate = sample(1:(length(Dates)-5), 100, replace=TRUE, prob=NULL)
-    choiceDeme = sample(1:dim(EnvData2)[1], 100, replace=TRUE, prob=NULL)
+    choiceDate = sample(1:(length(Dates)-5), 400, replace=TRUE, prob=NULL)
+    choiceDeme = sample(1:dim(EnvData2)[1], 400, replace=TRUE, prob=NULL)
   
     pData = NULL
-    for(i in 1:100) {
+    for(i in 1:400) {
       pData = rbind(pData, possibleData[choiceDeme[i], choiceDate[i]]) 
     }
   
-    sizes = rpois(100, pData)
+    sizes = rpois(400, pData)
     dates = colnames(possibleData[,choiceDate])
   
     dataSet = cbind.data.frame(as.Date(dates),as.numeric(sizes),as.integer(choiceDeme))

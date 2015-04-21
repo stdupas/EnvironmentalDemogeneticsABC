@@ -435,7 +435,7 @@ GrosGibbs <- function(thining=1){
     #           start1: valeurs des hyperparametres a l'iteration (i)
     #           post1: posteriors a l'iteration (i)   
 
-    start = c(2, 6, 8, 8, 2, 6, 8, 8)
+    start = c(1.5, 13, 6, 17, 1.5, 13, 6, 13)
     scale = c(0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2)
 
     indice = 10
@@ -479,27 +479,27 @@ GrosGibbs <- function(thining=1){
 }
 
 logPostDens <- function(start){
-    K.pr.X0 = start[1]
-    K.pr.Xopt = start[2]
-    K.pr.Xlim = start[3]
+    K.pr.Xmin = start[1]
+    K.pr.Xmax = start[2]
+    K.pr.Xopt = start[3]
     K.pr.Yopt = start[4]
-    R.pr.X0 = start[5]
-    R.pr.Xopt = start[6]
-    R.pr.Xlim = start[7]
+    R.pr.Xmin = start[5]
+    R.pr.Xmax = start[6]
+    R.pr.Xopt = start[7]
     R.pr.Yopt = start[8]
-    loglike = likelihoodShortTest(K.pr.X0, K.pr.Xopt, K.pr.Xlim, K.pr.Yopt,
-                                  R.pr.X0, R.pr.Xopt, R.pr.Xlim, R.pr.Yopt)
+    loglike = likelihoodShortTest(K.pr.Xmin, K.pr.Xmax, K.pr.Xopt, K.pr.Yopt,
+                                  R.pr.Xmin, R.pr.Xmax, R.pr.Xopt, R.pr.Yopt)
     
-    pKX0 = dunif(K.pr.X0, min=0, max=5) + 10^-320
+    pKXmin = dunif(K.pr.Xmin, min=0, max=2) + 10^-320
+    pKXmax = dunif(K.pr.Xmax, min=8, max=16) + 10^-320
     pKXopt = dunif(K.pr.Xopt, min=2, max=8) + 10^-320
-    pKXlim = dunif(K.pr.Xlim, min=6, max=15) + 10^-320
-    pKYopt = dunif(K.pr.Yopt, min=5, max=15) + 10^-320
-    pRX0 = dunif(R.pr.X0, min=0, max=5) + 10^-320
-    pRXopt  = dunif(R.pr.Xopt, min=2, max=8) + 10^-320
-    pRXlim = dunif(R.pr.Xlim, min=6, max=15) + 10^-320
-    pRYopt = dunif(R.pr.Yopt, min=5, max=15) + 10^-320
-    logprior = sum(sapply(c(pKX0,pKXopt,pKXlim,pKYopt,
-                            pRX0,pRXopt,pRXlim,pRYopt),
+    pKYopt = dunif(K.pr.Yopt, min=15, max=25) + 10^-320
+    pRXmin = dunif(R.pr.Xmin, min=0, max=2) + 10^-320
+    pRXmax  = dunif(R.pr.Xmax, min=8, max=18) + 10^-320
+    pRXopt = dunif(R.pr.Xopt, min=2, max=8) + 10^-320
+    pRYopt = dunif(R.pr.Yopt, min=8, max=18) + 10^-320
+    logprior = sum(sapply(c(pKXmin,pKXmax,pKXopt,pKYopt,
+                            pRXmin,pRXmax,pRXopt,pRYopt),
                           FUN = log))
     
     return(loglike + logprior)
@@ -508,11 +508,11 @@ logPostDens <- function(start){
 
 
 likelihoodShortTest <- function(
-    K.pr.X0=0.5, K.pr.Xopt=4, K.pr.Xlim=10, K.pr.Yopt=10,
-    R.pr.X0=0.5, R.pr.Xopt=4, R.pr.Xlim=10, R.pr.Yopt=10)
+    K.pr.Xmin=0.5, K.pr.Xmax=10, K.pr.Xopt=4, K.pr.Yopt=20,
+    R.pr.Xmin=0.5, R.pr.Xmax=10, R.pr.Xopt=4, R.pr.Yopt=10)
 {
-    larveSizes = expectedInd(K.pr.X0, K.pr.Xopt, K.pr.Xlim, K.pr.Yopt,
-                             R.pr.X0, R.pr.Xopt, R.pr.Xlim, R.pr.Yopt)
+    larveSizes = expectedInd(K.pr.Xmin, K.pr.Xmax, K.pr.Xopt, K.pr.Yopt,
+                             R.pr.Xmin, R.pr.Xmax, R.pr.Xopt, R.pr.Yopt)
 
     
     result = larveSizes[cbind(recovery2[,"demeNb"], as.character(recovery2[,"birthDate"]))]
@@ -534,8 +534,8 @@ likelihoodShortTest <- function(
 
 # Fonction qui calcule le nombre d'individus attendus, retourne "larveSizes"
 expectedInd <- function(
-    K.pr.X0=0.5, K.pr.Xopt=4, K.pr.Xlim=10, K.pr.Yopt=10,
-    R.pr.X0=0.5, R.pr.Xopt=4, R.pr.Xlim=10, R.pr.Yopt=10)
+    K.pr.Xmin=0.5, K.pr.Xmax=10, K.pr.Xopt=4, K.pr.Yopt=20,
+    R.pr.Xmin=0.5, R.pr.Xmax=10, R.pr.Xopt=4, R.pr.Yopt=10)
 {
     
     dispersionRate = .025;dispersionDistance=150;      
@@ -545,11 +545,11 @@ expectedInd <- function(
     dvlpTimeSD=1;
 
     # Matrice contenant les individus à l'extérieur des mais.
-    parentSizes <- array(0,dim=c(nrow(EnvData),length(Dates)),dimnames = list(1:nrow(EnvData),as.character(Dates)))
+    parentSizes <- array(0,dim=c(nrow(EnvData2),length(Dates)),dimnames = list(1:nrow(EnvData2),as.character(Dates)))
     parentSizes[,as.character(birthDates)] <- 1
  
     # Matrice des individus à l'intérieur des mais.
-    larveSizes <- array(0,dim=c(nrow(EnvData),length(Dates)),dimnames = list(1:nrow(EnvData),as.character(Dates)))
+    larveSizes <- array(0,dim=c(nrow(EnvData2),length(Dates)),dimnames = list(1:nrow(EnvData2),as.character(Dates)))
 
     #
     # building migration matrix
@@ -574,8 +574,8 @@ expectedInd <- function(
     for (i in 2:(ncol(larveSizes)-max(generationTimeInterval))) # Date = colnames(demeSizes)[1]
     {
         
-        K <- trapezeFourParameters(EnvData2[,i,"pr"], K.pr.X0, K.pr.Xopt, K.pr.Xlim, K.pr.Yopt)  
-        R <- trapezeFourParameters(EnvData2[,i,"pr"], R.pr.X0, R.pr.Xopt, R.pr.Xlim, R.pr.Yopt)  
+        K <- trapezeFourParameters(EnvData2[,i,"pr"], K.pr.Xmin, K.pr.Xmax, K.pr.Xopt, K.pr.Yopt)  
+        R <- trapezeFourParameters(EnvData2[,i,"pr"], R.pr.Xmin, R.pr.Xmax, R.pr.Xopt, R.pr.Yopt)  
 
         R[is.na(R)]<-0
         K[is.na(K)]<-0
@@ -613,22 +613,22 @@ expectedInd <- function(
 }
 
 buildDataSet <- function() {
-    possibleData = expectedInd(K.pr.X0=0.5, K.pr.Xopt=4, K.pr.Xlim=10, K.pr.Yopt=10,
-                               R.pr.X0=0.5, R.pr.Xopt=4, R.pr.Xlim=10, R.pr.Yopt=10)
+    possibleData = expectedInd(K.pr.Xmin=0.5, K.pr.Xmax=10, K.pr.Xopt=4, K.pr.Yopt=20,
+                               R.pr.Xmin=0.5, R.pr.Xmax=10, R.pr.Xopt=4, R.pr.Yopt=10)
     
-  choiceDate = sample(1:(length(Dates)-5), 100, replace=TRUE, prob=NULL)
-  choiceDeme = sample(1:dim(EnvData2)[1], 100, replace=TRUE, prob=NULL)
+    choiceDate = sample(1:(length(Dates)-5), 100, replace=TRUE, prob=NULL)
+    choiceDeme = sample(1:dim(EnvData2)[1], 100, replace=TRUE, prob=NULL)
   
-  pData = NULL
-  for(i in 1:100) {
-    pData = rbind(pData, possibleData[choiceDeme[i], choiceDate[i]]) 
-  }
+    pData = NULL
+    for(i in 1:100) {
+      pData = rbind(pData, possibleData[choiceDeme[i], choiceDate[i]]) 
+    }
   
-  sizes = rpois(100, pData)
-  dates = colnames(possibleData[,choiceDate])
+    sizes = rpois(100, pData)
+    dates = colnames(possibleData[,choiceDate])
   
-  dataSet = cbind.data.frame(as.Date(dates),as.numeric(sizes),as.integer(choiceDeme))
-  colnames(dataSet) = c("birthDate", "size", "demeNb")
+    dataSet = cbind.data.frame(as.Date(dates),as.numeric(sizes),as.integer(choiceDeme))
+    colnames(dataSet) = c("birthDate", "size", "demeNb")
   
-  return(dataSet)
+    return(dataSet)
 }

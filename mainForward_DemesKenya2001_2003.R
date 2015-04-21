@@ -123,7 +123,7 @@ LimiteLikelihood <- function(){
 }
 
 
-plotGrosGibbs() {
+plotGrosGibbs <- function() {
     par(mfrow=c(4,2))
     plot(a[[1]][,1],t="l",ylab="K.pr.X0", xlab="Iteration")
     abline(a=0.5,b=0,col="red")

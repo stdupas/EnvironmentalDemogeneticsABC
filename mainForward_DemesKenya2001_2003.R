@@ -123,37 +123,38 @@ LimiteLikelihood <- function(){
 }
 
 
-plotGrosGibbs <- function() {
+plotGrosGibbs <- function(obj=1) {
+  # obj=1 pour plot les valeurs de parametres, obj=2 pour plot les posteriors
     par(mfrow=c(4,2))
-    plot(a[[1]][,1],t="l",ylab="K.pr.X0", xlab="Iteration")
+    plot(a[[obj]][,1],t="l",ylab="K.pr.X0", xlab="Iteration")
     abline(a=0.5,b=0,col="red")
     abline(v=a[[3]],col="blue")
 
-    plot(a[[1]][,5],t="l",ylab="R.pr.X0", xlab="Iteration")
+    plot(a[[obj]][,5],t="l",ylab="R.pr.X0", xlab="Iteration")
     abline(a=0.5,b=0,col="red")
     abline(v=a[[3]],col="blue")
 
-    plot(a[[1]][,2],t="l",ylab="K.pr.Xopt", xlab="Iteration")
+    plot(a[[obj]][,2],t="l",ylab="K.pr.Xopt", xlab="Iteration")
     abline(a=4,b=0,col="red")
     abline(v=a[[3]],col="blue")
 
-    plot(a[[1]][,6],t="l",ylab="R.pr.Xopt", xlab="Iteration")
+    plot(a[[obj]][,6],t="l",ylab="R.pr.Xopt", xlab="Iteration")
     abline(a=4,b=0,col="red")
     abline(v=a[[3]],col="blue")
 
-    plot(a[[1]][,3],t="l",ylab="K.pr.Xlim", xlab="Iteration")
+    plot(a[[obj]][,3],t="l",ylab="K.pr.Xlim", xlab="Iteration")
     abline(a=10,b=0,col="red")
     abline(v=a[[3]],col="blue")
 
-    plot(a[[1]][,7],t="l",ylab="R.pr.Xlim", xlab="Iteration")
+    plot(a[[obj]][,7],t="l",ylab="R.pr.Xlim", xlab="Iteration")
     abline(a=10,b=0,col="red")
     abline(v=a[[3]],col="blue")
 
-    plot(a[[1]][,4],t="l",ylab="K.pr.Yopt", xlab="Iteration")
+    plot(a[[obj]][,4],t="l",ylab="K.pr.Yopt", xlab="Iteration")
     abline(a=10,b=0,col="red")
     abline(v=a[[3]],col="blue")
 
-    plot(a[[1]][,8],t="l",ylab="R.pr.Yopt", xlab="Iteration")
+    plot(a[[obj]][,8],t="l",ylab="R.pr.Yopt", xlab="Iteration")
     abline(a=10,b=0,col="red")
     abline(v=a[[3]],col="blue")
 }

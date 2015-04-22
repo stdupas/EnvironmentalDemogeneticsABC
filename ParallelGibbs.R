@@ -37,14 +37,12 @@ ParallelGibbs <- function(n=20) {
 }
 
 oneChainGibbs <- function(start, scale, nbPar, indice, thining) {
-    ndv = array(0, dim=c(indice, nbPar))
-    ndp = array(0, dim = c(indice, nbPar))
 
     start0 = start
     post0 = logPostDens(start0)
     
-    indiceMax = 0
-    postMax = post0
+    maxProb = post0
+    maxParam = NULL
 
     for(i in 1:indice){
         cat("\n", i, ":")
@@ -63,18 +61,12 @@ oneChainGibbs <- function(start, scale, nbPar, indice, thining) {
             # Si t = 1, on garde les nouvelles valeurs, sinon on garde les anciennes valeurs
             start0[j] = start1[j] *(t==1) + start0[j] *(t==0)
             post0 = post1 * (t==1) + post0 * (t == 0)          
-            ndv[i,j] = start0[j]
-            ndp[i,j] = post0
             
-            if((i%%thining == 0) && (postMax < post0)) {
-                indiceMax = i
-                postMax = post0
+            if((i%%thining == 0) && (maxProb < post0)) {
+                maxParam = start0
+                maxProb = post0
             }
         }
-
-        # if(i%%thining == 0) {
-        #     cat("\n",start0,"\n")
-        # }
     }
-    return(list(ndv,ndp,indiceMax,postMax))
+    return(cbind(maxParam,maxProb))
 }

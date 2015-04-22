@@ -1,30 +1,35 @@
+library(doParallel)
+registerDoParallel(cores=2)
+
 ParallelGibbs <- function(n=20) {
-    startF = c(2, 33, 9, 2, 33, 2)
-    startC = c(2, 33, 9, 2, 33, 2)
+
+
+
+    startF = c(0.5, 10, 4, 20, 0.5, 10, 4, 10)
+    startC = c(1, 9, 3, 19, 1, 9, 3, 9)
     start = rbind(startF, startC)
-    indiceF = 400
-    indiceC = 400
+    indiceF = 100 
+    indiceC = 100
     indice = rbind(indiceF, indiceC)
     thining = 2
-    nbPar = length(start)
+    nbPar = length(start[1,])
 
-    scaleF = c(1,1,1,1,1,1)
-    scaleC = c(0.2,0.2,0.2,0.2,0.2,0.2)
+    ndvC = NULL
+    ndvF = NULL
+    ndpC = NULL
+    ndpF = NULL
+
+
+    scaleF = c(1,1,1,1,1,1,1,1)
+    scaleC = c(0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2)
     scale = rbind(scaleF, scaleC)
     
-    system.time(
-        foreach(i=1:2) %dopar%{
-            for(j in 1:3){
-                f(c[j,i])
-            }
-            
-        })
-    
-    res = rep(list(rep(0,nbPar),0),2)
+    #res = rep(list(rep(0,nbPar),0),2)
     for(i in 1:n) {
-        foreach(chaine = 1:2) %dopar%{
-            tmp = (chaine-1)*2+1
-            res[[tmp:(tmp+1)]] = oneChainGibbs(start[chaine,], scale[chaine,], nbPar, indice[chaine,], thining)
+        res = foreach(chaine = 1:2, .combine=c) %dopar%{
+            #tmp = (chaine-1)*2+1
+            #res[tmp:(tmp+1)] = 
+            oneChainGibbs(start[chaine,], scale[chaine,], nbPar, indice[chaine,], thining)
         }
 
 
@@ -41,11 +46,17 @@ ParallelGibbs <- function(n=20) {
             startF = paramF
         }
 
-        cat(i,"\n")
-        cat("Chaud:",paramC,"\n")
-        cat("Froid:",paramF,"\n")
+        ndvC = cbind(ndvC,startC)
+        ndvF = cbind(ndvF,startF)
+        ndpC = cbind(ndpC,postC)
+        ndpF = cbind(ndpF,postF)
 
+        cat(i,"\n")
     }
+
+    return(list(ndvC,ndpC,ndvF,ndpF))
+
+
 
 }
 
@@ -55,7 +66,7 @@ oneChainGibbs <- function(start, scale, nbPar, indice, thining) {
     post0 = logPostDens(start0)
     
     maxProb = post0
-    maxParam = NULL
+    maxParam = start
 
     for(i in 1:indice){
         cat("\n", i, ":")

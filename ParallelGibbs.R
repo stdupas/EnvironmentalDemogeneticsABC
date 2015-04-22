@@ -3,14 +3,15 @@ ParallelGibbs <- function(n=20) {
     startC = rbind(2, 33, 9, 2, 33, 2)
     indiceF = 400
     indiceC = 400
+    thining = 2
     nbPar = length(start)
 
     scaleF = c(1,1,1,1,1,1)
     scaleC = c(0.2,0.2,0.2,0.2,0.2,0.2)
 
     for(i in 1:n) {
-        cf = parallel(oneChainGibbs(startF, scaleF, nbPar, indiceF), name="froid")
-        cc = parallel(oneChainGibbs(startC, scaleC, nbPar, indiceC), name="chaud")
+        cf = parallel(oneChainGibbs(startF, scaleF, nbPar, indiceF, thining), name="froid")
+        cc = parallel(oneChainGibbs(startC, scaleC, nbPar, indiceC, thining), name="chaud")
 
         res = collect(list(cf,cc), wait=TRUE)
 
@@ -35,16 +36,19 @@ ParallelGibbs <- function(n=20) {
 
 }
 
-oneChainGibbs <- function(start, scale, nbPar, indice) {
+oneChainGibbs <- function(start, scale, nbPar, indice, thining) {
     ndv = array(0, dim=c(indice, nbPar))
+    ndp = array(0, dim = c(indice, nbPar))
+
     start0 = start
     post0 = logPostDens(start0)
-    maxProb = post0 
-    maxParam = NULL
+    
+    indiceMax = 0
+    postMax = post0
 
-    for(i in 1:indice) {
+    for(i in 1:indice){
         cat("\n", i, ":")
-        for(j in 1:nbPar){
+        for(j in 1:nbPar){ 
             cat("*")
             start1 = start0
             # On pioche une valeur de pas pour faire bouger les hyperparametres a partir de start0
@@ -60,22 +64,17 @@ oneChainGibbs <- function(start, scale, nbPar, indice) {
             start0[j] = start1[j] *(t==1) + start0[j] *(t==0)
             post0 = post1 * (t==1) + post0 * (t == 0)          
             ndv[i,j] = start0[j]
-
-            #########
-            #########
-            ##
-            ##      Attention, echantilloner les valeurs avec variable thining 
-            ##      Ajouter dans le if : and i%%thining == 0
-            ##
-            #########
-            #########
-
-            # On recupere les valeurs de parametres avec la probabilite la plus grande de la chaine
-            if(maxProb < post0) {
-                maxParam = start0
-                maxProb = post0
+            ndp[i,j] = post0
+            
+            if((i%%thining == 0) && (postMax < post0)) {
+                indiceMax = i
+                postMax = post0
             }
         }
+
+        # if(i%%thining == 0) {
+        #     cat("\n",start0,"\n")
+        # }
     }
-    return(cbind(maxParam,maxProb))
+    return(list(ndv,ndp,indiceMax,postMax))
 }

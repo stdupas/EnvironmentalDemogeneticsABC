@@ -1,24 +1,37 @@
 ParallelGibbs <- function(n=20) {
-    startF = rbind(2, 33, 9, 2, 33, 2)
-    startC = rbind(2, 33, 9, 2, 33, 2)
+    startF = c(2, 33, 9, 2, 33, 2)
+    startC = c(2, 33, 9, 2, 33, 2)
+    start = rbind(startF, startC)
     indiceF = 400
     indiceC = 400
+    indice = rbind(indiceF, indiceC)
     thining = 2
     nbPar = length(start)
 
     scaleF = c(1,1,1,1,1,1)
     scaleC = c(0.2,0.2,0.2,0.2,0.2,0.2)
-
+    scale = rbind(scaleF, scaleC)
+    
+    system.time(
+        foreach(i=1:2) %dopar%{
+            for(j in 1:3){
+                f(c[j,i])
+            }
+            
+        })
+    
+    res = rep(list(rep(0,nbPar),0),2)
     for(i in 1:n) {
-        cf = parallel(oneChainGibbs(startF, scaleF, nbPar, indiceF, thining), name="froid")
-        cc = parallel(oneChainGibbs(startC, scaleC, nbPar, indiceC, thining), name="chaud")
+        foreach(chaine = 1:2) %dopar%{
+            tmp = (chaine-1)*2+1
+            res[[tmp:(tmp+1)]] = oneChainGibbs(start[chaine,], scale[chaine,], nbPar, indice[chaine,], thining)
+        }
 
-        res = collect(list(cf,cc), wait=TRUE)
 
-        postF = res$froid[1,2]
-        postC = res$chaud[1,2]
-        paramF = res$froid[,1]
-        paramC = res$chaud[,1]
+        postF = res[[2]]
+        postC = res[[4]]
+        paramF = res[[1]]
+        paramC = res[[3]]
 
         if(postF > postC) {
             startC = paramF
@@ -68,5 +81,5 @@ oneChainGibbs <- function(start, scale, nbPar, indice, thining) {
             }
         }
     }
-    return(cbind(maxParam,maxProb))
+    return(list(maxParam,maxProb))
 }

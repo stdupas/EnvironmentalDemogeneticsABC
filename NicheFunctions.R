@@ -42,7 +42,7 @@ conquadraticSkewed1 <- function(x, Xmin, Xmax, Xopt, Yopt)
   Xprime<- ((x-Xmin)/(Xmax-Xmin))^alpha*(Xmax-Xmin)+Xmin
   y <- (Yopt-4*Yopt/((Xmax-Xmin)^2)*(Xprime-(Xmin+Xmax)/2)^2)*((x>=Xmin)&(x<=Xmax))
   y[x<Xmin] <-0
-  y
+  return(y)
 }
 
 conquadraticSkewed2 <- function(x, Xmin, Xmax, Xopt, Yopt)

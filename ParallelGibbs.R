@@ -1,12 +1,12 @@
 library(doParallel)
 registerDoParallel(cores=2)
 
-ParallelGibbs <- function(n=20) {
+ParallelGibbs <- function(n=10) {
 
 
 
-    startF = c(0.5, 10, 4, 20, 0.5, 10, 4, 10)
-    startC = c(1, 9, 3, 19, 1, 9, 3, 9)
+    startF = c(2, 12, 6, 18, 2, 8, 6, 12)
+    startC = c(1, 9, 3, 21, 1, 9, 3, 9)
     start = rbind(startF, startC)
     indiceF = 100 
     indiceC = 100
@@ -20,23 +20,31 @@ ParallelGibbs <- function(n=20) {
     ndpF = NULL
 
 
-    scaleF = c(1,1,1,1,1,1,1,1)
+    scaleF = c(2,2,2,2,2,2,2,2)
     scaleC = c(0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2)
     scale = rbind(scaleF, scaleC)
     
+    
+
     #res = rep(list(rep(0,nbPar),0),2)
     for(i in 1:n) {
+
+        print("0")
+
         res = foreach(chaine = 1:2, .combine=c) %dopar%{
             #tmp = (chaine-1)*2+1
             #res[tmp:(tmp+1)] = 
             oneChainGibbs(start[chaine,], scale[chaine,], nbPar, indice[chaine,], thining)
         }
 
+        print("1")
 
         postF = res[[2]]
         postC = res[[4]]
         paramF = res[[1]]
         paramC = res[[3]]
+
+        print("2")
 
         if(postF > postC) {
             startC = paramF
@@ -45,6 +53,8 @@ ParallelGibbs <- function(n=20) {
             startC = paramC
             startF = paramF
         }
+
+        print("3")
 
         ndvC = cbind(ndvC,startC)
         ndvF = cbind(ndvF,startF)
@@ -75,6 +85,19 @@ oneChainGibbs <- function(start, scale, nbPar, indice, thining) {
             start1 = start0
             # On pioche une valeur de pas pour faire bouger les hyperparametres a partir de start0
             start1[j] = start0[j] + rnorm(1) * scale[j]
+
+            ##################### ConquadraticSkewed1
+            ##
+            ##
+            if(start1[1]>=start1[2] || start1[1]>=start1[3] || start1[5]>=start1[6] || start1[5]>=start1[7]) {
+                start1[j] = start0[j]
+                cat("OK\n")
+            }
+            ##
+            ##
+            #####################
+
+
             # On calcule les posteriors avec les nouveaux hyperparametres
             post1 = logPostDens(start1)
             # On decide si on garde ou non les nouvelles valeurs

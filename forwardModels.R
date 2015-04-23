@@ -435,10 +435,10 @@ GrosGibbs <- function(thining=2){
     #           start1: valeurs des hyperparametres a l'iteration (i)
     #           post1: posteriors a l'iteration (i)   
 
-    start = c(0.5, 10, 4, 20, 0.5, 10, 4, 10)
-    scale = c(0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2)
+    start = c(2, 3, 4, 20, 0.5, 10, 4, 10)
+    scale = c(5,5,0.2,0.2,0.2,0.2,0.2,0.2)
 
-    indice = 10
+    indice = 50
     nbPar = length(start)
     
     ndv = array(0, dim = c(indice, nbPar))
@@ -456,6 +456,19 @@ GrosGibbs <- function(thining=2){
             start1 = start0
             # On pioche une valeur de pas pour faire bouger les hyperparametres a partir de start0
             start1[j] = start0[j] + rnorm(1) * scale[j]
+
+
+            ##################### ConquadraticSkewed1
+            ##
+            ##
+            if(start1[1]>=start1[2] || start1[1]>=start1[3] || start1[5]>=start1[6] || start1[5]>=start1[7]) {
+                start1[j] = start0[j]
+                cat("OK\n")
+            }
+            ##
+            ##
+            #####################
+
             # On calcule les posteriors avec les nouveaux hyperparametres
             post1 = logPostDens(start1)
             # On decide si on garde ou non les nouvelles valeurs

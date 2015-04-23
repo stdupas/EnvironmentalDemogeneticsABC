@@ -1,7 +1,7 @@
 library(doParallel)
 registerDoParallel(cores=2)
 
-ParallelGibbs <- function(n=10) {
+ParallelGibbs <- function(n=8) {
 
 
 
@@ -91,7 +91,6 @@ oneChainGibbs <- function(start, scale, nbPar, indice, thining) {
             ##
             if(start1[1]>=start1[2] || start1[1]>=start1[3] || start1[5]>=start1[6] || start1[5]>=start1[7]) {
                 start1[j] = start0[j]
-                cat("OK\n")
             }
             ##
             ##
@@ -108,7 +107,7 @@ oneChainGibbs <- function(start, scale, nbPar, indice, thining) {
             # Si t = 1, on garde les nouvelles valeurs, sinon on garde les anciennes valeurs
             start0[j] = start1[j] *(t==1) + start0[j] *(t==0)
             post0 = post1 * (t==1) + post0 * (t == 0)          
-            
+
             if((i%%thining == 0) && (maxProb < post0)) {
                 maxParam = start0
                 maxProb = post0

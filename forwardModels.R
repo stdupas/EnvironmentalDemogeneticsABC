@@ -463,7 +463,6 @@ GrosGibbs <- function(thining=2){
             ##
             if(start1[1]>=start1[2] || start1[1]>=start1[3] || start1[5]>=start1[6] || start1[5]>=start1[7]) {
                 start1[j] = start0[j]
-                cat("OK\n")
             }
             ##
             ##
@@ -518,7 +517,7 @@ logPostDens <- function(start){
     logprior = sum(sapply(c(pKXmin,pKXmax,pKXopt,pKYopt,
                             pRXmin,pRXmax,pRXopt,pRYopt),
                           FUN = log))
-    
+
     return(loglike + logprior)
     
 }
@@ -545,7 +544,6 @@ likelihoodShortTest <- function(
     # Si recovery n'est pas un integer, dpois retourne -Inf
     # Il faut donc arrondir les valeurs de recovery
     logLikelihood <- sum(dpois(round(recovery2[,"size"]) , result , log=TRUE))
-
     return(logLikelihood)
 }
 
@@ -596,6 +594,9 @@ expectedInd <- function(
 
         R[is.na(R)]<-0
         K[is.na(K)]<-0
+
+        R[is.nan(R)]<-0
+        K[is.nan(K)]<-0
         
         # Migration des adultes
         migratedAtDate = parentSizes[,(i-1)]%*%migrationMatrix

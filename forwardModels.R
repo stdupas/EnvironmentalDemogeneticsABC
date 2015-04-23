@@ -537,6 +537,8 @@ likelihoodShortTest <- function(
     # Il faut donc convertir les 0 de result en 0.0001 (ou autre different de 0)
     result[which(result == 0)] = 0.0001
 
+    result[is.nan(result)] = 0.0001
+
     # plot(result,t='l',col='red',ylim=c(0,40))
     # par(new=T)
     # plot(recovery2[,'size'],t='l',col='blue',ylim=c(0,40))

@@ -9,16 +9,19 @@
 #setwd(wd)
 
 ### Sourcing functions files
+source("Class_paramList.R")
+source("Class_backward.R")
+source("Class_forward.R")
+source("PriorFunctions.R")
 source("AskModelsFunctions.R")
 source("NicheFunctions.R")
 source("DispersionFunctions.R")
-#source("MutationFunctions.R")
-#source("CoalescentFunctions.R")
 source("PriorFunctions.R")
-#source("MarkovProcess.R")
-#source("GeneticDataSimulation.R")
 source("forwardModels.R")
 source("readNetCDF.R")
+source("function_computeMeanEnvData.R")
+source("ParallelGibbs.R")
+source("script_distance_km_test.R")
 
 ### Sourcing Libraries
 library(raster)
@@ -32,17 +35,12 @@ library(bbmle) # Library fr the function of minimization mle2
 
 ########### Parameters initialisation  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-###### Environmental data of temperature and precipitations
-# Data2 <- data.frame(BIO1=c(200,120,300,400),BIO12=c(1000,350,2000,2900)) 
-#Data2 <- data.frame(BIO1=c(300,120,120,400),BIO12=c(2000,350,350,2900)) 
-
-#EnvDataRasterStack = nc2EnvDataAndRasterStack(ncDirectory="/Users/Stagiaire/ForwardSimulData/",aggregationParam=10)
+#EnvDataRasterStack = nc2EnvDataAndRasterStack(ncDirectory="/Users/Stagiaire/ForwardSimulData/",aggregationParam=40)
 EnvDataRasterStack = readRDS("/Users/Stagiaire/ForwardSimulData/ObjectEnvdataRasterStack")
-
-#EnvDataRasterStack = nc2EnvDataAndRasterStack(ncDirectory=paste(wd,"ForwardSimulData/",sep=""),aggregationParam=4)
 rasterStack <- EnvDataRasterStack[[2]]
 EnvData <- EnvDataRasterStack[[1]]
 rm(EnvDataRasterStack)
+
 ###### release data 
 release=as.data.frame(xyFromCell(rasterStack,1:ncell(rasterStack)))
 birthDates <- as.Date(as.Date("2000/01/01"):as.Date("2000/06/01"),origin="1970/01/01")
@@ -52,7 +50,7 @@ release$size=1
 release$demeNb <-  cellFromXY(object = rasterStack, xy = release[, c("x", "y")])
 #release <- aggregation(release,BY=c("birthDate","demeNb"),methodes=c("Mean","Mean","Name","Sum","Name"))
 
-########################## VERIFIER FORMAT FICHIER CSV #########################################
+###### recovery data 
 recovery <- read.csv("/Users/Stagiaire/ForwardSimulData/Stemborer_Kenya2001_2005.csv", header = TRUE, sep = ";")
 recovery <- recovery[,c("Long_dec","Lat_dec","Diss_Date","B._fusca", "no._plants")]
 recovery = recovery[-which(is.na(recovery$no._plants)),]
@@ -67,7 +65,6 @@ recovery <- recovery[which(as.Date(recovery$birthDate)<=as.Date("2003/12/31")),]
 minDates = min(release$birthDate)
 maxDates = min(max(recovery$birthDate),max(as.Date(colnames(EnvData))))
 Dates <- as.Date(as.Date(minDates):as.Date(maxDates),origin="1970/01/01")
-
 
 dispersionModel= "fatTail1"
 

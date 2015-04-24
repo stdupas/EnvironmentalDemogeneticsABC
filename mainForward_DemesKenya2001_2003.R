@@ -123,7 +123,7 @@ LimiteLikelihood <- function(){
 }
 
 
-plotGrosGibbs <- function(obj=1) {
+plotGrosGibbs <- function(a=a,obj=1) {
   # obj=1 pour plot les valeurs de parametres, obj=2 pour plot les posteriors
     par(mfrow=c(4,2))
     plot(a[[obj]][,1],t="l",ylab="K.pr.Xmin", xlab="Iteration")
@@ -159,7 +159,7 @@ plotGrosGibbs <- function(obj=1) {
     abline(v=a[[3]],col="blue")
 }
 
-plotParallelGibbs <- function(obj=1) {
+plotParallelGibbs <- function(a=a,obj=1) {
     if(obj==1) {
         par(mfrow=c(4,2))
         plot(a[[obj]][1,],t="l",ylab="K.pr.Xmin", xlab="Iteration",col="orange",ylim=c(0,2))

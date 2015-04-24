@@ -555,7 +555,7 @@ expectedInd <- function(
     R.pr.Xmin=0.5, R.pr.Xmax=10, R.pr.Xopt=4, R.pr.Yopt=10)
 {
     
-    dispersionRate = .025;dispersionDistance=150;      
+    dispersionRate = .025;dispersionDistance=300;      
     generationTime = ceiling(25/10);
     generationTimeSD=ceiling(3/10);    
     dvlpTime=1+ceiling(5/10);

@@ -20,7 +20,7 @@ ParallelGibbs <- function(n=8) {
     ndpF = NULL
 
 
-    scaleF = c(2,2,2,2,2,2,2,2)
+    scaleF = c(1,1,1,1,1,1,1,1)
     scaleC = c(0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2)
     scale = rbind(scaleF, scaleC)
     

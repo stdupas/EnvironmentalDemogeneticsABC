@@ -31,7 +31,10 @@ library(lattice)
 library(parallel)
 library(lubridate) # of little use, should be removed (function "days()")
 library(RNetCDF) # to read NetCDF data (climate spatial time series)
-library(bbmle) # Library fr the function of minimization mle2
+library("argosfilter")
+library(Matrix)
+library(foreach)
+library(doParallel)
 
 ########### Parameters initialisation  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 

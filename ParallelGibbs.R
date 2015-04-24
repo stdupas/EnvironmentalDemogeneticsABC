@@ -29,7 +29,7 @@ ParallelGibbs <- function(n=8) {
     #res = rep(list(rep(0,nbPar),0),2)
     for(i in 1:n) {
 
-        print("0")
+        cat(i, ": debut")
 
         res = foreach(chaine = 1:2, .combine=c) %dopar%{
             #tmp = (chaine-1)*2+1
@@ -37,14 +37,10 @@ ParallelGibbs <- function(n=8) {
             oneChainGibbs(start[chaine,], scale[chaine,], nbPar, indice[chaine,], thining)
         }
 
-        print("1")
-
         postF = res[[2]]
         postC = res[[4]]
         paramF = res[[1]]
         paramC = res[[3]]
-
-        print("2")
 
         if(postF > postC) {
             startC = paramF
@@ -53,8 +49,6 @@ ParallelGibbs <- function(n=8) {
             startC = paramC
             startF = paramF
         }
-
-        print("3")
 
         ndvC = cbind(ndvC,startC)
         ndvF = cbind(ndvF,startF)

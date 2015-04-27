@@ -1,39 +1,71 @@
 library(doParallel)
 registerDoParallel(cores=2)
 
-ParallelGibbs <- function(n=8) {
-
-
-
-    startF = c(2, 12, 6, 18, 2, 8, 6, 12)
-    startC = c(1, 9, 3, 21, 1, 9, 3, 9)
+ParallelGibbs <- function(n=10, nbPar=8, files=FALSE) {
+    
+    ##########################
+    #
+    # PARAMETRES DE DEPART
+    #
+    # Si files est TRUE, on reprend depuis les derniers parametres
+    if(files == TRUE) {
+      startF = read.table(file="PARAMFROID.txt",header=TRUE)
+      startC = read.table(file="PARAMCHAUD.txt",header=TRUE)
+      nbLines = dim(startF)[1]
+      startF = startF[nbLines,]
+      startC = startC[nbLines,]
+      
+    # Sinon, on part de nouveaux parametres
+    } else {
+      startF = c(4, 18, 8, 25, 4, 18, 8, 16)
+      startC = c(4, 18, 8, 25, 4, 18, 8, 16)
+      header=c("K.pr.Xmin", "K.pr.Xmax", "K.pr.Xopt", "K.pr.Yopt",
+               "R.pr.Xmin", "R.pr.Xmax", "R.pr.Xopt", "R.pr.Yopt")
+      write(header, file="PARAMFROID.txt", ncolumns=nbPar, append=FALSE)
+      write(header, file="PARAMCHAUD.txt", ncolumns=nbPar, append=FALSE)
+    }
     start = rbind(startF, startC)
-    indiceF = 100 
-    indiceC = 100
-    indice = rbind(indiceF, indiceC)
-    thining = 2
-    nbPar = length(start[1,])
 
+    ##########################
+    #
+    # NOMBRE ITERATION POUR CHAQUE CHAINE
+    #
+    indiceF = 200 
+    indiceC = 200
+    indice = rbind(indiceF, indiceC)
+    
+    ##########################
+    #
+    # ECHELLE DE CHAQUE CHAINE
+    #
+    scaleF = c(1,1,1,1,1,1,1,1)
+    scaleC = c(0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2)
+    scale = rbind(scaleF, scaleC)
+    
+    ##########################
+    #
+    # THINING
+    #
+    thining = 2
+
+    ##########################
+    #
+    # DECLARATION DES VARIABLES A STOCKER
+    #
     ndvC = NULL
     ndvF = NULL
     ndpC = NULL
     ndpF = NULL
 
-
-    scaleF = c(1,1,1,1,1,1,1,1)
-    scaleC = c(0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2)
-    scale = rbind(scaleF, scaleC)
-    
-    
-
-    #res = rep(list(rep(0,nbPar),0),2)
+    ##########################
+    #
+    # DEBUT DU GIBBS SAMPLING 
+    #
     for(i in 1:n) {
 
-        cat(i, ": debut")
+        cat(i, ": debut\n")
 
         res = foreach(chaine = 1:2, .combine=c) %dopar%{
-            #tmp = (chaine-1)*2+1
-            #res[tmp:(tmp+1)] = 
             oneChainGibbs(start[chaine,], scale[chaine,], nbPar, indice[chaine,], thining)
         }
 
@@ -45,23 +77,25 @@ ParallelGibbs <- function(n=8) {
         if(postF > postC) {
             startC = paramF
             startF = paramF
+            cat("Echange!\n")
         } else {
             startC = paramC
             startF = paramF
         }
+        
+        write(startF, file="PARAMFROID.txt",ncolumns=8, append=TRUE)
+        write(startC, file="PARAMCHAUD.txt",ncolumns=8, append=TRUE)
+        
+        start = rbind(startF, startC)
 
         ndvC = cbind(ndvC,startC)
         ndvF = cbind(ndvF,startF)
         ndpC = cbind(ndpC,postC)
         ndpF = cbind(ndpF,postF)
 
-        cat(i,"\n")
+        cat(i,": fin\n")
     }
-
     return(list(ndvC,ndpC,ndvF,ndpF))
-
-
-
 }
 
 oneChainGibbs <- function(start, scale, nbPar, indice, thining) {
@@ -73,9 +107,7 @@ oneChainGibbs <- function(start, scale, nbPar, indice, thining) {
     maxParam = start
 
     for(i in 1:indice){
-        cat("\n", i, ":")
         for(j in 1:nbPar){ 
-            cat("*")
             start1 = start0
             # On pioche une valeur de pas pour faire bouger les hyperparametres a partir de start0
             start1[j] = start0[j] + rnorm(1) * scale[j]

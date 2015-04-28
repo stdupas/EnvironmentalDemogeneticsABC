@@ -435,10 +435,11 @@ GrosGibbs <- function(thining=2){
     #           start1: valeurs des hyperparametres a l'iteration (i)
     #           post1: posteriors a l'iteration (i)   
 
-    start = c(2, 3, 4, 20, 0.5, 10, 4, 10)
-    scale = c(5,5,0.2,0.2,0.2,0.2,0.2,0.2)
+    #start = c(4, 18, 8, 25, 4, 18, 8, 16, 260, 312, 312, 1.8)
+    start = c(0.5, 10, 4, 20, 0.5, 10, 4, 10, 270, 320, 295, 1)
+    scale = c(0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2)
 
-    indice = 50
+    indice = 10
     nbPar = length(start)
     
     ndv = array(0, dim = c(indice, nbPar))
@@ -461,7 +462,7 @@ GrosGibbs <- function(thining=2){
             ##################### ConquadraticSkewed1
             ##
             ##
-            if(start1[1]>=start1[2] || start1[1]>=start1[3] || start1[5]>=start1[6] || start1[5]>=start1[7]) {
+            if(start1[1]>=start1[2] || start1[1]>=start1[3] || start1[5]>=start1[6] || start1[5]>=start1[7] || start1[9]>=start[10] || start[9]>=start[11]) {
                 start1[j] = start0[j]
             }
             ##
@@ -503,8 +504,13 @@ logPostDens <- function(start){
     R.pr.Xmax = start[6]
     R.pr.Xopt = start[7]
     R.pr.Yopt = start[8]
+    R.tas.Xmin = start[9]
+    R.tas.Xmax = start[10]
+    R.tas.Xopt = start[11]
+    R.tas.Yopt = start[12]
     loglike = likelihoodShortTest(K.pr.Xmin, K.pr.Xmax, K.pr.Xopt, K.pr.Yopt,
-                                  R.pr.Xmin, R.pr.Xmax, R.pr.Xopt, R.pr.Yopt)
+                                  R.pr.Xmin, R.pr.Xmax, R.pr.Xopt, R.pr.Yopt,
+                                  R.tas.Xmin, R.tas.Xmax, R.tas.Xopt, R.tas.Yopt)
     
     pKXmin = dunif(K.pr.Xmin, min=0, max=2) + 10^-320
     pKXmax = dunif(K.pr.Xmax, min=8, max=16) + 10^-320
@@ -514,8 +520,13 @@ logPostDens <- function(start){
     pRXmax  = dunif(R.pr.Xmax, min=8, max=18) + 10^-320
     pRXopt = dunif(R.pr.Xopt, min=2, max=8) + 10^-320
     pRYopt = dunif(R.pr.Yopt, min=8, max=18) + 10^-320
+    tRXmin = dunif(R.tas.Xmin, min=260, max=280) + 10^-320
+    tRXmax = dunif(R.tas.Xmax, min=310, max=330) + 10^-320
+    tRXopt = dunif(R.tas.Xopt, min=285, max=305) + 10^-320
+    tRYopt = dunif(R.tas.Yopt, min=0, max=2) + 10^-320
     logprior = sum(sapply(c(pKXmin,pKXmax,pKXopt,pKYopt,
-                            pRXmin,pRXmax,pRXopt,pRYopt),
+                            pRXmin,pRXmax,pRXopt,pRYopt,
+                            tRXmin,tRXmax,tRXopt,tRYopt),
                           FUN = log))
 
     return(loglike + logprior)
@@ -525,10 +536,12 @@ logPostDens <- function(start){
 
 likelihoodShortTest <- function(
     K.pr.Xmin=0.5, K.pr.Xmax=10, K.pr.Xopt=4, K.pr.Yopt=20,
-    R.pr.Xmin=0.5, R.pr.Xmax=10, R.pr.Xopt=4, R.pr.Yopt=10)
+    R.pr.Xmin=0.5, R.pr.Xmax=10, R.pr.Xopt=4, R.pr.Yopt=10,
+    R.tas.Xmin=270, R.tas.Xmax=320, R.tas.Xopt=295, R.tas.Yopt=1)
 {
     larveSizes = expectedInd(K.pr.Xmin, K.pr.Xmax, K.pr.Xopt, K.pr.Yopt,
-                             R.pr.Xmin, R.pr.Xmax, R.pr.Xopt, R.pr.Yopt)
+                             R.pr.Xmin, R.pr.Xmax, R.pr.Xopt, R.pr.Yopt,
+                             R.tas.Xmin, R.tas.Xmax, R.tas.Xopt, R.tas.Yopt)
 
     
     result = larveSizes[cbind(recovery2[,"demeNb"], as.character(recovery2[,"birthDate"]))]
@@ -552,7 +565,8 @@ likelihoodShortTest <- function(
 # Fonction qui calcule le nombre d'individus attendus, retourne "larveSizes"
 expectedInd <- function(
     K.pr.Xmin=0.5, K.pr.Xmax=10, K.pr.Xopt=4, K.pr.Yopt=20,
-    R.pr.Xmin=0.5, R.pr.Xmax=10, R.pr.Xopt=4, R.pr.Yopt=10)
+    R.pr.Xmin=0.5, R.pr.Xmax=10, R.pr.Xopt=4, R.pr.Yopt=10,
+    R.tas.Xmin=270, R.tas.Xmax=320, R.tas.Xopt=295, R.tas.Yopt=1)
 {
     
     dispersionRate = .025;dispersionDistance=300;      
@@ -590,10 +604,14 @@ expectedInd <- function(
     # construction of likelihood with expected recovery
     for (i in 2:(ncol(larveSizes)-max(generationTimeInterval))) # Date = colnames(demeSizes)[1]
     {
-        
-        K <- conquadraticSkewed1(EnvData2[,i,"pr"], K.pr.Xmin, K.pr.Xmax, K.pr.Xopt, K.pr.Yopt)  
-        R <- conquadraticSkewed1(EnvData2[,i,"pr"], R.pr.Xmin, R.pr.Xmax, R.pr.Xopt, R.pr.Yopt)  
 
+        R.tasmin <- conquadraticSkewed1(EnvData2[,i,"tasmin"], R.tas.Xmin, R.tas.Xmax, R.tas.Xopt, R.tas.Yopt)
+        R.tasmax <- conquadraticSkewed1(EnvData2[,i,"tasmax"], R.tas.Xmin, R.tas.Xmax, R.tas.Xopt, R.tas.Yopt)
+        R.pr <- conquadraticSkewed1(EnvData2[,i,"pr"], R.pr.Xmin, R.pr.Xmax, R.pr.Xopt, R.pr.Yopt)
+        R <- R.tasmax*R.tasmin*R.pr
+
+        K <- conquadraticSkewed1(EnvData2[,i,"pr"], K.pr.Xmin, K.pr.Xmax, K.pr.Xopt, K.pr.Yopt)  
+          
         R[is.na(R)]<-0
         K[is.na(K)]<-0
 
@@ -634,7 +652,8 @@ expectedInd <- function(
 
 buildDataSet <- function() {
     possibleData = expectedInd(K.pr.Xmin=0.5, K.pr.Xmax=10, K.pr.Xopt=4, K.pr.Yopt=20,
-                               R.pr.Xmin=0.5, R.pr.Xmax=10, R.pr.Xopt=4, R.pr.Yopt=10)
+                               R.pr.Xmin=0.5, R.pr.Xmax=10, R.pr.Xopt=4, R.pr.Yopt=10,
+                               R.tas.Xmin=270, R.tas.Xmax=320, R.tas.Xopt=295, R.tas.Yopt=1)
     
     choiceDate = sample(1:(length(Dates)-5), 400, replace=TRUE, prob=NULL)
     choiceDeme = sample(1:dim(EnvData2)[1], 400, replace=TRUE, prob=NULL)

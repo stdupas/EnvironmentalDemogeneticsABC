@@ -176,7 +176,7 @@ plotGrosGibbs <- function(a=a,obj=1) {
 
 plotParallelGibbs <- function(a=a,obj=1) {
     if(obj==1) {
-        par(mfrow=c(4,2))
+        par(mfrow=c(2,2))
         plot(a[[obj]][1,],t="l",ylab="K.pr.Xmin", xlab="Iteration",col="orange",ylim=c(0,2))
         points(a[[obj+2]][1,],t="l",col="navyblue")
 
@@ -199,7 +199,21 @@ plotParallelGibbs <- function(a=a,obj=1) {
         points(a[[obj+2]][4,],t="l",col="navyblue")
 
         plot(a[[obj]][8,],t="l",ylab="R.pr.Yopt", xlab="Iteration",col="orange",ylim=c(8,18))
-        points(a[[obj+2]][8,],t="l",col="navyblue")        
+        points(a[[obj+2]][8,],t="l",col="navyblue")      
+
+        plot(a[[obj]][9,],t="l",ylab="R.tas.Xmin", xlab="Iteration",col="orange",ylim=c(260,280))
+        points(a[[obj+2]][9,],t="l",col="navyblue")
+
+        plot(a[[obj]][10,],t="l",ylab="R.tas.Xmax", xlab="Iteration",col="orange",ylim=c(310,330))
+        points(a[[obj+2]][10,],t="l",col="navyblue")
+
+        plot(a[[obj]][11,],t="l",ylab="R.tas.Xopt", xlab="Iteration",col="orange",ylim=c(285,305))
+        points(a[[obj+2]][11,],t="l",col="navyblue")
+
+        plot(a[[obj]][12,],t="l",ylab="R.tas.Yopt", xlab="Iteration",col="orange",ylim=c(0,2))
+        points(a[[obj+2]][12,],t="l",col="navyblue") 
+
+
         } else {
             par(mfrow=c(1,1))
             plot(a[[obj]][1,],t="l", ylab="posteriors", xlab="Iteration", col="orange", ylim=c(-1300,-700))

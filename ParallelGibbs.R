@@ -1,7 +1,7 @@
 library(doParallel)
 registerDoParallel(cores=2)
 
-ParallelGibbs <- function(n=125, nbPar=8, files=FALSE) {
+ParallelGibbs <- function(n=5, nbPar=12, files=FALSE) {
     
     ##########################
     #
@@ -17,10 +17,11 @@ ParallelGibbs <- function(n=125, nbPar=8, files=FALSE) {
         
         # Sinon, on part de nouveaux parametres
     } else {
-        startF = c(4, 18, 8, 25, 4, 18, 8, 16)
-        startC = c(4, 18, 8, 25, 4, 18, 8, 16)
+        startF = c(0.5, 10, 4, 20, 0.5, 10, 4, 10, 270, 320, 295, 1)
+        startC = c(0.5, 10, 4, 20, 0.5, 10, 4, 10, 270, 320, 295, 1)
         header=c("K.pr.Xmin", "K.pr.Xmax", "K.pr.Xopt", "K.pr.Yopt",
-                 "R.pr.Xmin", "R.pr.Xmax", "R.pr.Xopt", "R.pr.Yopt")
+                 "R.pr.Xmin", "R.pr.Xmax", "R.pr.Xopt", "R.pr.Yopt",
+                 "R.tas.Xmin", "R.tas.Xmax", "R.tas.Xopt", "R.tas.Yopt")
         write(header, file="PARAMFROID.txt", ncolumns=nbPar, append=FALSE)
         write(header, file="PARAMCHAUD.txt", ncolumns=nbPar, append=FALSE)
         
@@ -33,23 +34,23 @@ ParallelGibbs <- function(n=125, nbPar=8, files=FALSE) {
     #
     # NOMBRE ITERATION POUR CHAQUE CHAINE
     #
-    indiceF = 500 
-    indiceC = 500
+    indiceF = 250 
+    indiceC = 250
     indice = rbind(indiceF, indiceC)
     
     ##########################
     #
     # ECHELLE DE CHAQUE CHAINE
     #
-    scaleF = c(1,1,1,1,1,1,1,1)
-    scaleC = c(0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2)
+    scaleF = c(1,1,1,1,1,1,1,1,1,1,1,1)
+    scaleC = c(0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2)
     scale = rbind(scaleF, scaleC)
     
     ##########################
     #
     # THINING
     #
-    thining = 2
+    thining = 1
     
     ##########################
     #
@@ -86,8 +87,8 @@ ParallelGibbs <- function(n=125, nbPar=8, files=FALSE) {
             startF = paramF
         }
         
-        write(startF, file="PARAMFROID.txt",ncolumns=8, append=TRUE)
-        write(startC, file="PARAMCHAUD.txt",ncolumns=8, append=TRUE)
+        write(startF, file="PARAMFROID.txt",ncolumns=nbPar, append=TRUE)
+        write(startC, file="PARAMCHAUD.txt",ncolumns=nbPar, append=TRUE)
         
         start = rbind(startF, startC)
         
@@ -118,9 +119,10 @@ oneChainGibbs <- function(start, scale, nbPar, indice, thining, chaine) {
             ##################### ConquadraticSkewed1
             ##
             ##
-            if(start1[1]>=start1[2] || start1[1]>=start1[3] || start1[5]>=start1[6] || start1[5]>=start1[7]) {
+            if(start1[1]>=start1[2] || start1[1]>=start1[3] || start1[5]>=start1[6] || start1[5]>=start1[7] || start1[9]>=start[10] || start[9]>=start[11]) {
                 start1[j] = start0[j]
             }
+
             ##
             ##
             #####################

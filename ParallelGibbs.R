@@ -145,10 +145,10 @@ oneChainGibbs <- function(start, scale, nbPar, indice, thining, chaine) {
             }
         }
         if(chaine==1) {
-            write(start0, file="PARAMFROID_oneChain.txt",ncolumns=8, append=TRUE)
+            write(start0, file="PARAMFROID_oneChain.txt",ncolumns=nbPar, append=TRUE)
         }
         else {
-            write(start0, file="PARAMCHAUD_oneChain.txt",ncolumns=8, append=TRUE)
+            write(start0, file="PARAMCHAUD_oneChain.txt",ncolumns=nbPar, append=TRUE)
         }
         
     }

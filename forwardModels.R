@@ -435,7 +435,6 @@ GrosGibbs <- function(thining=2){
     #           start1: valeurs des hyperparametres a l'iteration (i)
     #           post1: posteriors a l'iteration (i)   
 
-    #start = c(4, 18, 8, 25, 4, 18, 8, 16, 260, 312, 312, 1.8)
     start = c(0.5, 10, 4, 20, 0.5, 10, 4, 10, 270, 320, 295, 1)
     scale = c(0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2)
 
@@ -487,10 +486,6 @@ GrosGibbs <- function(thining=2){
                 postMax = post0
             }
         }
-
-        # if(i%%thining == 0) {
-        #     cat("\n",start0,"\n")
-        # }
     }
     return(list(ndv,ndp,indiceMax,postMax))
 }

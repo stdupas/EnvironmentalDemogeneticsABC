@@ -462,7 +462,7 @@ GrosGibbs <- function(thining=2){
             ##################### ConquadraticSkewed1
             ##
             ##
-            if(start1[1]>=start1[2] || start1[1]>=start1[3] || start1[5]>=start1[6] || start1[5]>=start1[7] || start1[9]>=start[10] || start[9]>=start[11]) {
+            if(start1[1]>=start1[2] || start1[1]>=start1[3] || start1[5]>=start1[6] || start1[5]>=start1[7] || start1[9]>=start1[10] || start1[9]>=start1[11]) {
                 start1[j] = start0[j]
             }
             ##
@@ -552,9 +552,6 @@ likelihoodShortTest <- function(
 
     result[is.nan(result)] = 0.0001
 
-    # plot(result,t='l',col='red',ylim=c(0,40))
-    # par(new=T)
-    # plot(recovery2[,'size'],t='l',col='blue',ylim=c(0,40))
     
     # Si recovery n'est pas un integer, dpois retourne -Inf
     # Il faut donc arrondir les valeurs de recovery

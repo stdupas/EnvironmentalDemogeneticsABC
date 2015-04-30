@@ -124,7 +124,6 @@ oneChainGibbs <- function(start, scale, nbPar, indice, thining, chaine) {
             if(start1[1]>=start1[2] || start1[1]>=start1[3] || start1[5]>=start1[6] || start1[5]>=start1[7] || start1[9]>=start1[10] || start1[9]>=start1[11]) {
                 start1[j] = start0[j]
             }
-
             ##
             ##
             #####################

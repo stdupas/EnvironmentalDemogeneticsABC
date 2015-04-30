@@ -146,13 +146,7 @@ oneChainGibbs <- function(start, scale, nbPar, indice, thining, chaine) {
                 maxProb = post0
             }
         }
-        if(chaine==1) {
-            write(start0, file="PARAMFROID_oneChain.txt",ncolumns=nbPar, append=TRUE)
-        }
-        else {
-            write(start0, file="PARAMCHAUD_oneChain.txt",ncolumns=nbPar, append=TRUE)
-        }
-        
+
     }
     return(list(maxParam,maxProb))
 }

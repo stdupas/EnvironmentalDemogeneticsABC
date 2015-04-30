@@ -179,44 +179,57 @@ plotParallelGibbs <- function(a=a,obj=1) {
         par(mfrow=c(2,2))
         plot(a[[obj]][1,],t="l",ylab="K.pr.Xmin", xlab="Iteration",col="orange",ylim=c(0,2))
         points(a[[obj+2]][1,],t="l",col="navyblue")
+        points(a[[obj+4]][1,],t="l",col="green")
 
         plot(a[[obj]][5,],t="l",ylab="R.pr.Xmin", xlab="Iteration",col="orange",ylim=c(0,2))
-        points(a[[obj+2]][5,],t="l",col="navyblue")        
+        points(a[[obj+2]][5,],t="l",col="navyblue")
+        points(a[[obj+4]][5,],t="l",col="green")        
 
         plot(a[[obj]][2,],t="l",ylab="K.pr.Xmax", xlab="Iteration",col="orange",ylim=c(8,18))
         points(a[[obj+2]][2,],t="l",col="navyblue")
+        points(a[[obj+4]][2,],t="l",col="green")
 
         plot(a[[obj]][6,],t="l",ylab="R.pr.Xmax", xlab="Iteration",col="orange",ylim=c(8,18))
         points(a[[obj+2]][6,],t="l",col="navyblue")
+        points(a[[obj+4]][6,],t="l",col="green")
 
         plot(a[[obj]][3,],t="l",ylab="K.pr.Xopt", xlab="Iteration",col="orange",ylim=c(2,8))
         points(a[[obj+2]][3,],t="l",col="navyblue")
+        points(a[[obj+4]][3,],t="l",col="green")
 
         plot(a[[obj]][7,],t="l",ylab="R.pr.Xopt", xlab="Iteration",col="orange",ylim=c(2,8))
         points(a[[obj+2]][7,],t="l",col="navyblue")
+        points(a[[obj+4]][7,],t="l",col="green")
 
         plot(a[[obj]][4,],t="l",ylab="K.pr.Yopt", xlab="Iteration",col="orange",ylim=c(15,25))
         points(a[[obj+2]][4,],t="l",col="navyblue")
+        points(a[[obj+4]][4,],t="l",col="green")
 
         plot(a[[obj]][8,],t="l",ylab="R.pr.Yopt", xlab="Iteration",col="orange",ylim=c(8,18))
-        points(a[[obj+2]][8,],t="l",col="navyblue")      
+        points(a[[obj+2]][8,],t="l",col="navyblue") 
+        points(a[[obj+4]][8,],t="l",col="green")     
 
         plot(a[[obj]][9,],t="l",ylab="R.tas.Xmin", xlab="Iteration",col="orange",ylim=c(260,280))
         points(a[[obj+2]][9,],t="l",col="navyblue")
+        points(a[[obj+4]][9,],t="l",col="green")
 
         plot(a[[obj]][10,],t="l",ylab="R.tas.Xmax", xlab="Iteration",col="orange",ylim=c(310,330))
         points(a[[obj+2]][10,],t="l",col="navyblue")
+        points(a[[obj+4]][10,],t="l",col="green")
 
         plot(a[[obj]][11,],t="l",ylab="R.tas.Xopt", xlab="Iteration",col="orange",ylim=c(285,305))
         points(a[[obj+2]][11,],t="l",col="navyblue")
+        points(a[[obj+4]][11,],t="l",col="green")
 
         plot(a[[obj]][12,],t="l",ylab="R.tas.Yopt", xlab="Iteration",col="orange",ylim=c(0,2))
-        points(a[[obj+2]][12,],t="l",col="navyblue") 
+        points(a[[obj+2]][12,],t="l",col="navyblue")
+        points(a[[obj+4]][12,],t="l",col="green") 
 
 
         } else {
             par(mfrow=c(1,1))
             plot(a[[obj]][1,],t="l", ylab="posteriors", xlab="Iteration", col="orange", ylim=c(-1300,-700))
             points(a[[obj+2]][1,], t="l", col="navyblue")
+            points(a[[obj+4]][1,],t="l",col="green")
         }
 }

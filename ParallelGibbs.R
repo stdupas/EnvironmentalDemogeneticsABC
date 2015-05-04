@@ -1,5 +1,5 @@
 library(doParallel)
-registerDoParallel(cores=3)
+registerDoParallel(cores=2)
 
 ParallelGibbs <- function(n=5, nbPar=12, files=FALSE) {
     
@@ -11,28 +11,26 @@ ParallelGibbs <- function(n=5, nbPar=12, files=FALSE) {
     if(files == TRUE) {
         startF = read.table(file="PARAMFROID.txt",header=TRUE)
         startC = read.table(file="PARAMCHAUD.txt",header=TRUE)
-        startM = read.table(file="PARAMMEDIUM.txt",header=TRUE)
         nbLines = dim(startF)[1]
         startF = startF[nbLines,]
         startC = startC[nbLines,]
-        startM = startM[nbLines,]
         
         # Sinon, on part de nouveaux parametres
     } else {
-        startF = c(7, 20, 13, 30, 7, 20, 13, 20, 295, 315, 305, 7)
+        startF = c(2, 15, 8, 25, 2, 15, 8, 15, 290, 310, 300, 2)
         startC = c(2, 15, 8, 25, 2, 15, 8, 15, 290, 310, 300, 2)
-        startM = c(3, 16, 9, 26, 3, 16, 9, 16, 291, 311, 301, 3)
         # startF = c(0.5, 10, 4, 20, 0.5, 10, 4, 10, 270, 320, 295, 1)
         # startC = c(0.5, 10, 4, 20, 0.5, 10, 4, 10, 270, 320, 295, 1)
-        # startM = c(0.5, 10, 4, 20, 0.5, 10, 4, 10, 270, 320, 295, 1)
         header=c("K.pr.Xmin", "K.pr.Xmax", "K.pr.Xopt", "K.pr.Yopt",
                  "R.pr.Xmin", "R.pr.Xmax", "R.pr.Xopt", "R.pr.Yopt",
                  "R.tas.Xmin", "R.tas.Xmax", "R.tas.Xopt", "R.tas.Yopt")
         write(header, file="PARAMFROID.txt", ncolumns=nbPar, append=FALSE)
         write(header, file="PARAMCHAUD.txt", ncolumns=nbPar, append=FALSE)
-        write(header, file="PARAMMEDIUM.txt", ncolumns=nbPar, append=FALSE)
+        
+        write(header, file="PARAMFROID_oneChain.txt", ncolumns=nbPar, append=FALSE)
+        write(header, file="PARAMCHAUD_oneChain.txt", ncolumns=nbPar, append=FALSE)
     }
-    start = rbind(startF, startC, startM)
+    start = rbind(startF, startC)
     
     ##########################
     #
@@ -40,17 +38,15 @@ ParallelGibbs <- function(n=5, nbPar=12, files=FALSE) {
     #
     indiceF = 250 
     indiceC = 250
-    indiceM = 250
-    indice = rbind(indiceF, indiceC, indiceM)
+    indice = rbind(indiceF, indiceC)
     
     ##########################
     #
     # ECHELLE DE CHAQUE CHAINE
     #
-    scaleF = c(2,2,2,2,2,2,2,2,3,3,3,2)
+    scaleF = c(1,1,1,1,1,1,1,1,2,2,2,1)
     scaleC = c(0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.4,0.4,0.4,0.2)
-    scaleM = c(0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,1,1,1,0.8)
-    scale = rbind(scaleF, scaleC, scaleM)
+    scale = rbind(scaleF, scaleC)
     
     ##########################
     #
@@ -64,11 +60,8 @@ ParallelGibbs <- function(n=5, nbPar=12, files=FALSE) {
     #
     ndvC = NULL
     ndvF = NULL
-    ndvM = NULL
-
     ndpC = NULL
     ndpF = NULL
-    ndpM = NULL
     
     ##########################
     #
@@ -78,68 +71,37 @@ ParallelGibbs <- function(n=5, nbPar=12, files=FALSE) {
         
         cat(i, ": debut\n")
         
-        nbChains = dim(scale)[1]
-
-        res = foreach(chaine = 1:nbChains, .combine=c) %dopar%{
+        res = foreach(chaine = 1:2, .combine=c) %dopar%{
             oneChainGibbs(start[chaine,], scale[chaine,], nbPar, indice[chaine,], thining, chaine)
         }
         
         postF = res[[2]]
         postC = res[[4]]
-        postM = res[[6]]
-
         paramF = res[[1]]
         paramC = res[[3]]
-        paramM = res[[5]]
         
-
-        if(postF > postM) {
-            startM = paramF
-            cat("Echange! M=F\n")
-            if(postC < postF) {
-                startC = paramF
-                cat("Echange! C=F\n")
-            } else {
-                startC = paramC
-            }
+        if(postF > postC) {
+            startC = paramF
+            startF = paramF
+            cat("Echange!\n")
         } else {
-            startM = paramM
-            if(postC < postM) {
-                startC = paramM
-                cat("Echange! C=M\n")
-            } else {
-                startC = paramC
-            }
+            startC = paramC
+            startF = paramF
         }
-
-        startF = paramF
-
-        # if(postF > postC) {
-        #     startC = paramF
-        #     startF = paramF
-        #     cat("Echange!\n")
-        # } else {
-        #     startC = paramC
-        #     startF = paramF
-        # }
         
         write(startF, file="PARAMFROID.txt",ncolumns=nbPar, append=TRUE)
         write(startC, file="PARAMCHAUD.txt",ncolumns=nbPar, append=TRUE)
-        write(startC, file="PARAMMEDIUM.txt",ncolumns=nbPar, append=TRUE)
         
-        start = rbind(startF, startC, startM)
+        start = rbind(startF, startC)
         
         ndvC = cbind(ndvC,startC)
         ndvF = cbind(ndvF,startF)
-        ndvM = cbind(ndvM,startM)
-
         ndpC = cbind(ndpC,postC)
         ndpF = cbind(ndpF,postF)
-        ndpM = cbind(ndpM,postM)
         
         cat(i,": fin\n")
     }
-    return(list(ndvC,ndpC,ndvF,ndpF,ndvM,ndpM))
+    return(list(ndvC,ndpC,ndvF,ndpF))
 }
 
 oneChainGibbs <- function(start, scale, nbPar, indice, thining, chaine) {
@@ -175,31 +137,15 @@ oneChainGibbs <- function(start, scale, nbPar, indice, thining, chaine) {
             # t est egale a 1 si les valeurs sont gardees, sinon 0
             t = runif(1) < min(1,exp(post1 - post0))
             # Si t = 1, on garde les nouvelles valeurs, sinon on garde les anciennes valeurs
-
-            debug = c(start0, post0, post1, start1)
-
-
             start0[j] = start1[j] *(t==1) + start0[j] *(t==0)
             post0 = post1 * (t==1) + post0 * (t == 0)          
-         
-            ############ DEBUG
-            #
-            #
-            #
-
-            write(debug, file="PARAM_o.txt", ncolumns=nbPar, append=FALSE)
-
-            #
-            #
-            #
-            #############
-
+            
             if((i%%thining == 0) && (maxProb < post0)) {
                 maxParam = start0
                 maxProb = post0
             }
         }
-
+        
     }
     return(list(maxParam,maxProb))
 }

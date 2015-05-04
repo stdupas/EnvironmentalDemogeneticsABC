@@ -434,10 +434,10 @@ GrosGibbs <- function(thining=2){
     #           start0: valeurs des hyperparametres a l'iteration (i-1)
     #           start1: valeurs des hyperparametres a l'iteration (i)
     #           post1: posteriors a l'iteration (i)   
-
+    
     start = c(0.5, 10, 4, 20, 0.5, 10, 4, 10, 270, 320, 295, 1)
     scale = c(0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2)
-
+    
     indice = 10
     nbPar = length(start)
     
@@ -456,8 +456,8 @@ GrosGibbs <- function(thining=2){
             start1 = start0
             # On pioche une valeur de pas pour faire bouger les hyperparametres a partir de start0
             start1[j] = start0[j] + rnorm(1) * scale[j]
-
-
+            
+            
             ##################### ConquadraticSkewed1
             ##
             ##
@@ -467,7 +467,7 @@ GrosGibbs <- function(thining=2){
             ##
             ##
             #####################
-
+            
             # On calcule les posteriors avec les nouveaux hyperparametres
             post1 = logPostDens(start1)
             # On decide si on garde ou non les nouvelles valeurs
@@ -523,7 +523,7 @@ logPostDens <- function(start){
                             pRXmin,pRXmax,pRXopt,pRYopt,
                             tRXmin,tRXmax,tRXopt,tRYopt),
                           FUN = log))
-
+    
     return(loglike + logprior)
     
 }
@@ -537,17 +537,16 @@ likelihoodShortTest <- function(
     larveSizes = expectedInd(K.pr.Xmin, K.pr.Xmax, K.pr.Xopt, K.pr.Yopt,
                              R.pr.Xmin, R.pr.Xmax, R.pr.Xopt, R.pr.Yopt,
                              R.tas.Xmin, R.tas.Xmax, R.tas.Xopt, R.tas.Yopt)
-
+    
     
     result = larveSizes[cbind(recovery2[,"demeNb"], as.character(recovery2[,"birthDate"]))]
     
     # Si recovery est > 0 et si result est egal à 0, dpois retourne -Inf
     # Il faut donc convertir les 0 de result en 0.0001 (ou autre different de 0)
     result[which(result == 0)] = 0.0001
-
+    
     result[is.nan(result)] = 0.0001
-    result[is.na(result)] = 0.0001
-
+    
     
     # Si recovery n'est pas un integer, dpois retourne -Inf
     # Il faut donc arrondir les valeurs de recovery
@@ -567,47 +566,47 @@ expectedInd <- function(
     generationTimeSD=ceiling(3/10);    
     dvlpTime=1+ceiling(5/10);
     dvlpTimeSD=1;
-
+    
     # Matrice contenant les individus à l'extérieur des mais.
     parentSizes <- array(0,dim=c(nrow(EnvData2),length(Dates)),dimnames = list(1:nrow(EnvData2),as.character(Dates)))
     parentSizes[,as.character(birthDates)] <- 1
- 
+    
     # Matrice des individus à l'intérieur des mais.
     larveSizes <- array(0,dim=c(nrow(EnvData2),length(Dates)),dimnames = list(1:nrow(EnvData2),as.character(Dates)))
-
+    
     #
     # building migration matrix
     #
     migrationMatrix = Matrix(0, nrow = dim(distMat)[1], ncol = dim(distMat)[2], sparse = TRUE)
     ind1 = which((distMat != 0) & (distMat < dispersionDistance))
     ind2 = which(distMat == 0)
-
+    
     migrationMatrix[ind1] = dispersionRate
     migrationMatrix[ind2] = 1-dispersionRate*4
-
+    
     #
     # probability density of generation time inthe interval [mean-3SD,mean+3SD]
     #
     generationTimeInterval <- (generationTime-generationTimeSD):(generationTime+generationTimeSD)
     generationTimeDensity <- dnorm(generationTimeInterval,generationTime,generationTimeSD)
-
+    
     dvlpTimeInterval <- (dvlpTime-dvlpTimeSD):(dvlpTime+dvlpTimeSD)
     dvlpTimeDensity <- dnorm(dvlpTimeInterval,dvlpTime,dvlpTimeSD)
-
+    
     # construction of likelihood with expected recovery
     for (i in 2:(ncol(larveSizes)-max(generationTimeInterval))) # Date = colnames(demeSizes)[1]
     {
-
+        
         R.tasmin <- conquadraticSkewed1(EnvData2[,i,"tasmin"], R.tas.Xmin, R.tas.Xmax, R.tas.Xopt, R.tas.Yopt)
         R.tasmax <- conquadraticSkewed1(EnvData2[,i,"tasmax"], R.tas.Xmin, R.tas.Xmax, R.tas.Xopt, R.tas.Yopt)
         R.pr <- conquadraticSkewed1(EnvData2[,i,"pr"], R.pr.Xmin, R.pr.Xmax, R.pr.Xopt, R.pr.Yopt)
         R <- R.tasmax*R.tasmin*R.pr
-
+        
         K <- conquadraticSkewed1(EnvData2[,i,"pr"], K.pr.Xmin, K.pr.Xmax, K.pr.Xopt, K.pr.Yopt)  
-          
+        
         R[is.na(R)]<-0
         K[is.na(K)]<-0
-
+        
         R[is.nan(R)]<-0
         K[is.nan(K)]<-0
         
@@ -639,7 +638,7 @@ expectedInd <- function(
         }
         
     }
-
+    
     return(larveSizes)
 }
 
@@ -650,17 +649,17 @@ buildDataSet <- function() {
     
     choiceDate = sample(1:(length(Dates)-5), 400, replace=TRUE, prob=NULL)
     choiceDeme = sample(1:dim(EnvData2)[1], 400, replace=TRUE, prob=NULL)
-  
+    
     pData = NULL
     for(i in 1:400) {
-      pData = rbind(pData, possibleData[choiceDeme[i], choiceDate[i]]) 
+        pData = rbind(pData, possibleData[choiceDeme[i], choiceDate[i]]) 
     }
-  
+    
     sizes = rpois(400, pData)
     dates = colnames(possibleData[,choiceDate])
-  
+    
     dataSet = cbind.data.frame(as.Date(dates),as.numeric(sizes),as.integer(choiceDeme))
     colnames(dataSet) = c("birthDate", "size", "demeNb")
-  
+    
     return(dataSet)
 }

@@ -26,9 +26,6 @@ ParallelGibbs <- function(n=5, nbPar=12, files=FALSE) {
                  "R.tas.Xmin", "R.tas.Xmax", "R.tas.Xopt", "R.tas.Yopt")
         write(header, file="PARAMFROID.txt", ncolumns=nbPar, append=FALSE)
         write(header, file="PARAMCHAUD.txt", ncolumns=nbPar, append=FALSE)
-        
-        write(header, file="PARAMFROID_oneChain.txt", ncolumns=nbPar, append=FALSE)
-        write(header, file="PARAMCHAUD_oneChain.txt", ncolumns=nbPar, append=FALSE)
     }
     start = rbind(startF, startC)
     

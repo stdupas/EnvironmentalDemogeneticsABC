@@ -14,6 +14,7 @@ ParallelGibbs <- function(n=5, nbPar=12, files=FALSE) {
         nbLines = dim(startF)[1]
         startF = startF[nbLines,]
         startC = startC[nbLines,]
+        recovery2 = readRDS("PARAM_recovery.RData")
         
         # Sinon, on part de nouveaux parametres
     } else {
@@ -26,6 +27,7 @@ ParallelGibbs <- function(n=5, nbPar=12, files=FALSE) {
                  "R.tas.Xmin", "R.tas.Xmax", "R.tas.Xopt", "R.tas.Yopt")
         write(header, file="PARAMFROID.txt", ncolumns=nbPar, append=FALSE)
         write(header, file="PARAMCHAUD.txt", ncolumns=nbPar, append=FALSE)
+        saveRDS(recovery2, "PARAM_recovery.RData")
     }
     start = rbind(startF, startC)
     

@@ -175,9 +175,25 @@ oneChainGibbs <- function(start, scale, nbPar, indice, thining, chaine) {
             # t est egale a 1 si les valeurs sont gardees, sinon 0
             t = runif(1) < min(1,exp(post1 - post0))
             # Si t = 1, on garde les nouvelles valeurs, sinon on garde les anciennes valeurs
+
+            debug = c(start0, post0, post1, start1)
+
+
             start0[j] = start1[j] *(t==1) + start0[j] *(t==0)
             post0 = post1 * (t==1) + post0 * (t == 0)          
-            
+         
+            ############ DEBUG
+            #
+            #
+            #
+
+            write(debug, file="PARAM_o.txt", ncolumns=nbPar, append=FALSE)
+
+            #
+            #
+            #
+            #############
+
             if((i%%thining == 0) && (maxProb < post0)) {
                 maxParam = start0
                 maxProb = post0

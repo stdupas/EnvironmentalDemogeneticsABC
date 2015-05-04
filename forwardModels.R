@@ -546,6 +546,7 @@ likelihoodShortTest <- function(
     result[which(result == 0)] = 0.0001
 
     result[is.nan(result)] = 0.0001
+    result[is.na(result)] = 0.0001
 
     
     # Si recovery n'est pas un integer, dpois retourne -Inf

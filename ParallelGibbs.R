@@ -35,8 +35,8 @@ ParallelGibbs <- function(n=5, nbPar=12, files=FALSE) {
     #
     # NOMBRE ITERATION POUR CHAQUE CHAINE
     #
-    indiceF = 250 
-    indiceC = 250
+    indiceF = 500 
+    indiceC = 500
     indice = rbind(indiceF, indiceC)
     
     ##########################

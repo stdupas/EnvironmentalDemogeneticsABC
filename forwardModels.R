@@ -508,17 +508,17 @@ logPostDens <- function(start){
                                   R.tas.Xmin, R.tas.Xmax, R.tas.Xopt, R.tas.Yopt)
     
     pKXmin = dunif(K.pr.Xmin, min=0, max=2) + 10^-320
-    pKXmax = dunif(K.pr.Xmax, min=8, max=16) + 10^-320
+    pKXmax = dunif(K.pr.Xmax, min=5, max=15) + 10^-320
     pKXopt = dunif(K.pr.Xopt, min=2, max=8) + 10^-320
     pKYopt = dunif(K.pr.Yopt, min=15, max=25) + 10^-320
     pRXmin = dunif(R.pr.Xmin, min=0, max=2) + 10^-320
-    pRXmax  = dunif(R.pr.Xmax, min=8, max=18) + 10^-320
+    pRXmax  = dunif(R.pr.Xmax, min=5, max=15) + 10^-320
     pRXopt = dunif(R.pr.Xopt, min=2, max=8) + 10^-320
-    pRYopt = dunif(R.pr.Yopt, min=8, max=18) + 10^-320
+    pRYopt = dunif(R.pr.Yopt, min=5, max=15) + 10^-320
     tRXmin = dunif(R.tas.Xmin, min=270, max=295) + 10^-320
     tRXmax = dunif(R.tas.Xmax, min=296, max=315) + 10^-320
-    tRXopt = dunif(R.tas.Xopt, min=290, max=300) + 10^-320
-    tRYopt = dunif(R.tas.Yopt, min=0.5, max=1.5) + 10^-320
+    tRXopt = dunif(R.tas.Xopt, min=285, max=305) + 10^-320
+    tRYopt = dunif(R.tas.Yopt, min=0, max=2) + 10^-320
     logprior = sum(sapply(c(pKXmin,pKXmax,pKXopt,pKYopt,
                             pRXmin,pRXmax,pRXopt,pRYopt,
                             tRXmin,tRXmax,tRXopt,tRYopt),

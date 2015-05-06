@@ -43,8 +43,8 @@ ParallelGibbs <- function(n=5, nbPar=12, files=FALSE) {
     #
     # ECHELLE DE CHAQUE CHAINE
     #
-    scaleF = c(1,1,1,1,1,1,1,1,2,2,2,1)
-    scaleC = c(0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.4,0.4,0.4,0.2)
+    scaleF = c(2,2,2,2,2,2,2,2,4,4,4,2)
+    scaleC = c(0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.8,0.8,0.8,0.4)
     scale = rbind(scaleF, scaleC)
     
     ##########################

@@ -183,10 +183,10 @@ plotParallelGibbs <- function(a=a,obj=1) {
         plot(a[[obj]][5,],t="l",ylab="R.pr.Xmin", xlab="Iteration",col="orange",ylim=c(0,2))
         points(a[[obj+2]][5,],t="l",col="navyblue")        
         
-        plot(a[[obj]][2,],t="l",ylab="K.pr.Xmax", xlab="Iteration",col="orange",ylim=c(8,18))
+        plot(a[[obj]][2,],t="l",ylab="K.pr.Xmax", xlab="Iteration",col="orange",ylim=c(5,15))
         points(a[[obj+2]][2,],t="l",col="navyblue")
         
-        plot(a[[obj]][6,],t="l",ylab="R.pr.Xmax", xlab="Iteration",col="orange",ylim=c(8,18))
+        plot(a[[obj]][6,],t="l",ylab="R.pr.Xmax", xlab="Iteration",col="orange",ylim=c(5,15))
         points(a[[obj+2]][6,],t="l",col="navyblue")
         
         plot(a[[obj]][3,],t="l",ylab="K.pr.Xopt", xlab="Iteration",col="orange",ylim=c(2,8))
@@ -198,13 +198,13 @@ plotParallelGibbs <- function(a=a,obj=1) {
         plot(a[[obj]][4,],t="l",ylab="K.pr.Yopt", xlab="Iteration",col="orange",ylim=c(15,25))
         points(a[[obj+2]][4,],t="l",col="navyblue")
         
-        plot(a[[obj]][8,],t="l",ylab="R.pr.Yopt", xlab="Iteration",col="orange",ylim=c(8,18))
+        plot(a[[obj]][8,],t="l",ylab="R.pr.Yopt", xlab="Iteration",col="orange",ylim=c(5,15))
         points(a[[obj+2]][8,],t="l",col="navyblue")      
         
-        plot(a[[obj]][9,],t="l",ylab="R.tas.Xmin", xlab="Iteration",col="orange",ylim=c(260,280))
+        plot(a[[obj]][9,],t="l",ylab="R.tas.Xmin", xlab="Iteration",col="orange",ylim=c(270,295))
         points(a[[obj+2]][9,],t="l",col="navyblue")
         
-        plot(a[[obj]][10,],t="l",ylab="R.tas.Xmax", xlab="Iteration",col="orange",ylim=c(310,330))
+        plot(a[[obj]][10,],t="l",ylab="R.tas.Xmax", xlab="Iteration",col="orange",ylim=c(295,315))
         points(a[[obj+2]][10,],t="l",col="navyblue")
         
         plot(a[[obj]][11,],t="l",ylab="R.tas.Xopt", xlab="Iteration",col="orange",ylim=c(285,305))

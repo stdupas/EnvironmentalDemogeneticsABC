@@ -435,7 +435,7 @@ GrosGibbs <- function(thining=2){
     #           start1: valeurs des hyperparametres a l'iteration (i)
     #           post1: posteriors a l'iteration (i)   
     
-    start = c(0.5, 10, 4, 20, 0.5, 10, 4, 10, 270, 320, 295, 1)
+    start = c(0.5, 10, 4, 20, 0.5, 10, 4, 10, 285, 305, 295, 1)
     scale = c(0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2)
     
     indice = 10
@@ -515,8 +515,8 @@ logPostDens <- function(start){
     pRXmax  = dunif(R.pr.Xmax, min=8, max=18) + 10^-320
     pRXopt = dunif(R.pr.Xopt, min=2, max=8) + 10^-320
     pRYopt = dunif(R.pr.Yopt, min=8, max=18) + 10^-320
-    tRXmin = dunif(R.tas.Xmin, min=265, max=280) + 10^-320
-    tRXmax = dunif(R.tas.Xmax, min=315, max=325) + 10^-320
+    tRXmin = dunif(R.tas.Xmin, min=270, max=295) + 10^-320
+    tRXmax = dunif(R.tas.Xmax, min=296, max=315) + 10^-320
     tRXopt = dunif(R.tas.Xopt, min=290, max=300) + 10^-320
     tRYopt = dunif(R.tas.Yopt, min=0.5, max=1.5) + 10^-320
     logprior = sum(sapply(c(pKXmin,pKXmax,pKXopt,pKYopt,
@@ -532,7 +532,7 @@ logPostDens <- function(start){
 likelihoodShortTest <- function(
     K.pr.Xmin=0.5, K.pr.Xmax=10, K.pr.Xopt=4, K.pr.Yopt=20,
     R.pr.Xmin=0.5, R.pr.Xmax=10, R.pr.Xopt=4, R.pr.Yopt=10,
-    R.tas.Xmin=270, R.tas.Xmax=320, R.tas.Xopt=295, R.tas.Yopt=1)
+    R.tas.Xmin=285, R.tas.Xmax=305, R.tas.Xopt=295, R.tas.Yopt=1)
 {
     larveSizes = expectedInd(K.pr.Xmin, K.pr.Xmax, K.pr.Xopt, K.pr.Yopt,
                              R.pr.Xmin, R.pr.Xmax, R.pr.Xopt, R.pr.Yopt,
@@ -558,7 +558,7 @@ likelihoodShortTest <- function(
 expectedInd <- function(
     K.pr.Xmin=0.5, K.pr.Xmax=10, K.pr.Xopt=4, K.pr.Yopt=20,
     R.pr.Xmin=0.5, R.pr.Xmax=10, R.pr.Xopt=4, R.pr.Yopt=10,
-    R.tas.Xmin=270, R.tas.Xmax=320, R.tas.Xopt=295, R.tas.Yopt=1)
+    R.tas.Xmin=285, R.tas.Xmax=305, R.tas.Xopt=295, R.tas.Yopt=1)
 {
     
     dispersionRate = .025;dispersionDistance=300;      
@@ -645,9 +645,9 @@ expectedInd <- function(
 buildDataSet <- function() {
     possibleData = expectedInd(K.pr.Xmin=0.5, K.pr.Xmax=10, K.pr.Xopt=4, K.pr.Yopt=20,
                                R.pr.Xmin=0.5, R.pr.Xmax=10, R.pr.Xopt=4, R.pr.Yopt=10,
-                               R.tas.Xmin=270, R.tas.Xmax=320, R.tas.Xopt=295, R.tas.Yopt=1)
+                               R.tas.Xmin=285, R.tas.Xmax=305, R.tas.Xopt=295, R.tas.Yopt=1)
     
-    nbData = 600
+    nbData = 1200
 
     choiceDate = sample(1:(length(Dates)-5), nbData, replace=TRUE, prob=NULL)
     choiceDeme = sample(1:dim(EnvData2)[1], nbData, replace=TRUE, prob=NULL)

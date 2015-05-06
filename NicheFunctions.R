@@ -28,8 +28,8 @@ binaryMultiplicative <- function(x, Y){
 conquadraticSkewed1 <- function(x, Xmin, Xmax, Xopt, Yopt)
 {
   # Asymetric concave conquadratic function within an enveloppe, else returns 0.
-  # 
-  # Args: 
+  #
+  # Args:
   #   x : numeric providing the values of variable to calculate reaction norm
   #   Xmin: start of the enveloppe
   #   Xmax: end of the enveloppe
@@ -38,10 +38,12 @@ conquadraticSkewed1 <- function(x, Xmin, Xmax, Xopt, Yopt)
   #
   # Returns:
   #   The value of reaction norm
-  alpha <- -log(2)/log((Xopt-Xmin)/(Xmax-Xmin))
-  Xprime<- ((x-Xmin)/(Xmax-Xmin))^alpha*(Xmax-Xmin)+Xmin
-  y <- (Yopt-4*Yopt/((Xmax-Xmin)^2)*(Xprime-(Xmin+Xmax)/2)^2)*((x>=Xmin)&(x<=Xmax))
-  y[x<Xmin] <-0
+  if(Xopt>=Xmax) Xopt=Xmax-Xmax/100000
+  if(Xopt<=Xmin) Xopt=Xmin+Xmin/100000
+  a1=(Xmin-Xmax)/(2*(Xmin-Xopt))
+  a2=(Xmax-Xmin)/(2*(Xmax-Xopt))
+  Xprime<- (x<Xopt)*(a1*x+Xmin*(1-a1))+(x>=Xopt)*(a2*x+Xmax*(1-a2))
+  y <- -4*Yopt/(Xmax-Xmin)^2*(Xprime-Xmax)*(Xprime-Xmin)*(x<=Xmax)*(x>=Xmin)
   return(y)
 }
 

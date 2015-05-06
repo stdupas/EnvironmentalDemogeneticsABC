@@ -20,8 +20,8 @@ ParallelGibbs <- function(n=5, nbPar=12, files=FALSE) {
     } else {
         startF = c(2, 15, 8, 25, 2, 15, 8, 15, 290, 310, 300, 2)
         startC = c(2, 15, 8, 25, 2, 15, 8, 15, 290, 310, 300, 2)
-        # startF = c(0.5, 10, 4, 20, 0.5, 10, 4, 10, 270, 320, 295, 1)
-        # startC = c(0.5, 10, 4, 20, 0.5, 10, 4, 10, 270, 320, 295, 1)
+        # startF = c(0.5, 10, 4, 20, 0.5, 10, 4, 10, 285, 305, 295, 1)
+        # startC = c(0.5, 10, 4, 20, 0.5, 10, 4, 10, 285, 305, 295, 1)
         header=c("K.pr.Xmin", "K.pr.Xmax", "K.pr.Xopt", "K.pr.Yopt",
                  "R.pr.Xmin", "R.pr.Xmax", "R.pr.Xopt", "R.pr.Yopt",
                  "R.tas.Xmin", "R.tas.Xmax", "R.tas.Xopt", "R.tas.Yopt")

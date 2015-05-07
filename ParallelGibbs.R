@@ -71,7 +71,7 @@ ParallelGibbs <- function(n=5, nbPar=12, files=FALSE) {
         cat(i, ": debut\n")
         
         res = foreach(chaine = 1:2, .combine=c) %dopar%{
-            oneChainGibbs(start[chaine,], scale[chaine,], nbPar, indice[chaine,], thining, chaine)
+            oneChainGibbs(start[chaine,], scale[chaine,], nbPar, indice[chaine,], thining)
         }
         
         postF = res[[2]]
@@ -103,8 +103,43 @@ ParallelGibbs <- function(n=5, nbPar=12, files=FALSE) {
     return(list(ndvC,ndpC,ndvF,ndpF))
 }
 
-oneChainGibbs <- function(start, scale, nbPar, indice, thining, chaine) {
-    
+
+
+################################
+##
+##
+##          TEMPORAIRE
+##
+##
+## Commandes pour lancer seulement le oneChainGibbs
+## 
+# start = c(2, 15, 8, 25, 2, 15, 8, 15, 290, 310, 300, 2)
+# scale = c(1,2,2,2,1,2,2,2,4,4,4,1)
+# nbPar=12
+# indice = 100
+# thining = 1
+##
+##
+##
+##
+##
+###############################
+
+
+oneChainGibbs <- function(start, scale, nbPar, indice, thining) {
+    # Fonction faisant tourner un algorithme de Gibbs Sampling
+    # Variables: 
+    #           start: vecteur contenant les valeurs de depart des parametres
+    #           scale: vecteur contenant une valeur d'echelle pour le pas de chaque parametre
+    #           indice: nombre d'iterations de l'algorithme
+    #           nPar: nombre de parametres a evaluer
+    #           ndv: tableau (nbIterations x nbParametres) contenant la valeur des parametres a chaque iteration
+    #           ndp: tableau (nbIterations x nbParametres) contenant la valeur des posteriors a chaque iteration
+    #           post0: posteriors a l'iteration (i-1), logPostDens
+    #           start0: valeurs des hyperparametres a l'iteration (i-1)
+    #           start1: valeurs des hyperparametres a l'iteration (i)
+    #           post1: posteriors a l'iteration (i) 
+
     start0 = start
     post0 = logPostDens(start0)
     
@@ -112,7 +147,9 @@ oneChainGibbs <- function(start, scale, nbPar, indice, thining, chaine) {
     maxParam = start
     
     for(i in 1:indice){
-        for(j in 1:nbPar){ 
+        cat("\n", i, ":")
+        for(j in 1:nbPar){
+            cat("*") 
             start1 = start0
             # On pioche une valeur de pas pour faire bouger les hyperparametres a partir de start0
             start1[j] = start0[j] + rnorm(1) * scale[j]
@@ -139,12 +176,12 @@ oneChainGibbs <- function(start, scale, nbPar, indice, thining, chaine) {
             start0[j] = start1[j] *(t==1) + start0[j] *(t==0)
             post0 = post1 * (t==1) + post0 * (t == 0)          
             
+            # On garde les valeurs avec le meilleur posterior
             if((i%%thining == 0) && (maxProb < post0)) {
                 maxParam = start0
                 maxProb = post0
             }
-        }
-        
+        }  
     }
     return(list(maxParam,maxProb))
 }

@@ -416,81 +416,20 @@ likelihoodShort <- function(dispersionRate = .025,dispersionDistance=100,
 #############################################################
 #############################################################
 ##                                                         ##
-##                      TESTS FUNCTIONS                    ##
+##                     FONCTIONS BAYESIAN                  ##
 ##                                                         ##
 #############################################################
 #############################################################
 
-GrosGibbs <- function(thining=2){
-    # Fonction faisant tourner un algorithme de Gibbs Sampling
-    # Variables: 
-    #           start: vecteur contenant les valeurs de depart des parametres
-    #           scale: vecteur contenant une valeur d'echelle pour le pas de chaque parametre
-    #           indice: nombre d'iterations de l'algorithme
-    #           nPar: nombre de parametres a evaluer
-    #           ndv: tableau (nbIterations x nbParametres) contenant la valeur des parametres a chaque iteration
-    #           ndp: tableau (nbIterations x nbParametres) contenant la valeur des posteriors a chaque iteration
-    #           post0: posteriors a l'iteration (i-1), logPostDens
-    #           start0: valeurs des hyperparametres a l'iteration (i-1)
-    #           start1: valeurs des hyperparametres a l'iteration (i)
-    #           post1: posteriors a l'iteration (i)   
-    
-    start = c(0.5, 10, 4, 20, 0.5, 10, 4, 10, 285, 305, 295, 1)
-    scale = c(0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2)
-    
-    indice = 10
-    nbPar = length(start)
-    
-    ndv = array(0, dim = c(indice, nbPar))
-    ndp = array(0, dim = c(indice, nbPar))
-    post0 = logPostDens(start)
-    start0 = start
-    
-    indiceMax = 0
-    postMax = post0
-    
-    for(i in 1:indice){
-        cat("\n", i, ":")
-        for(j in 1:nbPar){ 
-            cat("*")
-            start1 = start0
-            # On pioche une valeur de pas pour faire bouger les hyperparametres a partir de start0
-            start1[j] = start0[j] + rnorm(1) * scale[j]
-            
-            
-            ##################### ConquadraticSkewed1
-            ##
-            ##
-            if(start1[1]>=start1[2] || start1[1]>=start1[3] || start1[5]>=start1[6] || start1[5]>=start1[7] || start1[9]>=start1[10] || start1[9]>=start1[11]) {
-                start1[j] = start0[j]
-            }
-            ##
-            ##
-            #####################
-            
-            # On calcule les posteriors avec les nouveaux hyperparametres
-            post1 = logPostDens(start1)
-            # On decide si on garde ou non les nouvelles valeurs
-            # Les valeurs sont gardees si la valeur tiree aleatoirement dans la loi uniforme est plus petite que
-            # la difference entre le posterior au temps i et le posterior au temps i-1
-            # t est egale a 1 si les valeurs sont gardees, sinon 0
-            t = runif(1) < min(1,exp(post1 - post0))
-            # Si t = 1, on garde les nouvelles valeurs, sinon on garde les anciennes valeurs
-            start0[j] = start1[j] *(t==1) + start0[j] *(t==0)
-            post0 = post1 * (t==1) + post0 * (t == 0)          
-            ndv[i,j] = start0[j]
-            ndp[i,j] = post0
-            
-            if((i%%thining == 0) && (postMax < post0)) {
-                indiceMax = i
-                postMax = post0
-            }
-        }
-    }
-    return(list(ndv,ndp,indiceMax,postMax))
-}
 
 logPostDens <- function(start){
+    # Fonction calculant le posterior pour un lot de parametres donne
+    # Variables: 
+    #           start: vecteur contenant les valeurs des parametres
+    # Retourne:
+    #           somme du log de la likelihood et du log du prior
+
+    # Affectation des vairables puis alcul du loglikelihood
     K.pr.Xmin = start[1]
     K.pr.Xmax = start[2]
     K.pr.Xopt = start[3]
@@ -507,6 +446,7 @@ logPostDens <- function(start){
                                   R.pr.Xmin, R.pr.Xmax, R.pr.Xopt, R.pr.Yopt,
                                   R.tas.Xmin, R.tas.Xmax, R.tas.Xopt, R.tas.Yopt)
     
+    # Calcul des priors
     pKXmin = dunif(K.pr.Xmin, min=0, max=2) + 10^-320
     pKXmax = dunif(K.pr.Xmax, min=5, max=15) + 10^-320
     pKXopt = dunif(K.pr.Xopt, min=2, max=8) + 10^-320
@@ -532,21 +472,25 @@ logPostDens <- function(start){
 likelihoodShortTest <- function(
     K.pr.Xmin=0.5, K.pr.Xmax=10, K.pr.Xopt=4, K.pr.Yopt=20,
     R.pr.Xmin=0.5, R.pr.Xmax=10, R.pr.Xopt=4, R.pr.Yopt=10,
-    R.tas.Xmin=285, R.tas.Xmax=305, R.tas.Xopt=295, R.tas.Yopt=1)
-{
+    R.tas.Xmin=285, R.tas.Xmax=305, R.tas.Xopt=295, R.tas.Yopt=1){
+    # Fonction qui calcule la log likelihood pour pour un lot de parametres donne
+    # Variables: 
+    #           K.pr: parametres pour la fonction K=f(precipitation)
+    #           R.pr: parametres pour la fonction R=f(precipitation)
+    #           R.tas: parametres pour la fonction R=f(temperature)
+
+    # Calcul du nombre d'individus attendus pour ce lot de parametres
     larveSizes = expectedInd(K.pr.Xmin, K.pr.Xmax, K.pr.Xopt, K.pr.Yopt,
                              R.pr.Xmin, R.pr.Xmax, R.pr.Xopt, R.pr.Yopt,
                              R.tas.Xmin, R.tas.Xmax, R.tas.Xopt, R.tas.Yopt)
     
-    
+    # On ne garde que les donnees avec un couple (deme,date) commun a notre recovery
     result = larveSizes[cbind(recovery2[,"demeNb"], as.character(recovery2[,"birthDate"]))]
     
     # Si recovery est > 0 et si result est egal à 0, dpois retourne -Inf
     # Il faut donc convertir les 0 de result en 0.0001 (ou autre different de 0)
     result[which(result == 0)] = 0.0001
-    
     result[is.nan(result)] = 0.0001
-    
     
     # Si recovery n'est pas un integer, dpois retourne -Inf
     # Il faut donc arrondir les valeurs de recovery
@@ -554,13 +498,20 @@ likelihoodShortTest <- function(
     return(logLikelihood)
 }
 
-# Fonction qui calcule le nombre d'individus attendus, retourne "larveSizes"
+
 expectedInd <- function(
     K.pr.Xmin=0.5, K.pr.Xmax=10, K.pr.Xopt=4, K.pr.Yopt=20,
     R.pr.Xmin=0.5, R.pr.Xmax=10, R.pr.Xopt=4, R.pr.Yopt=10,
-    R.tas.Xmin=285, R.tas.Xmax=305, R.tas.Xopt=295, R.tas.Yopt=1)
-{
+    R.tas.Xmin=285, R.tas.Xmax=305, R.tas.Xopt=295, R.tas.Yopt=1){
+    # Fonction qui calcule le nombre d'individus attendus
+    # Variables: 
+    #           K.pr: parametres pour la fonction K=f(precipitation)
+    #           R.pr: parametres pour la fonction R=f(precipitation)
+    #           R.tas: parametres pour la fonction R=f(temperature)
+
     
+    # Affectation des valeurs pour la migration, 
+    # le temps de developpement et le temps de generation
     dispersionRate = .025;dispersionDistance=300;      
     generationTime = ceiling(25/10);
     generationTimeSD=ceiling(3/10);    
@@ -574,9 +525,7 @@ expectedInd <- function(
     # Matrice des individus à l'intérieur des mais.
     larveSizes <- array(0,dim=c(nrow(EnvData2),length(Dates)),dimnames = list(1:nrow(EnvData2),as.character(Dates)))
     
-    #
-    # building migration matrix
-    #
+    # Matrice de migration
     migrationMatrix = Matrix(0, nrow = dim(distMat)[1], ncol = dim(distMat)[2], sparse = TRUE)
     ind1 = which((distMat != 0) & (distMat < dispersionDistance))
     ind2 = which(distMat == 0)
@@ -584,19 +533,17 @@ expectedInd <- function(
     migrationMatrix[ind1] = dispersionRate
     migrationMatrix[ind2] = 1-dispersionRate*4
     
-    #
-    # probability density of generation time inthe interval [mean-3SD,mean+3SD]
-    #
+    # Densite de probabilite du temps de generation dans un intervalle
     generationTimeInterval <- (generationTime-generationTimeSD):(generationTime+generationTimeSD)
     generationTimeDensity <- dnorm(generationTimeInterval,generationTime,generationTimeSD)
     
     dvlpTimeInterval <- (dvlpTime-dvlpTimeSD):(dvlpTime+dvlpTimeSD)
     dvlpTimeDensity <- dnorm(dvlpTimeInterval,dvlpTime,dvlpTimeSD)
     
-    # construction of likelihood with expected recovery
-    for (i in 2:(ncol(larveSizes)-max(generationTimeInterval))) # Date = colnames(demeSizes)[1]
+    # Calcul du nombre d'individus attendus en fonction des parametres
+    for (i in 2:(ncol(larveSizes)-max(generationTimeInterval))) 
     {
-        
+        # Calcul des parametres K et R en fonction des parametres et de la precipitation + temperature
         R.tasmin <- conquadraticSkewed1(EnvData2[,i,"tasmin"], R.tas.Xmin, R.tas.Xmax, R.tas.Xopt, R.tas.Yopt)
         R.tasmax <- conquadraticSkewed1(EnvData2[,i,"tasmax"], R.tas.Xmin, R.tas.Xmax, R.tas.Xopt, R.tas.Yopt)
         R.pr <- conquadraticSkewed1(EnvData2[,i,"pr"], R.pr.Xmin, R.pr.Xmax, R.pr.Xopt, R.pr.Yopt)
@@ -635,31 +582,37 @@ expectedInd <- function(
         tempsVie = 2
         if(i+max(generationTimeInterval)+tempsVie <= dim(parentSizes)[2]){
             parentSizes[,i+tempsVie+generationTimeInterval] = parentSizes[,i+tempsVie+generationTimeInterval] - outer(nbNaissancesOld,generationTimeDensity,"*")
-        }
-        
+        } 
     }
-    
     return(larveSizes)
 }
 
 buildDataSet <- function() {
+    # Fonction qui simule un recovery (pour des tests de convergence)
+
+    # Calcul des valeurs possibles avec la meme fonction que pour la likelihood
     possibleData = expectedInd(K.pr.Xmin=0.5, K.pr.Xmax=10, K.pr.Xopt=4, K.pr.Yopt=20,
                                R.pr.Xmin=0.5, R.pr.Xmax=10, R.pr.Xopt=4, R.pr.Yopt=10,
                                R.tas.Xmin=285, R.tas.Xmax=305, R.tas.Xopt=295, R.tas.Yopt=1)
     
+    # Nombre de donnees a calculer
     nbData = 1200
 
+    # On pioche certains demes et certaines dates
     choiceDate = sample(1:(length(Dates)-5), nbData, replace=TRUE, prob=NULL)
     choiceDeme = sample(1:dim(EnvData2)[1], nbData, replace=TRUE, prob=NULL)
     
+    # On forme les couples (deme,date)
     pData = NULL
     for(i in 1:nbData) {
         pData = rbind(pData, possibleData[choiceDeme[i], choiceDate[i]]) 
     }
     
+    # On calcule le nombre d'individus
     sizes = rpois(nbData, pData)
     dates = colnames(possibleData[,choiceDate])
     
+    # On transforme les integers de dates en vraies dates
     dataSet = cbind.data.frame(as.Date(dates),as.numeric(sizes),as.integer(choiceDeme))
     colnames(dataSet) = c("birthDate", "size", "demeNb")
     

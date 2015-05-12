@@ -23,28 +23,37 @@ ParallelGibbs <- function(n=5, nbPar=12, files=FALSE) {
     #
     # Si files est TRUE, on reprend depuis les derniers parametres
     if(files == TRUE) {
-        readF = as.numeric(read.table(file="PARAMFROID.txt",header=TRUE))
-        readC = as.numeric(read.table(file="PARAMCHAUD.txt",header=TRUE))
+        readF = read.table(file="PARAMFROID.txt",header=TRUE)
+        readC = read.table(file="PARAMCHAUD.txt",header=TRUE)
         
-        startF = readF[,(1:nbPar)] 
-        startC = readC[,(1:nbPar)] 
+        startF = readF[,(1:nbPar)]
+        startC = readC[,(1:nbPar)]
         postF = readF[,(nbPar+1)]
         postC = readC[,(nbPar+1)]
         
-        ndvC = c(ndvC,startC)
-        ndvF = c(ndvF,startF)
-        ndpC = c(ndpC,postC)
-        ndpF = c(ndpF,postF)
+        ndvC = rbind(ndvC,startC)
+        ndvF = rbind(ndvF,startF)
+        ndpC = rbind(ndpC,postC)
+        ndpF = rbind(ndpF,postF)
 
         nbLines = dim(readF)[1]
-        startF = startF[nbLines,]
-        startC = startC[nbLines,]
+        startF = as.numeric(startF[nbLines,])
+        startC = as.numeric(startC[nbLines,])
         recovery2 = readRDS("PARAM_recovery.RData")
 
         allStartC = rbind(allStartC, read.table("ALLCHAUD_param.txt", header=TRUE, sep=" "))
         allPostC = rbind(allPostC, read.table("ALLCHAUD_post.txt", header=TRUE, sep=" "))
         allStartF = rbind(allStartF, read.table("ALLFROID_param.txt", header=TRUE, sep=" "))
         allPostF = rbind(allPostF, read.table("ALLFROID_post.txt", header=TRUE, sep=" "))
+
+        # header=c("K.pr.Xmin", "K.pr.Xmax", "K.pr.Xopt", "K.pr.Yopt",
+        #          "R.pr.Xmin", "R.pr.Xmax", "R.pr.Xopt", "R.pr.Yopt",
+        #          "R.tas.Xmin", "R.tas.Xmax", "R.tas.Xopt", "R.tas.Yopt")
+
+        # colnames(allStartC) = header
+        # colnames(allStartF) = header
+        # colnames(allPostC) = header
+        # colnames(allPostF) = header
         
         # Sinon, on part de nouveaux parametres
     } else {
@@ -59,14 +68,15 @@ ParallelGibbs <- function(n=5, nbPar=12, files=FALSE) {
         write(header, file="PARAMCHAUD.txt", ncolumns=nbPar+1, append=FALSE)
         saveRDS(recovery2, "PARAM_recovery.RData")
         
-        header=c("K.pr.Xmin", "K.pr.Xmax", "K.pr.Xopt", "K.pr.Yopt",
+        header=cbind("K.pr.Xmin", "K.pr.Xmax", "K.pr.Xopt", "K.pr.Yopt",
                  "R.pr.Xmin", "R.pr.Xmax", "R.pr.Xopt", "R.pr.Yopt",
                  "R.tas.Xmin", "R.tas.Xmax", "R.tas.Xopt", "R.tas.Yopt")
-        write.table(allStartF, file="ALLFROID_param.txt", append=FALSE, col.names=FALSE, row.names=FALSE, sep=" ")
-        write.table(allStartC, file="ALLCHAUD_param.txt", append=FALSE, col.names=FALSE, row.names=FALSE, sep=" ")
+
+        write.table(header, file="ALLFROID_param.txt", append=FALSE, col.names=FALSE, row.names=FALSE, sep=" ")
+        write.table(header, file="ALLCHAUD_param.txt", append=FALSE, col.names=FALSE, row.names=FALSE, sep=" ")
         
-        write.table(allPostF, file="ALLFROID_post.txt", append=FALSE, col.names=FALSE, row.names=FALSE, sep=" ")
-        write.table(allPostC, file="ALLCHAUD_post.txt", append=FALSE, col.names=FALSE, row.names=FALSE, sep=" ")
+        write.table(header, file="ALLFROID_post.txt", append=FALSE, col.names=FALSE, row.names=FALSE, sep=" ")
+        write.table(header, file="ALLCHAUD_post.txt", append=FALSE, col.names=FALSE, row.names=FALSE, sep=" ")
 
     }
     start = rbind(startF, startC)
@@ -75,8 +85,8 @@ ParallelGibbs <- function(n=5, nbPar=12, files=FALSE) {
     #
     # NOMBRE ITERATION POUR CHAQUE CHAINE
     #
-    indiceF = 250 
-    indiceC = 250
+    indiceF = 500 
+    indiceC = 500
     indice = rbind(indiceF, indiceC)
     
     ##########################
@@ -127,8 +137,8 @@ ParallelGibbs <- function(n=5, nbPar=12, files=FALSE) {
         start = rbind(startF, startC)
         
         # Ecriture des fichiers a la suite
-        write(c(startF,postF), file="PARAMFROID.txt", ncolumns=nbPar, append=TRUE)
-        write(c(startC,postC), file="PARAMCHAUD.txt", ncolumns=nbPar, append=TRUE)
+        write(c(startF,postF), file="PARAMFROID.txt", ncolumns=nbPar+1, append=TRUE)
+        write(c(startC,postC), file="PARAMCHAUD.txt", ncolumns=nbPar+1, append=TRUE)
 
         write.table(allSF, file="ALLFROID_param.txt", append=TRUE, col.names=FALSE, row.names=FALSE, sep=" ")
         write.table(allSC, file="ALLCHAUD_param.txt", append=TRUE, col.names=FALSE, row.names=FALSE, sep=" ")
@@ -137,12 +147,21 @@ ParallelGibbs <- function(n=5, nbPar=12, files=FALSE) {
         write.table(allPC, file="ALLCHAUD_post.txt", append=TRUE, col.names=FALSE, row.names=FALSE, sep=" ")
 
         # Recuperation des start et post pour le max
-        ndvC = cbind(ndvC,startC)
-        ndvF = cbind(ndvF,startF)
-        ndpC = cbind(ndpC,postC)
-        ndpF = cbind(ndpF,postF)
+        ndvC = rbind(ndvC,startC)
+        ndvF = rbind(ndvF,startF)
+        ndpC = rbind(ndpC,postC)
+        ndpF = rbind(ndpF,postF)
 
         # Recuperation de toutes les valeurs de parametres et posteriors
+        header=c("K.pr.Xmin", "K.pr.Xmax", "K.pr.Xopt", "K.pr.Yopt",
+                 "R.pr.Xmin", "R.pr.Xmax", "R.pr.Xopt", "R.pr.Yopt",
+                 "R.tas.Xmin", "R.tas.Xmax", "R.tas.Xopt", "R.tas.Yopt")
+
+        colnames(allSC) = header
+        colnames(allPC) = header
+        colnames(allSF) = header
+        colnames(allPF) = header
+
         allStartC = rbind(allStartC,allSC)
         allPostC = rbind(allPostC,allPC)
         allStartF = rbind(allStartF,allSF)

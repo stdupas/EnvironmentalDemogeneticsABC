@@ -45,15 +45,6 @@ ParallelGibbs <- function(n=5, nbPar=12, files=FALSE) {
         allPostC = rbind(allPostC, read.table("ALLCHAUD_post.txt", header=TRUE, sep=" "))
         allStartF = rbind(allStartF, read.table("ALLFROID_param.txt", header=TRUE, sep=" "))
         allPostF = rbind(allPostF, read.table("ALLFROID_post.txt", header=TRUE, sep=" "))
-
-        # header=c("K.pr.Xmin", "K.pr.Xmax", "K.pr.Xopt", "K.pr.Yopt",
-        #          "R.pr.Xmin", "R.pr.Xmax", "R.pr.Xopt", "R.pr.Yopt",
-        #          "R.tas.Xmin", "R.tas.Xmax", "R.tas.Xopt", "R.tas.Yopt")
-
-        # colnames(allStartC) = header
-        # colnames(allStartF) = header
-        # colnames(allPostC) = header
-        # colnames(allPostF) = header
         
         # Sinon, on part de nouveaux parametres
     } else {

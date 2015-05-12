@@ -5,16 +5,46 @@ ParallelGibbs <- function(n=5, nbPar=12, files=FALSE) {
     
     ##########################
     #
+    # DECLARATION DES VARIABLES A STOCKER
+    #
+    ndvC = NULL
+    ndvF = NULL
+    ndpC = NULL
+    ndpF = NULL
+
+    allStartC = NULL
+    allPostC = NULL
+    allStartF = NULL
+    allPostF = NULL
+
+    ##########################
+    #
     # PARAMETRES DE DEPART
     #
     # Si files est TRUE, on reprend depuis les derniers parametres
     if(files == TRUE) {
-        startF = read.table(file="PARAMFROID.txt",header=TRUE)
-        startC = read.table(file="PARAMCHAUD.txt",header=TRUE)
-        nbLines = dim(startF)[1]
+        readF = as.numeric(read.table(file="PARAMFROID.txt",header=TRUE))
+        readC = as.numeric(read.table(file="PARAMCHAUD.txt",header=TRUE))
+        
+        startF = readF[,(1:nbPar)] 
+        startC = readC[,(1:nbPar)] 
+        postF = readF[,(nbPar+1)]
+        postC = readC[,(nbPar+1)]
+        
+        ndvC = c(ndvC,startC)
+        ndvF = c(ndvF,startF)
+        ndpC = c(ndpC,postC)
+        ndpF = c(ndpF,postF)
+
+        nbLines = dim(readF)[1]
         startF = startF[nbLines,]
         startC = startC[nbLines,]
         recovery2 = readRDS("PARAM_recovery.RData")
+
+        allStartC = rbind(allStartC, read.table("ALLCHAUD_param.txt", header=TRUE, sep=" "))
+        allPostC = rbind(allPostC, read.table("ALLCHAUD_post.txt", header=TRUE, sep=" "))
+        allStartF = rbind(allStartF, read.table("ALLFROID_param.txt", header=TRUE, sep=" "))
+        allPostF = rbind(allPostF, read.table("ALLFROID_post.txt", header=TRUE, sep=" "))
         
         # Sinon, on part de nouveaux parametres
     } else {
@@ -24,10 +54,20 @@ ParallelGibbs <- function(n=5, nbPar=12, files=FALSE) {
         # startC = c(0.5, 10, 4, 20, 0.5, 10, 4, 10, 285, 305, 295, 1)
         header=c("K.pr.Xmin", "K.pr.Xmax", "K.pr.Xopt", "K.pr.Yopt",
                  "R.pr.Xmin", "R.pr.Xmax", "R.pr.Xopt", "R.pr.Yopt",
-                 "R.tas.Xmin", "R.tas.Xmax", "R.tas.Xopt", "R.tas.Yopt")
-        write(header, file="PARAMFROID.txt", ncolumns=nbPar, append=FALSE)
-        write(header, file="PARAMCHAUD.txt", ncolumns=nbPar, append=FALSE)
+                 "R.tas.Xmin", "R.tas.Xmax", "R.tas.Xopt", "R.tas.Yopt", "posteriors")
+        write(header, file="PARAMFROID.txt", ncolumns=nbPar+1, append=FALSE)
+        write(header, file="PARAMCHAUD.txt", ncolumns=nbPar+1, append=FALSE)
         saveRDS(recovery2, "PARAM_recovery.RData")
+        
+        header=c("K.pr.Xmin", "K.pr.Xmax", "K.pr.Xopt", "K.pr.Yopt",
+                 "R.pr.Xmin", "R.pr.Xmax", "R.pr.Xopt", "R.pr.Yopt",
+                 "R.tas.Xmin", "R.tas.Xmax", "R.tas.Xopt", "R.tas.Yopt")
+        write.table(allStartF, file="ALLFROID_param.txt", append=FALSE, col.names=FALSE, row.names=FALSE, sep=" ")
+        write.table(allStartC, file="ALLCHAUD_param.txt", append=FALSE, col.names=FALSE, row.names=FALSE, sep=" ")
+        
+        write.table(allPostF, file="ALLFROID_post.txt", append=FALSE, col.names=FALSE, row.names=FALSE, sep=" ")
+        write.table(allPostC, file="ALLCHAUD_post.txt", append=FALSE, col.names=FALSE, row.names=FALSE, sep=" ")
+
     }
     start = rbind(startF, startC)
     
@@ -35,8 +75,8 @@ ParallelGibbs <- function(n=5, nbPar=12, files=FALSE) {
     #
     # NOMBRE ITERATION POUR CHAQUE CHAINE
     #
-    indiceF = 500 
-    indiceC = 500
+    indiceF = 250 
+    indiceC = 250
     indice = rbind(indiceF, indiceC)
     
     ##########################
@@ -55,15 +95,6 @@ ParallelGibbs <- function(n=5, nbPar=12, files=FALSE) {
     
     ##########################
     #
-    # DECLARATION DES VARIABLES A STOCKER
-    #
-    ndvC = NULL
-    ndvF = NULL
-    ndpC = NULL
-    ndpF = NULL
-    
-    ##########################
-    #
     # DEBUT DU GIBBS SAMPLING 
     #
     for(i in 1:n) {
@@ -75,9 +106,14 @@ ParallelGibbs <- function(n=5, nbPar=12, files=FALSE) {
         }
         
         postF = res[[2]]
-        postC = res[[4]]
+        postC = res[[6]]
         paramF = res[[1]]
-        paramC = res[[3]]
+        paramC = res[[5]]
+
+        allSC = res[[7]]
+        allPC = res[[8]]
+        allSF = res[[3]]
+        allPF = res[[4]]
         
         if(postF > postC) {
             startC = paramF
@@ -87,16 +123,30 @@ ParallelGibbs <- function(n=5, nbPar=12, files=FALSE) {
             startC = paramC
             startF = paramF
         }
-        
-        write(startF, file="PARAMFROID.txt",ncolumns=nbPar, append=TRUE)
-        write(startC, file="PARAMCHAUD.txt",ncolumns=nbPar, append=TRUE)
-        
+
         start = rbind(startF, startC)
         
+        # Ecriture des fichiers a la suite
+        write(c(startF,postF), file="PARAMFROID.txt", ncolumns=nbPar, append=TRUE)
+        write(c(startC,postC), file="PARAMCHAUD.txt", ncolumns=nbPar, append=TRUE)
+
+        write.table(allSF, file="ALLFROID_param.txt", append=TRUE, col.names=FALSE, row.names=FALSE, sep=" ")
+        write.table(allSC, file="ALLCHAUD_param.txt", append=TRUE, col.names=FALSE, row.names=FALSE, sep=" ")
+        
+        write.table(allPF, file="ALLFROID_post.txt", append=TRUE, col.names=FALSE, row.names=FALSE, sep=" ")
+        write.table(allPC, file="ALLCHAUD_post.txt", append=TRUE, col.names=FALSE, row.names=FALSE, sep=" ")
+
+        # Recuperation des start et post pour le max
         ndvC = cbind(ndvC,startC)
         ndvF = cbind(ndvF,startF)
         ndpC = cbind(ndpC,postC)
         ndpF = cbind(ndpF,postF)
+
+        # Recuperation de toutes les valeurs de parametres et posteriors
+        allStartC = rbind(allStartC,allSC)
+        allPostC = rbind(allPostC,allPC)
+        allStartF = rbind(allStartF,allSF)
+        allPostF = rbind(allPostF,allPF)
         
         cat(i,": fin\n")
     }
@@ -145,6 +195,9 @@ oneChainGibbs <- function(start, scale, nbPar, indice, thining) {
     
     maxProb = post0
     maxParam = start
+
+    allStart = array(0, dim = c(indice, nbPar))
+    allPost = array(0, dim = c(indice, nbPar))
     
     for(i in 1:indice){
         cat("\n", i, ":")
@@ -174,7 +227,13 @@ oneChainGibbs <- function(start, scale, nbPar, indice, thining) {
             t = runif(1) < min(1,exp(post1 - post0))
             # Si t = 1, on garde les nouvelles valeurs, sinon on garde les anciennes valeurs
             start0[j] = start1[j] *(t==1) + start0[j] *(t==0)
-            post0 = post1 * (t==1) + post0 * (t == 0)          
+            post0 = post1 * (t==1) + post0 * (t == 0)
+
+            #####################
+            ##
+            ## On garde toutes les valeurs de post et start
+            allStart[i,j] = start0[j]
+            allPost[i,j] = post0         
             
             # On garde les valeurs avec le meilleur posterior
             if((i%%thining == 0) && (maxProb < post0)) {
@@ -183,5 +242,5 @@ oneChainGibbs <- function(start, scale, nbPar, indice, thining) {
             }
         }  
     }
-    return(list(maxParam,maxProb))
+    return(list(maxParam,maxProb,allStart,allPost))
 }

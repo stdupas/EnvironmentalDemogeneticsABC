@@ -513,11 +513,17 @@ expectedInd <- function(
     # Affectation des valeurs pour la migration, 
     # le temps de developpement et le temps de generation
     dispersionRate = .025;dispersionDistance=300;      
+    
     generationTime = ceiling(25/10);
     generationTimeSD=ceiling(3/10);    
     dvlpTime=1+ceiling(5/10);
     dvlpTimeSD=1;
     
+    # generationTime = 25;
+    # generationTimeSD = 3;    
+    # dvlpTime= 5;
+    # dvlpTimeSD=1;
+
     # Matrice contenant les individus à l'extérieur des mais.
     parentSizes <- array(0,dim=c(nrow(EnvData2),length(Dates)),dimnames = list(1:nrow(EnvData2),as.character(Dates)))
     parentSizes[,as.character(birthDates)] <- 1

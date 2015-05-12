@@ -169,7 +169,7 @@ ParallelGibbs <- function(n=5, nbPar=12, files=FALSE) {
         
         cat(i,": fin\n")
     }
-    return(list(ndvC,ndpC,ndvF,ndpF))
+    return(list(ndvC,ndpC,ndvF,ndpF,allStartC,allPostC,allStartF,allPostF))
 }
 
 

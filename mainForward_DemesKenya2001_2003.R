@@ -38,8 +38,8 @@ library(doParallel)
 
 ########### Parameters initialisation  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-#EnvDataRasterStack = nc2EnvDataAndRasterStack(ncDirectory="/Users/Stagiaire/ForwardSimulData/",aggregationParam=40)
-EnvDataRasterStack = readRDS("/Users/Stagiaire/ForwardSimulData/ObjectEnvdataRasterStack")
+#EnvDataRasterStack = nc2EnvDataAndRasterStack(ncDirectory="../ForwardSimulData/",aggregationParam=40)
+EnvDataRasterStack = readRDS("../ForwardSimulData/ObjectEnvdataRasterStackAggr40")
 rasterStack <- EnvDataRasterStack[[2]]
 EnvData <- EnvDataRasterStack[[1]]
 rm(EnvDataRasterStack)
@@ -54,7 +54,7 @@ release$demeNb <-  cellFromXY(object = rasterStack, xy = release[, c("x", "y")])
 #release <- aggregation(release,BY=c("birthDate","demeNb"),methodes=c("Mean","Mean","Name","Sum","Name"))
 
 ###### recovery data 
-recovery <- read.csv("/Users/Stagiaire/ForwardSimulData/Stemborer_Kenya2001_2005.csv", header = TRUE, sep = ";")
+recovery <- read.csv("../ForwardSimulData/Stemborer_Kenya2001_2005.csv", header = TRUE, sep = ";")
 recovery <- recovery[,c("Long_dec","Lat_dec","Diss_Date","B._fusca", "no._plants")]
 recovery = recovery[-which(is.na(recovery$no._plants)),]
 recovery$B._fusca = as.numeric(recovery$B._fusca)/recovery$no._plants

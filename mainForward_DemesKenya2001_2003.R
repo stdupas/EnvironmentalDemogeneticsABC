@@ -167,3 +167,5 @@ plotParallelGibbs <- function(a=a,obj=1) {
         points(a[[obj+2]][1,], t="l", col="navyblue")
     }
 }
+
+plotAllValues <- function(a=a,obj=1)

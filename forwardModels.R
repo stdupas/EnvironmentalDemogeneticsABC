@@ -489,7 +489,7 @@ likelihoodShortTest <- function(
     
     # Si recovery est > 0 et si result est egal à 0, dpois retourne -Inf
     # Il faut donc convertir les 0 de result en 0.0001 (ou autre different de 0)
-    result[which(result == 0)] = 0.0001
+    result[which(result <= 0)] = 0.0001
     result[is.nan(result)] = 0.0001
     
     # Si recovery n'est pas un integer, dpois retourne -Inf

@@ -169,56 +169,58 @@ plotParallelGibbs <- function(a=a,obj=1) {
     }
 }
 
-plotAllValues <- function(a=a) {
+plotAllValues <- function(a=a,burning=0) {
         obj=1
+
+        intervalle = c(1:burning)
 
         par(mfrow=c(2,2))
         plot(a[[obj+4]][,1], t="l",ylab="K.pr.Xmin", xlab="Iteration",col="orange")
-        hist(a[[obj+4]][,1],prob=TRUE,xlab="K.pr.Xmin",breaks=50,main="")
-        lines(density(a[[obj+4]][,1]),col="red")
+        hist(a[[obj+4]][-intervalle,1],prob=TRUE,xlab="K.pr.Xmin",breaks=50,main="")
+        lines(density(a[[obj+4]][-intervalle,1]),col="red")
 
         plot(a[[obj+4]][,5],t="l",ylab="R.pr.Xmin", xlab="Iteration",col="orange")
-        hist(a[[obj+4]][,5],prob=TRUE,xlab="R.pr.Xmin",breaks=50,main="")
-        lines(density(a[[obj+4]][,5]),col="red")
+        hist(a[[obj+4]][-intervalle,5],prob=TRUE,xlab="R.pr.Xmin",breaks=50,main="")
+        lines(density(a[[obj+4]][-intervalle,5]),col="red")
 
         plot(a[[obj+4]][,2],t="l",ylab="K.pr.Xmax", xlab="Iteration",col="orange")
-        hist(a[[obj+4]][,2],prob=TRUE,xlab="K.pr.Xmax",breaks=50,main="")
-        lines(density(a[[obj+4]][,2]),col="red")
+        hist(a[[obj+4]][-intervalle,2],prob=TRUE,xlab="K.pr.Xmax",breaks=50,main="")
+        lines(density(a[[obj+4]][-intervalle,2]),col="red")
         
         plot(a[[obj+4]][,6],t="l",ylab="R.pr.Xmax", xlab="Iteration",col="orange")
-        hist(a[[obj+4]][,6],prob=TRUE,xlab="R.pr.Xmax",breaks=50,main="")
-        lines(density(a[[obj+4]][,6]),col="red")
+        hist(a[[obj+4]][-intervalle,6],prob=TRUE,xlab="R.pr.Xmax",breaks=50,main="")
+        lines(density(a[[obj+4]][-intervalle,6]),col="red")
         
         plot(a[[obj+4]][,3],t="l",ylab="K.pr.Xopt", xlab="Iteration",col="orange")
-        hist(a[[obj+4]][,3],prob=TRUE,xlab="K.pr.Xopt",breaks=50,main="")
-        lines(density(a[[obj+4]][,3]),col="red")
+        hist(a[[obj+4]][-intervalle,3],prob=TRUE,xlab="K.pr.Xopt",breaks=50,main="")
+        lines(density(a[[obj+4]][-intervalle,3]),col="red")
         
         plot(a[[obj+4]][,7],t="l",ylab="R.pr.Xopt", xlab="Iteration",col="orange")
-        hist(a[[obj+4]][,7],prob=TRUE,xlab="R.pr.Xopt",breaks=50,main="")
-        lines(density(a[[obj+4]][,7]),col="red")
+        hist(a[[obj+4]][-intervalle,7],prob=TRUE,xlab="R.pr.Xopt",breaks=50,main="")
+        lines(density(a[[obj+4]][-intervalle,7]),col="red")
         
         plot(a[[obj+4]][,4],t="l",ylab="K.pr.Yopt", xlab="Iteration",col="orange")
-        hist(a[[obj+4]][,4],prob=TRUE,xlab="K.pr.Yopt",breaks=50,main="")
-        lines(density(a[[obj+4]][,4]),col="red")
+        hist(a[[obj+4]][-intervalle,4],prob=TRUE,xlab="K.pr.Yopt",breaks=50,main="")
+        lines(density(a[[obj+4]][-intervalle,4]),col="red")
         
         plot(a[[obj+4]][,8],t="l",ylab="R.pr.Yopt", xlab="Iteration",col="orange")
-        hist(a[[obj+4]][,8],prob=TRUE,xlab="R.pr.Yopt",breaks=50,main="")
-        lines(density(a[[obj+4]][,8]),col="red")
+        hist(a[[obj+4]][-intervalle,8],prob=TRUE,xlab="R.pr.Yopt",breaks=50,main="")
+        lines(density(a[[obj+4]][-intervalle,8]),col="red")
         
         plot(a[[obj+4]][,9],t="l",ylab="R.tas.Xmin", xlab="Iteration",col="orange")
-        hist(a[[obj+4]][,9],prob=TRUE,xlab="R.tas.Xmin",breaks=50,main="")
-        lines(density(a[[obj+4]][,9]),col="red")
+        hist(a[[obj+4]][-intervalle,9],prob=TRUE,xlab="R.tas.Xmin",breaks=50,main="")
+        lines(density(a[[obj+4]][-intervalle,9]),col="red")
         
         plot(a[[obj+4]][,10],t="l",ylab="R.tas.Xmax", xlab="Iteration",col="orange")
-        hist(a[[obj+4]][,10],prob=TRUE,xlab="R.tas.Xmax",breaks=50,main="")
-        lines(density(a[[obj+4]][,10]),col="red")
+        hist(a[[obj+4]][-intervalle,10],prob=TRUE,xlab="R.tas.Xmax",breaks=50,main="")
+        lines(density(a[[obj+4]][-intervalle,10]),col="red")
         
         plot(a[[obj+4]][,11],t="l",ylab="R.tas.Xopt", xlab="Iteration",col="orange")
-        hist(a[[obj+4]][,11],prob=TRUE,xlab="R.tas.Xopt",breaks=50,main="")
-        lines(density(a[[obj+4]][,11]),col="red")
+        hist(a[[obj+4]][-intervalle,11],prob=TRUE,xlab="R.tas.Xopt",breaks=50,main="")
+        lines(density(a[[obj+4]][-intervalle,11]),col="red")
         
         plot(a[[obj+4]][,12],t="l",ylab="R.tas.Yopt", xlab="Iteration",col="orange")
-        hist(a[[obj+4]][,12],prob=TRUE,xlab="R.tas.Yopt",breaks=50,main="")
-        lines(density(a[[obj+4]][,12]),col="red")
+        hist(a[[obj+4]][-intervalle,12],prob=TRUE,xlab="R.tas.Yopt",breaks=50,main="")
+        lines(density(a[[obj+4]][-intervalle,12]),col="red")
 
 }

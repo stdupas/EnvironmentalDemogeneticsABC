@@ -122,50 +122,103 @@ LimiteLikelihood <- function(){
 }
 
 plotParallelGibbs <- function(a=a,obj=1) {
+    # obj=1 pour plot les parametres, obj=2 pour plot les posteriors
     if(obj==1) {
         par(mfrow=c(2,2))
-        plot(a[[obj]][1,],t="l",ylab="K.pr.Xmin", xlab="Iteration",col="orange",ylim=c(0,2))
-        points(a[[obj+2]][1,],t="l",col="navyblue")
+        plot(a[[obj]][,1],t="l",ylab="K.pr.Xmin", xlab="Iteration",col="orange",ylim=c(0,2))
+        points(a[[obj+2]][,1],t="l",col="navyblue")
         
-        plot(a[[obj]][5,],t="l",ylab="R.pr.Xmin", xlab="Iteration",col="orange",ylim=c(0,2))
-        points(a[[obj+2]][5,],t="l",col="navyblue")        
+        plot(a[[obj]][,5],t="l",ylab="R.pr.Xmin", xlab="Iteration",col="orange",ylim=c(0,2))
+        points(a[[obj+2]][,5],t="l",col="navyblue")        
         
-        plot(a[[obj]][2,],t="l",ylab="K.pr.Xmax", xlab="Iteration",col="orange",ylim=c(5,15))
-        points(a[[obj+2]][2,],t="l",col="navyblue")
+        plot(a[[obj]][,2],t="l",ylab="K.pr.Xmax", xlab="Iteration",col="orange",ylim=c(5,15))
+        points(a[[obj+2]][,2],t="l",col="navyblue")
         
-        plot(a[[obj]][6,],t="l",ylab="R.pr.Xmax", xlab="Iteration",col="orange",ylim=c(5,15))
-        points(a[[obj+2]][6,],t="l",col="navyblue")
+        plot(a[[obj]][,6],t="l",ylab="R.pr.Xmax", xlab="Iteration",col="orange",ylim=c(5,15))
+        points(a[[obj+2]][,6],t="l",col="navyblue")
         
-        plot(a[[obj]][3,],t="l",ylab="K.pr.Xopt", xlab="Iteration",col="orange",ylim=c(2,8))
-        points(a[[obj+2]][3,],t="l",col="navyblue")
+        plot(a[[obj]][,3],t="l",ylab="K.pr.Xopt", xlab="Iteration",col="orange",ylim=c(2,8))
+        points(a[[obj+2]][,3],t="l",col="navyblue")
         
-        plot(a[[obj]][7,],t="l",ylab="R.pr.Xopt", xlab="Iteration",col="orange",ylim=c(2,8))
-        points(a[[obj+2]][7,],t="l",col="navyblue")
+        plot(a[[obj]][,7],t="l",ylab="R.pr.Xopt", xlab="Iteration",col="orange",ylim=c(2,8))
+        points(a[[obj+2]][,7],t="l",col="navyblue")
         
-        plot(a[[obj]][4,],t="l",ylab="K.pr.Yopt", xlab="Iteration",col="orange",ylim=c(15,25))
-        points(a[[obj+2]][4,],t="l",col="navyblue")
+        plot(a[[obj]][,4],t="l",ylab="K.pr.Yopt", xlab="Iteration",col="orange",ylim=c(15,25))
+        points(a[[obj+2]][,4],t="l",col="navyblue")
         
-        plot(a[[obj]][8,],t="l",ylab="R.pr.Yopt", xlab="Iteration",col="orange",ylim=c(5,15))
-        points(a[[obj+2]][8,],t="l",col="navyblue")      
+        plot(a[[obj]][,8],t="l",ylab="R.pr.Yopt", xlab="Iteration",col="orange",ylim=c(5,15))
+        points(a[[obj+2]][,8],t="l",col="navyblue")      
         
-        plot(a[[obj]][9,],t="l",ylab="R.tas.Xmin", xlab="Iteration",col="orange",ylim=c(270,295))
-        points(a[[obj+2]][9,],t="l",col="navyblue")
+        plot(a[[obj]][,9],t="l",ylab="R.tas.Xmin", xlab="Iteration",col="orange",ylim=c(270,295))
+        points(a[[obj+2]][,9],t="l",col="navyblue")
         
-        plot(a[[obj]][10,],t="l",ylab="R.tas.Xmax", xlab="Iteration",col="orange",ylim=c(295,315))
-        points(a[[obj+2]][10,],t="l",col="navyblue")
+        plot(a[[obj]][,10],t="l",ylab="R.tas.Xmax", xlab="Iteration",col="orange",ylim=c(295,315))
+        points(a[[obj+2]][,10],t="l",col="navyblue")
         
-        plot(a[[obj]][11,],t="l",ylab="R.tas.Xopt", xlab="Iteration",col="orange",ylim=c(285,305))
-        points(a[[obj+2]][11,],t="l",col="navyblue")
+        plot(a[[obj]][,11],t="l",ylab="R.tas.Xopt", xlab="Iteration",col="orange",ylim=c(285,305))
+        points(a[[obj+2]][,11],t="l",col="navyblue")
         
-        plot(a[[obj]][12,],t="l",ylab="R.tas.Yopt", xlab="Iteration",col="orange",ylim=c(0,2))
-        points(a[[obj+2]][12,],t="l",col="navyblue") 
+        plot(a[[obj]][,12],t="l",ylab="R.tas.Yopt", xlab="Iteration",col="orange",ylim=c(0,2))
+        points(a[[obj+2]][,12],t="l",col="navyblue") 
         
         
     } else {
         par(mfrow=c(1,1))
-        plot(a[[obj]][1,],t="l", ylab="posteriors", xlab="Iteration", col="orange", ylim=c(-1300,-700))
-        points(a[[obj+2]][1,], t="l", col="navyblue")
+        plot(a[[obj]][,1],t="l", ylab="posteriors", xlab="Iteration", col="orange", ylim=c(-1300,-700))
+        points(a[[obj+2]][,1], t="l", col="navyblue")
     }
 }
 
-plotAllValues <- function(a=a,obj=1)
+plotAllValues <- function(a=a) {
+        obj=1
+
+        par(mfrow=c(2,2))
+        plot(a[[obj+4]][,1], t="l",ylab="K.pr.Xmin", xlab="Iteration",col="orange")
+        hist(a[[obj+4]][,1],prob=TRUE,xlab="K.pr.Xmin",breaks=50,main="")
+        lines(density(a[[obj+4]][,1]),col="red")
+
+        plot(a[[obj+4]][,5],t="l",ylab="R.pr.Xmin", xlab="Iteration",col="orange")
+        hist(a[[obj+4]][,5],prob=TRUE,xlab="R.pr.Xmin",breaks=50,main="")
+        lines(density(a[[obj+4]][,5]),col="red")
+
+        plot(a[[obj+4]][,2],t="l",ylab="K.pr.Xmax", xlab="Iteration",col="orange")
+        hist(a[[obj+4]][,2],prob=TRUE,xlab="K.pr.Xmax",breaks=50,main="")
+        lines(density(a[[obj+4]][,2]),col="red")
+        
+        plot(a[[obj+4]][,6],t="l",ylab="R.pr.Xmax", xlab="Iteration",col="orange")
+        hist(a[[obj+4]][,6],prob=TRUE,xlab="R.pr.Xmax",breaks=50,main="")
+        lines(density(a[[obj+4]][,6]),col="red")
+        
+        plot(a[[obj+4]][,3],t="l",ylab="K.pr.Xopt", xlab="Iteration",col="orange")
+        hist(a[[obj+4]][,3],prob=TRUE,xlab="K.pr.Xopt",breaks=50,main="")
+        lines(density(a[[obj+4]][,3]),col="red")
+        
+        plot(a[[obj+4]][,7],t="l",ylab="R.pr.Xopt", xlab="Iteration",col="orange")
+        hist(a[[obj+4]][,7],prob=TRUE,xlab="R.pr.Xopt",breaks=50,main="")
+        lines(density(a[[obj+4]][,7]),col="red")
+        
+        plot(a[[obj+4]][,4],t="l",ylab="K.pr.Yopt", xlab="Iteration",col="orange")
+        hist(a[[obj+4]][,4],prob=TRUE,xlab="K.pr.Yopt",breaks=50,main="")
+        lines(density(a[[obj+4]][,4]),col="red")
+        
+        plot(a[[obj+4]][,8],t="l",ylab="R.pr.Yopt", xlab="Iteration",col="orange")
+        hist(a[[obj+4]][,8],prob=TRUE,xlab="R.pr.Yopt",breaks=50,main="")
+        lines(density(a[[obj+4]][,8]),col="red")
+        
+        plot(a[[obj+4]][,9],t="l",ylab="R.tas.Xmin", xlab="Iteration",col="orange")
+        hist(a[[obj+4]][,9],prob=TRUE,xlab="R.tas.Xmin",breaks=50,main="")
+        lines(density(a[[obj+4]][,9]),col="red")
+        
+        plot(a[[obj+4]][,10],t="l",ylab="R.tas.Xmax", xlab="Iteration",col="orange")
+        hist(a[[obj+4]][,10],prob=TRUE,xlab="R.tas.Xmax",breaks=50,main="")
+        lines(density(a[[obj+4]][,10]),col="red")
+        
+        plot(a[[obj+4]][,11],t="l",ylab="R.tas.Xopt", xlab="Iteration",col="orange")
+        hist(a[[obj+4]][,11],prob=TRUE,xlab="R.tas.Xopt",breaks=50,main="")
+        lines(density(a[[obj+4]][,11]),col="red")
+        
+        plot(a[[obj+4]][,12],t="l",ylab="R.tas.Yopt", xlab="Iteration",col="orange")
+        hist(a[[obj+4]][,12],prob=TRUE,xlab="R.tas.Yopt",breaks=50,main="")
+        lines(density(a[[obj+4]][,12]),col="red")
+
+}

@@ -31,14 +31,16 @@ library(lattice)
 library(parallel)
 library(lubridate) # of little use, should be removed (function "days()")
 library(RNetCDF) # to read NetCDF data (climate spatial time series)
-library("argosfilter")
+library(argosfilter)
 library(Matrix)
 library(foreach)
 library(doParallel)
 
 ########### Parameters initialisation  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
+#Lecture et aggregation des fichiers de données
 #EnvDataRasterStack = nc2EnvDataAndRasterStack(ncDirectory="../ForwardSimulData/",aggregationParam=40)
+#Lecture des données déjà aggrégées. Gain de temps
 EnvDataRasterStack = readRDS("../ForwardSimulData/ObjectEnvdataRasterStackAggr40")
 rasterStack <- EnvDataRasterStack[[2]]
 EnvData <- EnvDataRasterStack[[1]]
@@ -69,57 +71,37 @@ minDates = min(release$birthDate)
 maxDates = min(max(recovery$birthDate),max(as.Date(colnames(EnvData))))
 Dates <- as.Date(as.Date(minDates):as.Date(maxDates),origin="1970/01/01")
 
-dispersionModel= "fatTail1"
-
-nicheKFunctionList=list(pr="linearTreeParameters",
-                        tasmax="linearTreeParameters",
-                        tasmin="linearTreeParameters")
-nicheRFunctionList=list(pr="linearTreeParameters",
-                        tasmax="linearTreeParameters",
-                        tasmin="linearTreeParameters")
-
-#recovery_sim <- data.frame(individualNb=1:3000,
-#                       x=runif(3000,min=bbox(rasterStack)[1,1],
-#                               max=bbox(rasterStack)[1,2]),
-#                       y=runif(3000,min=bbox(rasterStack)[2,1],
-#                               max=bbox(rasterStack)[2,2]),
-#                       birthDate=as.Date("2001/01/01")+days(sample(100:730,3000,replace=TRUE)),
-#                       size=sample(1:10,3000,replace=TRUE)
-#                       )
-
+#Calcul de la distance en km entre deux demes à partir de leurs coordonées
 distMat <- distanceMatrixFromRaster2(object = rasterStack)
+
 demeSizes <- array(0,dim=c(nrow(EnvData),length(Dates)),dimnames = list(1:nrow(EnvData),as.character(Dates)))
 demeSizes[,as.character(birthDates)] <- 10
+#On récupère les dates d'interêt seulement.
 EnvData <- EnvData[,colnames(demeSizes),]
-
+#On fait la moyenne des precipitations sur les 15 derniers jours
 EnvData2 = computeMeanEnvData(EnvData, "pr", 15)
+
+#!!!!!!!!!!!!!!!!!!!!!!   POUR LES DONNEES REELLES, S'ARRETER ICI  !!!!!!!!!!!!!!!!!!!!!!!!!
+
+#Formatage pour données de test:
+#******************************
+
+#Aggregation des jours par 10
 EnvData2 = aggregateDays(EnvData2,10,Dates)
+#On ne garde qu'une date sur 10
 Dates = Dates[seq(10,length(Dates),by=10)]
+#On ne garde les birthdates qui sont présentes dans Dates
 tmp = birthDates %in% Dates
 birthDates = birthDates[which(tmp == TRUE)]
 
+#Création des données de test en lancant la fonction expectedInd sur des paramètres imposés.
 recovery2 = buildDataSet()
 
-LimiteLikelihood <- function(){
-    ############# Boucle de visualisation fastidieuse ###############
-    x = seq(33,37,0.1)
-    y = seq(8,12,0.1)
-    z = NULL
-    for ( i in 1: length(x)){
-        zbis = NULL
-        cat("\n", i, ": ")
-        for( j in 1: length(y)){
-            cat("*")
-            zbis = c(zbis, likelihoodShortTest(x[i], y[j]))
-        }
-        z = rbind(z, zbis)
-    }
-    zorder = rank(z)
-    library(rgl)
-    persp3d(x,y,z,col=rainbow(as.integer(max(zorder)))[zorder])
-    filled.contour(x,y,z, color.palette = heat.colors)
-    
-}
+
+
+
+#Fonctions de visualisation:
+#***************************
 
 plotParallelGibbs <- function(a=a,obj=1) {
     # obj=1 pour plot les parametres, obj=2 pour plot les posteriors

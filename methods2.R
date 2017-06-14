@@ -1,26 +1,12 @@
 setMethod(
-  f="getMatrix",
-  signature = "TransitionBackward",
-  definition = function(object){return(object@matrix)}
-)
-existsMethod(f="getMatrix",signature = "TransitionBackward")
-
-setMethod(
-  f="setMatrix",
-  signature = "TransitionBackward",
-  definition = function(object,matrix){
-    object@matrix<-matrix
-    return(object@matrix)}
-)
-
-setMethod(
   f = "laplaceMatrix",
   signature = "TransitionBackward",
   definition = function(object){
-    matrixD = diag(rep(1,dim(object@matrix)[1])) # diagonal equals to 1
-    laplacianMatrix = matrixD - object@matrix
+    matrixD = diag(rep(1,dim(object)[1])) # diagonal equals to 1
+    laplacianMatrix = matrixD - object
     laplacianMatrix[is.na(laplacianMatrix)]<-0 # replace NA by 0
-    cat("laplacian",laplacianMatrix)
+    #cat("laplacian",laplacianMatrix)
+    return(laplacianMatrix)
   }
 )
 
@@ -41,7 +27,7 @@ setMethod(
 
 
 setMethod(
-  f="commute_time_undigraph ",
+  f="commute_time_undigraph",
   signature = "TransitionBackward",
   definition = function(object){
     laplacian = laplaceMatrix(object)
@@ -62,11 +48,11 @@ setMethod(
   f="hitting_time_digraph",
   signature = "TransitionBackward",
   definition = function(object){
-    Ones <- rep(1,dim(getMatrix(object))[1])
-    markovB<-new("markovchain", states=dimnames(getMatrix(object))[[1]], transitionMatrix=getMatrix(object))
+    Ones <- rep(1,dim(object)[1])
+    markovB<-new("markovchain", states=dimnames(object)[[1]], transitionMatrix=object)
     pi_<-steadyStates(markovB)[1,]
     PI <- diag(pi_)
-    L <- PI - PI%*%getMatrix(object)
+    L <- PI - PI%*%object
     Z <- ginv(L + pi_%*%t(pi_))
     H <- Ones%*%t(diag(Z))-Z
     H
@@ -239,6 +225,189 @@ setMethod(
     if (Log) {log(p[rep("a",dim(X)[1]),colnames(X)]*X)} else {
       p[rep("a",dim(X)[1]),colnames(X)]*X
     }
+  }
+)
+
+
+setMethod(
+  f="linear",
+  signature = "",
+  definition = function(X,p,Log=FALSE){
+    Yx1 = p[rep("Yx1",dim(X)[1]),colnames(X)]
+    Yx0 = p[rep("Yx0",dim(X)[1]),colnames(X)]
+    a = (Yx1 - Yx0)
+    b = Yx0
+    if (Log) {log(a*X+b)*((X>Xmin)&(X<Xmax))} else {(a*X+b)*((X>Xmin)&(X<Xmax))}
+  }
+)
+
+setMethod(
+  f="ReactNorm",
+  signature = "",
+  definition = function(X,p,shapes){
+    if (class(p)=="numeric") {p=t(as.matrix(p));rownames(p)="a"}
+    if (class(X)=="numeric") {X=data.frame(X=X);colnames(X)=colnames(p)}
+    Y=X
+    if (!all(colnames(p)%in%names(shapes))) {stop ("variable names do not correspond between parameters 'p' ans 'shape'")}
+    for (shape in as.character(levels(as.factor(shapes))))
+    {
+      variables = colnames(p)[which(shapes==shape)]
+      Y[,variables]=switch(shape,
+                           constant=p,
+                           proportional = proportional(subset(X,select=variables),p),
+                           linear = linear(subset(X,select=variables),p),
+                           enveloppe=enveloppe(subset(X,select=variables),p),
+                           envelin=envelinear(subset(X,select=variables),p),
+                           envloglin=envelinear(subset(X,select=variables),p,log=TRUE),
+                           loG = log(subset(X,select=variables)),
+                           conquadratic=conquadratic(subset(X,select=variables),p),
+                           conquadraticskewed=conquadraticskewed(subset(X,select=variables),p),
+                           conquadraticsq=conquadraticsq(subset(X,select=variables),p),
+                           conquadraticskewedsq=conquadraticskewedsq(subset(X,select=variables),p)
+      )
+    }
+    Y=cbind(Y,Y=apply(Y, 1, prod)^(1/dim(p)[2])) # geometric mean
+    Y
+  }
+)
+
+
+setMethod(
+  f="K_Function",
+  signature = "",
+  definition = function(rasterStack, p, shapes){
+    ReactNorm(valuesA(rasterStack),p,shapes)
+  }
+)
+
+setMethod(
+  f="R_Function",
+  signature = "",
+  definition = function(rasterStack, alpha, beta){
+    if(nlayers(rasterStack)>1){
+      R = exp(as.matrix(alpha+sum(beta*rasterStack)))# utilisation d'un modele lineaire generalise
+    }
+    else{ R = exp(as.matrix(alpha+beta*rasterStack)) }
+    R = t(R) # transpose to get niche predicted values that fits to matrix organisation (by columns) and not in raster organisation (by rows)
+    R = t(matrix(R,nrow=length(R),ncol=length(R))) # Get population size by columns
+    R[is.na(R)]<-0 # replace NA by 0
+    R
+  }
+)
+
+setMethod(
+  f="",
+  signature = "",
+  definition = function(){
+    
+  }
+)
+
+
+setMethod(
+  f="",
+  signature = "",
+  definition = function(){
+    
+  }
+)
+
+
+setMethod(
+  f="",
+  signature = "",
+  definition = function(){
+    
+  }
+)
+
+
+setMethod(
+  f="",
+  signature = "",
+  definition = function(){
+    
+  }
+)
+
+
+setMethod(
+  f="",
+  signature = "",
+  definition = function(){
+    
+  }
+)
+
+
+setMethod(
+  f="",
+  signature = "",
+  definition = function(){
+    
+  }
+)
+
+
+setMethod(
+  f="",
+  signature = "",
+  definition = function(){
+    
+  }
+)
+
+
+setMethod(
+  f="",
+  signature = "",
+  definition = function(){
+    
+  }
+)
+
+
+setMethod(
+  f="",
+  signature = "",
+  definition = function(){
+    
+  }
+)
+
+
+setMethod(
+  f="",
+  signature = "",
+  definition = function(){
+    
+  }
+)
+
+
+setMethod(
+  f="",
+  signature = "",
+  definition = function(){
+    
+  }
+)
+
+
+setMethod(
+  f="",
+  signature = "",
+  definition = function(){
+    
+  }
+)
+
+
+setMethod(
+  f="",
+  signature = "",
+  definition = function(){
+    
   }
 )
 

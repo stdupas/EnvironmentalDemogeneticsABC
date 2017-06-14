@@ -28,7 +28,8 @@ library(abind)
 
 
 # Function to get spatial resolution in km
-degree2km = function(rasterStack){
+degree2km <- function(rasterStack)
+{
   x_origin = ((xmin(rasterStack)+xmax(rasterStack))/2) #longitude origin
   y_origin = ((ymin(rasterStack)+ymax(rasterStack))/2) #latitude origin
   x_destination = (x_origin + xres(rasterStack)) #longitude of destination point
@@ -275,7 +276,8 @@ ReactNorm <- function(X,p,shapes)
 # rasterStack = environmental variables 
 # shapes = vector of shapes used for the niche function of each environemental variable 
 # (among enveloppe, envelin, envloglin, conquadratic, conquadraticskewed) 
-K_Function <- function(rasterStack, p, shapes){
+K_Function <- function(rasterStack, p, shapes)
+{
   #K=matrix(combineReactNorms(values(rasterStack),p,shapes),byrow=TRUE,nrow=length(rasterStack),ncol=legnth(rasterStack))
   ReactNorm(valuesA(rasterStack),p,shapes)
 }
@@ -283,7 +285,8 @@ K_Function <- function(rasterStack, p, shapes){
 # R_Function: Gets effective growth rate from environmental variables 
 # alpha and beta are fixed by estimation
 # rasterStack = environmental variables 
-R_Function <- function(rasterStack, alpha, beta){
+R_Function <- function(rasterStack, alpha, beta)
+{
   if(nlayers(rasterStack)>1){
     R = exp(as.matrix(alpha+sum(beta*rasterStack)))# utilisation d'un modele lineaire generalise
   }
@@ -332,7 +335,8 @@ populationSize <- function(donneesEnvironmentObs, p, shapes)
 }
   
 # (optional) distanceMatrix return distance between all cells of raster
-distanceMatrix <- function(rasterStack){
+distanceMatrix <- function(rasterStack)
+{
   #get x and y coordinates for each cell of raster object put in parameters
   coords = xyFromCellA(rasterStack)
   distance = as.matrix(dist(coords)) # distance matrix of coordinates
@@ -349,7 +353,8 @@ distanceMatrix <- function(rasterStack){
 #           "fat_tail1", "fat_tail2": ref :Chapman et all, Journal of Animal Ecology (2007) 76 , 36– 44
 #           "island" probability 1-m to stay, else homogen dispersion,
 #           "contiguous" near dispersal.
-migrationMatrix <- function(rasterStack,shapeDisp, pDisp){
+migrationMatrix <- function(rasterStack,shapeDisp, pDisp)
+{
   distMat<-distanceMatrix(rasterStack)
   Ndim = 1+all(ncell(rasterStack)!=dim(rasterStack)[1:2])
   migration = apply(distMat, c(1,2), 
@@ -376,7 +381,8 @@ migrationMatrix <- function(rasterStack,shapeDisp, pDisp){
 }
 
 # transitionMatrix obtained with an isotropic migration hypothesis for a backward model
-transitionMatrixBackward <- function(r,K, migration){
+transitionMatrixBackward <- function(r,K, migration)
+{
   if ((length(r)==1)&(length(K)==1)){transition = r * K * t(migration)}
   if ((length(r)>1)&(length(K)==1)){transition = t(matrix(r,nrow=length(r),ncol=length(r))) * K * t(migration)}
   if ((length(r)==1)&(length(K)>1)){transition = r * t(matrix(K,nrow=length(K),ncol=length(K))) * t(migration)}
@@ -389,7 +395,8 @@ transitionMatrixBackward <- function(r,K, migration){
 }
 
 # transitionMatrix obtained with an isotropic migration hypothesis for a formard model
-transitionMatrixForward <- function(r,K, migration, meth="non_overlap"){
+transitionMatrixForward <- function(r,K, migration, meth="non_overlap")
+{
   rs = matrix(r,nrow=length(r),ncol=length(r))
   Ku = t(matrix(K,nrow=length(K),ncol=length(K)))
   leave = migration*(1+rs)*t(Ku); leave = leave - diag(leave)
@@ -627,7 +634,8 @@ fundamentalMatrixAbsorbingChain <- function(transientTransitionMatrix)
 # Absorbing times vector and matrix
 #
 
-absorbingTime <- function(fundamentalMatrixAbsChain,Qline){
+absorbingTime <- function(fundamentalMatrixAbsChain,Qline)
+{
   # first use the fundamental matrix to calculate
   # absorbingtimes for pair of genes {i,j} in the following sequence:
   # 1) for (i in 2:Ndeme) for (j in 1:(i-1)) (Heterodemic states)
@@ -643,7 +651,8 @@ absorbingTime <- function(fundamentalMatrixAbsChain,Qline){
 # genetic Distance
 #
 
-genetDistAbsorbingMethod <- function(transition,N,mutation_rate){
+genetDistAbsorbingMethod <- function(transition,N,mutation_rate)
+{
   # N is effective population size of the deme
   # transition is the backward transition matrix among demes
   Qlist<-absorbingTransition(transition,N)
@@ -654,7 +663,8 @@ genetDistAbsorbingMethod <- function(transition,N,mutation_rate){
 #
 #
 
-coalescenceTimeProbDistrib <- function(Qlist){
+coalescenceTimeProbDistrib <- function(Qlist)
+{
   x <- eigen(Qlist[["Q"]])
   Lambda <- x$values;Theta=x$vector
   Ndeme <- (2*dim(Q)[1]+1/4)^.5-.5
@@ -674,7 +684,8 @@ coalescenceTimeProbDistrib <- function(Qlist){
 # Probability distribuiton of coalescence times
 # Hey 2001
 
-coalescenceTimeProbDistrib <- function(Qlist){
+coalescenceTimeProbDistrib <- function(Qlist)
+{
   Ndeme <- (2*dim(Qlist[[1]])[1]+1/4)^.5-.5
   cTPD <- array(NA,dim=c(Ndeme,Ndeme,1))
   condition=TRUE
@@ -695,7 +706,8 @@ cTPD
 # Probability of coalescence time
 # Hey 2001
 
-coalescenceProb <- function(Qlist,time){
+coalescenceProb <- function(Qlist,time)
+{
   Ndeme <- (2*dim(Qlist[[1]])[1]+1/4)^.5-.5
   cTPD <- array(NA,dim=c(Ndeme,Ndeme,1))
   condition=TRUE
@@ -720,7 +732,8 @@ forward_simul_landpopsize <- function(N0,p, migration)
 # laplaceMatrix returns Laplacian matrix from transition matrix
 
 # DONE !!!!!!!!!!!!!!!!!!
-laplaceMatrix <- function(transitionMatrix){
+laplaceMatrix <- function(transitionMatrix)
+{
   matrixD = diag(rep(1,dim(transitionMatrix)[1])) # diagonal equals to 1
   laplacianMatrix = matrixD - transitionMatrix
   laplacianMatrix[is.na(laplacianMatrix)]<-0 # replace NA by 0
@@ -731,7 +744,8 @@ laplaceMatrix <- function(transitionMatrix){
 #
 
 # DONE !!!!!!!!!!!!!!!!
-ordinary_laplacian <- function(transition){
+ordinary_laplacian <- function(transition)
+{
   markovB<-new("markovchain", states=dimnames(transition)[[1]], transitionMatrix=transition)
   PI<-diag(steadyStates(markovB)[1,])
   PI - PI%*%transition
@@ -750,7 +764,8 @@ ordinary_laplacian <- function(transition){
   
 
 # DONE !!!!!!!!!!!!!!
-commute_time_undigraph <- function(matrice_transition){
+commute_time_undigraph <- function(matrice_transition)
+{
   laplacian = laplaceMatrix(matrice_transition)
   inverseMP = ginv(laplacian) # generalized inverse matrix  (Moore Penrose)
   diag = diag(inverseMP) # get diagonal of the inverse matrix
@@ -773,7 +788,8 @@ commute_time_undigraph <- function(matrice_transition){
 # and PI is the diagonal matrix of π
 
 # DONE !!!!!!!!!!!!!!!!
-hitting_time_digraph <- function(transition){
+hitting_time_digraph <- function(transition)
+{
   Ones <- rep(1,dim(transition)[1])
   markovB<-new("markovchain", states=dimnames(transition)[[1]], transitionMatrix=transition)
   pi_<-steadyStates(markovB)[1,]
@@ -785,7 +801,8 @@ H
 }
 
 
-genetDistStepping <- function(migration,popSize,mutation_rate){
+genetDistStepping <- function(migration,popSize,mutation_rate)
+{
   commute_time <- commute_time_undigraph(migration)
   #genetic_dist = commute_time / (8* popSize)
   #genetic_dist = commute_time / (8* (sum(popSize)/(dim(popSize)[1]*dim(popSize)[2])))
@@ -797,7 +814,8 @@ genetDistStepping <- function(migration,popSize,mutation_rate){
 # Calcul of genetic distance from resistance undirected graph
 
 # DONE!!!!!!!!!!!!!!!!
-genetDistUndigraph <- function(transition,popSize,mutation_rate){
+genetDistUndigraph <- function(transition,popSize,mutation_rate)
+{
   commute_time <- commute_time_undigraph(transition)
   #genetic_dist = commute_time / (8* popSize)
   #genetic_dist = commute_time / (8* (sum(popSize)/(dim(popSize)[1]*dim(popSize)[2])))
@@ -816,7 +834,8 @@ genetDistUndigraphForNLM <- function(parameters)
     (nrow(genetDist)*(nrow(genetDist)+1)/2)
 }
 
-linearizedFstUndigraph <- function(transition, popSize){
+linearizedFstUndigraph <- function(transition, popSize)
+{
   commute_time <- commute_time_undigraph(transition)
   #genetic_dist = commute_time / (8* popSize)
   #genetic_dist = commute_time / (8* (sum(popSize)/(dim(popSize)[1]*dim(popSize)[2])))
@@ -824,7 +843,8 @@ linearizedFstUndigraph <- function(transition, popSize){
   linearizedFst
 }
 
-Collisionijk <- function(Hitting_mat){# expected first collision time of i and j in k
+Collisionijk <- function(Hitting_mat)# expected first collision time of i and j in k
+{  
   Tijk=array(NA,dim=c(dim(Hitting_mat)[1],dim(Hitting_mat)[2],dim(Hitting_mat)[1]))
   for (k in 1:dim(Hitting_mat)[1]){
     for (i in 1:dim(Hitting_mat)[1]){
@@ -837,7 +857,8 @@ Tijk
 }
 
 # Calcul of genetic distance from digraph
-linearizedFstDigraph <- function(transition, popSize){#popSize is raster class
+linearizedFstDigraph <- function(transition, popSize)#popSize is raster class
+{
   H <- hitting_time_digraph(transition)
   Tijk <- Collisionijk(H)
   Collision <- H
@@ -850,7 +871,8 @@ Collision
 }
 
 # Calcul of genetic distance from digraph
-linearizedFstDigraph <- function(transition, popSize){#popSize is raster class
+linearizedFstDigraph <- function(transition, popSize)#popSize is raster class
+{
   H <- hitting_time_digraph(transition)
   dim2 <- dim(H);dim2[[3]]=2
   H2 <- array(c(H,t(H)),dim=dim2)
@@ -862,7 +884,8 @@ linearizedFstDigraph <- function(transition, popSize){#popSize is raster class
 }
 
 # DONE!!!!!!!!!!!!
-genetDistDigraph <- function(transition,popSize,mutation_rate,method="Goldstein95"){
+genetDistDigraph <- function(transition,popSize,mutation_rate,method="Goldstein95")
+{
   H <- hitting_time_digraph(transition)
   dim2 <- dim(H);dim2[[3]]=2
   H2 <- array(c(H,t(H)),dim=dim2)
@@ -874,7 +897,8 @@ genetDistDigraph <- function(transition,popSize,mutation_rate,method="Goldstein9
 }
 
 # Calcul of genetic distance from digraph
-linearizedFstDigraph1 <- function(transition, popSize){#popSize is raster class
+linearizedFstDigraph1 <- function(transition, popSize)#popSize is raster class
+{
   H <- hitting_time_digraph(transition)
   Coalij <- H
   Coal = array (NA,dim=list(dim(H)[1],dim(H)[2],dim(H)[2]))
@@ -890,7 +914,8 @@ linearizedFstDigraph1 <- function(transition, popSize){#popSize is raster class
   linearizedFst
 }
 
-comuteTimeDigraph <- function(transition, popSize){#popSize is raster class
+comuteTimeDigraph <- function(transition, popSize)#popSize is raster class
+{
   H <- hitting_time_digraph(transition)
   commuteTime = (H+t(H)) 
 }
@@ -1056,7 +1081,8 @@ CreateGenetArray <- function(rasK, nb_locus, initial_locus_value,Option="sample_
 #Plot genetic data in environmental data observed 
 #Genetic data is turn into a Spatial Pixel Data Frame 
 #Mettre des couleurs en fonction du nombre d'individu
-plotGeneticData = function(geneticData, EnvironmentalDataObserved){
+plotGeneticData = function(geneticData, EnvironmentalDataObserved)
+{
   colnames(geneticData)[1:2] <- c("x","y")
   geneticData = SpatialPixelsDataFrame(points = geneticData[,c("x","y")], data = geneticData[,])
   plot(EnvironmentalDataObserved[[1]])
@@ -1080,7 +1106,8 @@ gridRepnDispFunction <- function(dynamics,r,K,d=.9,ptG, migration,overlapping=TR
 }
 
 # Function that combine reproduction, dispersion and mutation for a given genetic data
-repnDispMutFunction <- function(geneticData, dimGeneticData, mutationRate, transitionmatrice){
+repnDispMutFunction <- function(geneticData, dimGeneticData, mutationRate, transitionmatrice)
+{
   # Calcul for reproduction and dispersion 
   # random choice of individuals and at the same time of their target cells in the transition matrix
   ncell_transition <- dimGeneticData[1]*dim(transitionmatrice)[1]
@@ -1101,7 +1128,8 @@ repnDispMutFunction <- function(geneticData, dimGeneticData, mutationRate, trans
 }
 
 # Function that combine reproduction, dispersion and mutation for a given genetic data
-repnDispMutFunction <- function(geneticData, dimGeneticData, mutationRate, transitionmatrice){
+repnDispMutFunction <- function(geneticData, dimGeneticData, mutationRate, transitionmatrice)
+{
   # Calcul for reproduction and dispersion 
   # loop for individuals
   locusCols = grep("Locus", colnames(geneticData))
@@ -1122,7 +1150,8 @@ repnDispMutFunction <- function(geneticData, dimGeneticData, mutationRate, trans
 }
 
 #Function that calculate probability of identity of genes intra individual (at individuals level)
-Qwithin_pair <- function(gDat){
+Qwithin_pair <- function(gDat)
+{
   gDat <- gDat[,grep("ocus",colnames(gDat))]
   if ((dim(gDat)[1] %% 2 == 0) & !all(grepl("\\.",colnames(gDat)))) { #gDat is 1_col_diploid
     gDat <- OneCol2TwoCols(gDat)}
@@ -1135,14 +1164,16 @@ Qwithin_pair <- function(gDat){
 Qw
 }
 
-Qwithin_pair_2 <- function(gDat){
+Qwithin_pair_2 <- function(gDat)
+{
   gDatG <- gDat[,grep("ocus",colnames(gDat))]
   gDat3D <- OneCol23Dims(gDatG)
   (t(array(diag(id_mat_prob(gDat3D[,,1],gDat3D[,,2])),dim=c(dim(gDat3D)[1],dim(gDat3D)[1])))+array(diag(id_mat_prob(gDat3D[,,1],gDat3D[,,2])),dim=c(dim(gDat3D)[1],dim(gDat3D)[1])))/2
 }
 
 #Function that calculate probability of identity of genes intra individual (at population level)
-Qwithin_pop <- function(gDat){
+Qwithin_pop <- function(gDat)
+{
   gDat <- gDat[,grep("ocus",colnames(gDat))]
   if ((dim(gDat)[1] %% 2 == 0) & !all(grepl("\\.",colnames(gDat)))) { #gDat is 1_col_diploid
   gDat <- OneCol2TwoCols(gDat)}
@@ -1234,7 +1265,8 @@ Qbetween_2 <- function(gDat)
 }
 
 # Fonction that calculates probability of identity of genes inter individual (between two individuals)
-Qbetween <- function(gDat){
+Qbetween <- function(gDat)
+{
   colNames  <- colnames(gDat)
   gDat <- gDat[,grep("ocus",colnames(gDat))]
   if ((dim(gDat)[1] %% 2 == 0) & !all(grepl("\\.",colnames(gDat)))) { #gDat is 1_col_diploid
@@ -1258,11 +1290,13 @@ Qbetween <- function(gDat){
   Qb
 }
 
-SSb <-function(gDat){
+SSb <- function(gDat)
+{
   1+Qwithin_pair(gDat)-2*Qbetween(gDat)
 }
 
-SSw <- function(gDat){
+SSw <- function(gDat)
+{
   2*(1-Qwithin_pop(gDat)) 
 }
 
@@ -1273,7 +1307,8 @@ a_matrix <- function(gDat)
 
 # TEST: pour un nombre de generation donné, on teste la stabilité du a value
 #Function test of stabilisation for a value
-test_stabilite_a_value <- function(geneticData, mutationRate, dimGeneticData, nb_generations=5000,transitionmatrice){
+test_stabilite_a_value <- function(geneticData, mutationRate, dimGeneticData, nb_generations=5000,transitionmatrice)
+{
 ## ref: Rousset et al. J Evol Biol,13  (2000) 58-62.
   vecteur_a_value <-c(0)
   for(i in 1: nb_generations){
@@ -1293,7 +1328,8 @@ test_stabilite_a_value <- function(geneticData, mutationRate, dimGeneticData, nb
   }
 }
 
-test_stabilite_a_value <- function(geneticData, mutationRate, dimGeneticData, nb_generations=5000,transitionmatrice){
+test_stabilite_a_value <- function(geneticData, mutationRate, dimGeneticData, nb_generations=5000,transitionmatrice)
+{
   ## ref: Rousset et al. J Evol Biol,13  (2000) 58-62.
   vecteur_a_value <-c(0)
   for(i in 1: nb_generations){
@@ -1315,7 +1351,8 @@ test_stabilite_a_value <- function(geneticData, mutationRate, dimGeneticData, nb
 
 
 # this fstat function is not finished and not used
-fstat = function(geneticData){
+fstat = function(geneticData)
+{
   Genotypes = geneticData[,grep("Locus", colnames(geneticData), fixed = T)]
   form <- as.formulae
   Pops = geneticData[,"Cell_numbers"]
@@ -1362,7 +1399,8 @@ t
 # function that calculates matrixes of transition, forward and backwark, as well as carrying capacity
 # depending on environmentall data and r, K niche model parameters and shapes
 #
-transitionMatrice <- function(rasterStack,pK,pR,shapesK,shapesR,shapeDisp,pDisp){
+transitionMatrice <- function(rasterStack,pK,pR,shapesK,shapesR,shapeDisp,pDisp)
+{
   K = ReactNorm(valuesA(rasterStack),pK,shapesK)[,"Y"]
   r = ReactNorm(valuesA(rasterStack),pR,shapesR)[,"Y"]
   migrationM <- migrationMatrix(rasterStack,shapeDisp, pDisp)
@@ -1466,9 +1504,7 @@ simul_coalescent <- function(transitionList,geneticData)
 # and simulates genetic evolution along the coalescent
 # 
 
-simul_coal_genet <- function(geneticData,rasterStack,pK,pR,shapesK,shapesR,shapeDisp,pDisp,
-                 mutation_rate=1E-2,initial_locus_value=200,mutation_model="stepwise",
-                 stepvalue=2,locusnames=NA)
+simul_coal_genet <- function(geneticData,rasterStack,pK,pR,shapesK,shapesR,shapeDisp,pDisp,mutation_rate=1E-2,initial_locus_value=200,mutation_model="stepwise",stepvalue=2,locusnames=NA)
 {
   if (is.na(locusnames)) {
     locusnames <- grep("ocus",colnames(geneticData),value=TRUE)
@@ -1694,7 +1730,8 @@ get_nj_tree <- function(tip_genotype,mutation_model,step_value)
   nj(as.matrix(distmat))
 }
 
-get_ultrametric_nj_tree <- function(tip_genotype,mutation_model,step_value){
+get_ultrametric_nj_tree <- function(tip_genotype,mutation_model,step_value)
+{
   #
   nj_tree <- get_nj_tree(tip_genotype,mutation_model,step_value)
   nj_tree$edge.length[nj_tree$edge.length<0]<-0 # negative branch length set to zero
@@ -1711,7 +1748,7 @@ get_ultrametric_nj_tree <- function(tip_genotype,mutation_model,step_value){
 # tmra of coalescent : tiem to most recent comon ancestor
 #
 
-tmra<-function(coalescent_simulated)
+tmra <- function(coalescent_simulated)
 {
   coalescent_simulated$coalescent[[length(coalescent_simulated$coalescent)]]$time
 }
@@ -1804,7 +1841,8 @@ summary_stat <- function(geneticDataObs,geneticDataSimulList,log_lik_simul_list)
 #
 
 
-test_stabilite_a_value <- function(geneticData, mutationRate, dimGeneticData, nb_generations=5000,transitionmatrice){
+test_stabilite_a_value <- function(geneticData, mutationRate, dimGeneticData, nb_generations=5000,transitionmatrice)
+{
   ## ref: Rousset et al. J Evol Biol,13  (2000) 58-62.
   vecteur_a_value <-c(0)
   GenDist=list()
@@ -1922,7 +1960,8 @@ agg3
 
 # Function that determine number of dispersal parameters from dispersal shapeDisp used
 # Useful for nlm estimation
-nbpDisp <- function(shapeDisp){
+nbpDisp <- function(shapeDisp)
+{
   (switch(shapeDisp,
           fat_tail1 = 2,
           gaussian = 1,
@@ -1934,7 +1973,8 @@ nbpDisp <- function(shapeDisp){
 
 # Function that simulate a genetic data with forward simulation, parameters given
 #It returns a list of 2 variables:  final genetic data observed and matrix of a-value observed
-simulationGenet <- function(donneesEnvironmentObs, pK, pR, shapesK, shapesR, mutationRate, nbLocus, initial_locus_value, shapeDisp, pDisp, nb_generations,ind_per_cell=30){
+simulationGenet <- function(donneesEnvironmentObs, pK, pR, shapesK, shapesR, mutationRate, nbLocus, initial_locus_value, shapeDisp, pDisp, nb_generations,ind_per_cell=30)
+{
   K <- subset(ReactNorm(valuesA(donneesEnvironmentObs), pK , shapesK),select="Y") # carrying capacity
   r <- subset(ReactNorm(valuesA(donneesEnvironmentObs), pR , shapesR),select="Y") # growth rate
   Rast_K <- donneesEnvironmentObs ; valuesA(Rast_K) <- K
@@ -2017,7 +2057,8 @@ expect_linearizedFst_digraph <- function(rasterStack,pK,pR,shapesK,shapesR,pDisp
   linearizedFst_att
 }
 
-ssr <- function(p){
+ssr <- function(p)
+{
   linearizedFst_att = expect_linearizedFst_undigraph(donneesEnvironmentObs,pK,pR,shapesK,shapesR,pDisp,shapeDisp,Cell_numbers=finalGenetData$Cell_Number)
   return(mean((linearizedFst_obs - linearizedFst_att)^2))
 }
@@ -2195,7 +2236,8 @@ samplePrior <- function(prior,method="random")
   p[-1]
 }
 
-landGenetAnalysis <- function(genetData,environmentalData,priors){
+landGenetAnalysis <- function(genetData,environmentalData,priors)
+{
   # prior list is strictured as follows:
   # 4 sublists representing the parameter : $K, $R, $mutation_rate, $pDisp
   # each parameter has 3 components: $distribution is the name of the prior distribution 
@@ -2231,7 +2273,8 @@ landGenetAnalysis <- function(genetData,environmentalData,priors){
 # plot_coal_time_depending_on_time_interval : plots the results, 
 #                                             and produces a table of correlations
 
-checkTimeInterval <- function(transition = result$transitionmatrice,rasK = rasK,threshold = 1E-5){
+checkTimeInterval <- function(transition = result$transitionmatrice,rasK = rasK,threshold = 1E-5)
+{
   meanCoalTimes <- list()
   for (time_interval in c("1","4","10","15","20","40","100")){
     meanCoalTimes[[time_interval]] <- coalescence_prob_time_distribution_matrix(transition = transition,max_time_interval = as.numeric(time_interval),rasK = rasK,threshold = 1E-5)$exp_times
@@ -2243,7 +2286,8 @@ checkTimeInterval <- function(transition = result$transitionmatrice,rasK = rasK,
 # Function to check that we can jump generations in the coalescent time probability calculation
 #
 
-plot_coal_time_depending_on_time_interval <- function(meanCoalTimes,filen=NA,corr=TRUE,land=TRUE){
+plot_coal_time_depending_on_time_interval <- function(meanCoalTimes,filen=NA,corr=TRUE,land=TRUE)
+{
   if (land){
     if (!is.na(filen)) {
       if (grepl(".jpg",filen)) jpeg(paste("land_",filen,sep="")) else if (grepl(".pdf",filen)) pdf(paste("land_",filen,sep=""))
@@ -2376,7 +2420,8 @@ plot_validation <- function(validationdata,what=c("pop_size","sample_size","tran
 
 
 #test nlm
-ssr <- function(p){
+ssr <- function(p)
+{
   popSize = K_Function(rasterStack = donneesEnvironmentObs, p[1], p[2:(nblayers+1)])
   matrice_migration = migrationMatrix(donneesEnvironmentObs,shapeDisp, p[(nblayers+2):(nbpDisp+nblayers+1)])
   matrice_transition = transitionMatrixBackward(popSize, matrice_migration)

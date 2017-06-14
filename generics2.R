@@ -1,14 +1,4 @@
 setGeneric(
-  name = "getMatrix",
-  def = function(object){return(standardGeneric("getMatrix"))}
-)
-
-setGeneric(
-  name = "setMatrix",
-  def = function(object,matrix){return(standardGeneric("setMatrix"))}
-)
-
-setGeneric(
   name = "laplaceMatrix",
   def=function(object){return(standardGeneric("laplaceMatrix"))}
 )

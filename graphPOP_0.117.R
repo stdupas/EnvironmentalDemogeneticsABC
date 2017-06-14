@@ -193,6 +193,30 @@ proportional <- function(X,p,Log=FALSE)
   }
 }
 
+
+
+
+
+
+
+
+################################################################################################
+#########################     METHODE A IMPLEMENTER     ########################################
+################################################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 linear <- function(X,p,Log=FALSE)
 {
   Yx1 = p[rep("Yx1",dim(X)[1]),colnames(X)]
@@ -695,7 +719,7 @@ forward_simul_landpopsize <- function(N0,p, migration)
 }
 # laplaceMatrix returns Laplacian matrix from transition matrix
 
-# *************
+# DONE !!!!!!!!!!!!!!!!!!
 laplaceMatrix <- function(transitionMatrix){
   matrixD = diag(rep(1,dim(transitionMatrix)[1])) # diagonal equals to 1
   laplacianMatrix = matrixD - transitionMatrix
@@ -706,7 +730,7 @@ laplaceMatrix <- function(transitionMatrix){
 # Boley et al 2011
 #
 
-# *************
+# DONE !!!!!!!!!!!!!!!!
 ordinary_laplacian <- function(transition){
   markovB<-new("markovchain", states=dimnames(transition)[[1]], transitionMatrix=transition)
   PI<-diag(steadyStates(markovB)[1,])
@@ -725,7 +749,7 @@ ordinary_laplacian <- function(transition){
 #}
   
 
-# *************
+# DONE !!!!!!!!!!!!!!
 commute_time_undigraph <- function(matrice_transition){
   laplacian = laplaceMatrix(matrice_transition)
   inverseMP = ginv(laplacian) # generalized inverse matrix  (Moore Penrose)
@@ -748,7 +772,7 @@ commute_time_undigraph <- function(matrice_transition){
 # pi_ (or π) is the stationary probablity distribution of P
 # and PI is the diagonal matrix of π
 
-# *************
+# DONE !!!!!!!!!!!!!!!!
 hitting_time_digraph <- function(transition){
   Ones <- rep(1,dim(transition)[1])
   markovB<-new("markovchain", states=dimnames(transition)[[1]], transitionMatrix=transition)
@@ -772,7 +796,7 @@ genetDistStepping <- function(migration,popSize,mutation_rate){
 
 # Calcul of genetic distance from resistance undirected graph
 
-# *************
+# DONE!!!!!!!!!!!!!!!!
 genetDistUndigraph <- function(transition,popSize,mutation_rate){
   commute_time <- commute_time_undigraph(transition)
   #genetic_dist = commute_time / (8* popSize)
@@ -837,7 +861,7 @@ linearizedFstDigraph <- function(transition, popSize){#popSize is raster class
   genetic_dist
 }
 
-# *************
+# DONE!!!!!!!!!!!!
 genetDistDigraph <- function(transition,popSize,mutation_rate,method="Goldstein95"){
   H <- hitting_time_digraph(transition)
   dim2 <- dim(H);dim2[[3]]=2

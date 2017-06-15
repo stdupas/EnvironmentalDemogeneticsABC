@@ -49,7 +49,7 @@ degree2km <- function(rasterStack)
 Aggregate_and_adjust_raster_to_data <- function(Envir_raster_stack,release,recovery,extend_band_size,aggregate_index)
 {
   samples <- SpatialPoints(rbind(na.omit(release[,c("X","Y")]),na.omit(recovery[,c("X","Y")])))
-  if (aggregate_index > 1) {Envir_raster_stack <- aggregate(crop(Envir_raster_stack,extent(samples)+extend_band_size), fact=aggregate_index, fun=mean, expand=TRUE, na.rm=TRUE)} else {
+  if (aggregate_index > 1) { Envir_raster_stack <- aggregate(crop(Envir_raster_stack,extent(samples)+extend_band_size), fact=aggregate_index, fun=mean, expand=TRUE, na.rm=TRUE) } else {
     Envir_raster_stack <- crop(Envir_raster_stack,extent(samples)+extend_band_size)
   }
   Envir_raster_stack
@@ -477,7 +477,7 @@ absorbingTransition <- function(transition,N)
   QhomoHetero <- matrix(NA,Ndeme,Nhetero)
   kl=0
   Check=TRUE
-  for (i in 1:Ndeme){ # only homodemic sources are considered (i=j)
+  for (i in 1:Ndeme){ #only homodemic sources are considered (i=j)
     Qline[i,i] <- Nhetero+i # the homodemic states are after the  heterodemic states
                             # in the lines of Q matrix
     for (k in 2:Ndeme){
@@ -625,7 +625,7 @@ absorbingTransitionComplete <- function(transition,N)
 #
 
 fundamentalMatrixAbsorbingChain <- function(transientTransitionMatrix)
-{# transtientTransitionMatrix
+{ #transtientTransitionMatrix
   Ndeme <- (2*dim(transientTransitionMatrix)[1]+1/4)^.5-.5
   solve(diag(Ndeme*(Ndeme+1)/2)-transientTransitionMatrix)
 }
@@ -1135,7 +1135,7 @@ repnDispMutFunction <- function(geneticData, dimGeneticData, mutationRate, trans
   locusCols = grep("Locus", colnames(geneticData))
   for (individual in 1:dimGeneticData[1])
   { # we choose where the parent come from in the individual cell line probabilities of the backward transition matrice
-    mothercell = sample(nCell, 1,,transitionmatrice[geneticData[individual,"Cell_numbers"],])
+    mothercell = sample(nCell, 1,transitionmatrice[geneticData[individual,"Cell_numbers"],])
     # we chose the parent among the individuals in this cell
     geneticline = sample(which(geneticData[,"Cell_numbers"]==mothercell),1)
     # we atribute the individual the genetic data of its mother
@@ -2453,7 +2453,8 @@ list(ProbCellPairs=ProbPairs,GenetDistPairs=GenetDistPairs)
 }
 
 deme_coocurence_probability <- function(pGenes,transition,time)
-{ # pGenes is a matrix of initial occurence  probabilities for a set of genes
+{ 
+# pGenes is a matrix of initial occurence  probabilities for a set of genes
   # transition is a transiiton matrix per unit of time
   # time is time
   # t(M^t P0[g1])%*%(M^t P0[g2])

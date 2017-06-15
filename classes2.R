@@ -44,5 +44,6 @@ mic<-TransitionBackward(mat3)
 laplaceMatrix(mic)
 commute_time_undigraph(mic)
 hitting_time_digraph(mic)
-getMatrix(mic)
-mic@matrix
+genetDistUndigraph(mic,100,0.1)
+genetDistDigraph(mic,100,0.1,method = "Goldstein95")
+

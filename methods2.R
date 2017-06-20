@@ -10,9 +10,6 @@ setMethod(
   }
 )
 
-existsMethod(f="laplaceMatrix",signature = "TransitionBackward")
-
-
 
 setMethod(
   f="ordinary_laplacian",
@@ -23,7 +20,6 @@ setMethod(
     PI - PI%*%transition
   }
 )
-
 
 
 setMethod(
@@ -41,7 +37,6 @@ setMethod(
     commute_time
     }
 )
-
 
 
 setMethod(
@@ -117,6 +112,118 @@ setMethod(
   }
 )
 
+
+setMethod(
+  f="simul_coalescent",
+  signature="",
+  definition=function(transitionList,geneticData)
+  {
+    prob_forward=NA
+    N <- round(transitionList$K);N[N==0]<-1
+    coalescent = list()
+    nodes = as.numeric(rownames(geneticData));names(nodes)=as.character(nodes)
+    names(cell_number_of_nodes) <- nodes
+    parent_cell_number_of_nodes <- cell_number_of_nodes
+    nodes_remaining_by_cell = list() 
+    time=0 
+    single_coalescence_events=0
+    single_and_multiple_coalescence_events=0 
+    for (cell in 1:ncellA(rasterStack))
+    {
+      nodes_remaining_by_cell[[cell]] <- which(cell_number_of_nodes==cell)
+    }
+    while (length(unlist(nodes_remaining_by_cell))>1) 
+    {
+      for (node in 1:length(parent_cell_number_of_nodes))
+      {
+        parent_cell_number_of_nodes[node] = sample(ncellA(rasterStack),size=1,prob=c(transitionList$backw[cell_number_of_nodes[node],]))
+      }
+      prob_forward[time] = sum(log(transitionList$forw[parent_cell_number_of_nodes,cell_number_of_nodes]))
+      time=time+1; if (round(time/10)*10==time) {print(time)}
+      for (cell in 1:ncellA(rasterStack))
+      {
+        nodes_remaining_in_the_cell = nodes_remaining_by_cell[[cell]] <- as.numeric(names(which(parent_cell_number_of_nodes==cell)))
+      }
+        prob_forward[time] = sum(log(transitionList$forw[parent_cell_number_of_nodes,cell_number_of_nodes]))
+        time=time+1; if (round(time/10)*10==time) {print(time)}
+        for (cell in 1:ncellA(rasterStack))
+        {     
+          nodes_remaining_in_the_cell = nodes_remaining_by_cell[[cell]] <- as.numeric(names(which(parent_cell_number_of_nodes==cell)))
+          if (length(nodes_remaining_in_the_cell)>1) 
+          {
+            nbgenesremaining=length(nodes_remaining_in_the_cell)
+            smp = sample(N[cell],length(nodes_remaining_in_the_cell),replace=TRUE)
+            parentoffspringmatrix <- matrix(smp,nrow=nbgenesremaining,ncol=N[cell])==matrix(1:N[cell],nrow=nbgenesremaining,ncol=N[cell],byrow=TRUE)
+            rownames(parentoffspringmatrix) <- nodes_remaining_in_the_cell
+            if (any(colSums(parentoffspringmatrix)>1) )
+            {
+              for (multiple in which(colSums(parentoffspringmatrix)>1))
+              {
+                single_coalescence_events = single_coalescence_events +1
+                nodes_that_coalesce = names(which(parentoffspringmatrix[,multiple]))
+                new_node <- max(nodes)+1;nodes=nodes[!(names(nodes)%in%nodes_that_coalesce)];nodes=append(nodes,new_node);names(nodes)[length(nodes)]=new_node
+                parent_cell_number_of_nodes <- append(parent_cell_number_of_nodes[!(names(parent_cell_number_of_nodes)%in%nodes_that_coalesce)],cell);names(parent_cell_number_of_nodes)[length(parent_cell_number_of_nodes)]<-new_node
+                coalescent[[single_coalescence_events]] <- list(time=time,coalescing=as.numeric(nodes_that_coalesce),new_node=new_node)
+                nodes_remaining_in_the_cell = nodes_remaining_by_cell[[cell]] <- append(nodes_remaining_in_the_cell[!nodes_remaining_in_the_cell %in% nodes_that_coalesce],new_node)
+                single_and_multiple_coalescence_events = single_and_multiple_coalescence_events + length(nodes_that_coalesce) - 1
+              }
+            }
+          }
+        }
+      cell_number_of_nodes = parent_cell_number_of_nodes
+    }
+  list(coalescent=coalescent,prob_forward=sum(prob_forward))
+  }
+)
+
+
+setMethod(
+  f="CreateGenetArray",
+  signature="",
+  definition=function(rasK, nb_locus, initial_locus_value,Option="sample_1_col_diploid",nind="Ne")
+  {
+    if (nind%in%c("Ne","Ne2","Ne10")) nind <- switch(nind,
+                                                     Ne = floor(sum(valuesA(rasK))),
+                                                     Ne2= 2*floor(sum(valuesA(rasK))),
+                                                     Ne10= 10*floor(sum(valuesA(rasK)))
+    )
+    coords = xyFromCellA(rasK)
+    repet = switch(Option,
+                   sample_1col_diploid= sort(rep(sample(rep(1:ncellA(rasK),round(valuesA(rasK))),nind,replace=TRUE),2)), 
+                   sample_2col_diploid= sample(rep(1:length(rasK),round(valuesA(rasK))),nind,replace=TRUE), 
+                   sample_haploid= sample(rep(1:ncellA(rasK),round(valuesA(rasK))),nind,replace=TRUE),
+                   full_1col_diploid= rep(1:length(rasK),round(valuesA(rasK))*2), 
+                   full_2col_diploid= rep(1:length(rasK),round(valuesA(rasK))), 
+                   full_haploid= rep(1:length(rasK),round(valuesA(rasK))),
+                   homogenous_1col= rep(1:length(rasK),each=nind/length(rasK)*2),
+                   homoNonEmtpyCells1col= rep((1:length(rasK))[which(round(valuesA(rasK))>1)],each=nind/length(rasK)*2)
+    )
+    geneticData <- as.data.frame(coords[repet,]) ; geneticData[,"Cell_numbers"] <- repet
+    genes = switch(Option,
+                   sample_1col_diploid = as.data.frame(array(initial_locus_value,dim=c(length(repet),nb_locus))), 
+                   sample_2col_diploid = as.data.frame(array(initial_locus_value,dim=c(length(repet),nb_locus*2))), 
+                   sample_haploid =      as.data.frame(array(initial_locus_value,dim=c(length(repet),nb_locus))),
+                   full_1col_diploid =   as.data.frame(array(initial_locus_value,dim=c(length(repet),nb_locus))), 
+                   full_2col_diploid =   as.data.frame(array(initial_locus_value,dim=c(length(repet),nb_locus*2))), 
+                   full_haploid =        as.data.frame(array(initial_locus_value,dim=c(length(repet),nb_locus))),
+                   homogenous_1col =     as.data.frame(array(initial_locus_value,dim=c(length(repet),nb_locus))),
+                   homogenous_2col =     as.data.frame(array(initial_locus_value,dim=c(length(repet),nb_locus)*2)),
+                   homoNonEmtpyCells1col=as.data.frame(array(initial_locus_value,dim=c(length(repet),nb_locus)))
+    )
+    colnames(genes) = switch(Option,
+                             sample_1col_diploid = paste("Locus",1:nb_locus, sep=""), 
+                             sample_2col_diploid = paste("Locus",sort(rep(1:nb_locus,2)),".", 1:2, sep=""), 
+                             sample_haploid = paste("Locus",1:nb_locus, sep=""),
+                             full_1col_diploid = paste("Locus",1:nb_locus, sep=""), 
+                             full_2col_diploid = paste("Locus",sort(rep(1:nb_locus,2)),".", 1:2, sep=""), 
+                             full_haploid = paste("Locus",1:nb_locus, sep=""),                 
+                             homogenous_1col = paste("Locus",1:nb_locus, sep=""),                 
+                             homoNonEmtpyCells1col= paste("Locus",1:nb_locus, sep=""),                 
+                             homogenous_2col =  paste("Locus",sort(rep(1:nb_locus,2)),".", 1:2, sep="")
+    )
+    geneticData
+  }
+)
 
 
 ############################ METHODS NON ADAPTÉE #############################################
@@ -271,18 +378,19 @@ setMethod(
     )
     geneticData
   }
+)
   
   
-  
-  plotGeneticData = function(geneticData, EnvironmentalDataObserved)
+setMethod(
+  f="plotGeneticData",
+  signature = "",
+  definition = function(geneticData, EnvironmentalDataObserved)
   {
     colnames(geneticData)[1:2] <- c("x","y")
     geneticData = SpatialPixelsDataFrame(points = geneticData[,c("x","y")], data = geneticData[,])
     plot(EnvironmentalDataObserved[[1]])
     plot(geneticData, add = T)
   }
-  
-  
 )
 
 
@@ -749,54 +857,7 @@ setMethod(
   )
   
   
-  setMethod(
-    f="simul_coalescent",
-    signature="",
-    definition=function(transitionList,geneticData)
-    {
-      prob_forward=NA
-      N <- round(transitionList$K);N[N==0]<-1
-      names(cell_number_of_nodes) <- nodes
-      {
-        nodes_remaining_by_cell[[cell]] <- which(cell_number_of_nodes==cell)
-      }
-      while (length(unlist(nodes_remaining_by_cell))>1) 
-      {
-        {
-          parent_cell_number_of_nodes[node] = sample(ncellA(rasterStack),size=1,prob=c(transitionList$backw[cell_number_of_nodes[node],]))
-        }
-        prob_forward[time] = sum(log(transitionList$forw[parent_cell_number_of_nodes,cell_number_of_nodes]))
-        time=time+1; if (round(time/10)*10==time) {print(time)}
-        {     
-          nodes_remaining_in_the_cell = nodes_remaining_by_cell[[cell]] <- as.numeric(names(which(parent_cell_number_of_nodes==cell)))
-          if (length(nodes_remaining_in_the_cell)>1) 
-          {
-            nbgenesremaining=length(nodes_remaining_in_the_cell)
-            smp = sample(N[cell],length(nodes_remaining_in_the_cell),replace=TRUE)
-            parentoffspringmatrix <- matrix(smp,nrow=nbgenesremaining,ncol=N[cell])==matrix(1:N[cell],nrow=nbgenesremaining,ncol=N[cell],byrow=TRUE)
-            rownames(parentoffspringmatrix) <- nodes_remaining_in_the_cell
-            if (any(colSums(parentoffspringmatrix)>1) )
-            {
-              {
-                single_coalescence_events = single_coalescence_events +1
-                nodes_that_coalesce = names(which(parentoffspringmatrix[,multiple]))
-                new_node <- max(nodes)+1;nodes=nodes[!(names(nodes)%in%nodes_that_coalesce)];nodes=append(nodes,new_node);names(nodes)[length(nodes)]=new_node
-                parent_cell_number_of_nodes <- append(parent_cell_number_of_nodes[!(names(parent_cell_number_of_nodes)%in%nodes_that_coalesce)],cell);names(parent_cell_number_of_nodes)[length(parent_cell_number_of_nodes)]<-new_node
-                coalescent[[single_coalescence_events]] <- list(time=time,coalescing=as.numeric(nodes_that_coalesce),new_node=new_node)
-                nodes_remaining_in_the_cell = nodes_remaining_by_cell[[cell]] <- append(nodes_remaining_in_the_cell[!nodes_remaining_in_the_cell %in% nodes_that_coalesce],new_node)
-                single_and_multiple_coalescence_events = single_and_multiple_coalescence_events + length(nodes_that_coalesce) - 1
-              }
-            }
-          }
-        }
-        cell_number_of_nodes = parent_cell_number_of_nodes
-      }
-      list(coalescent=coalescent,prob_forward=sum(prob_forward))
-    }
-    
-    #
-    
-  )
+ 
   
   
   setMethod(

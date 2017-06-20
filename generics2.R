@@ -33,6 +33,11 @@ setGeneric(
 
 
 setGeneric(
+  name = "plotGeneticData",
+  def=function(gDat){return(standardGeneric("plotGeneticData"))}
+)
+
+setGeneric(
   name = "a_matrix",
   def=function(gDat){return(standardGeneric("a_matrix"))}
 )

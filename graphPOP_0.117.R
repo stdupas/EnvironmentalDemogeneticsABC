@@ -1415,7 +1415,7 @@ transitionMatrice <- function(rasterStack,pK,pR,shapesK,shapesR,shapeDisp,pDisp)
 # with the environemental variable 
 # pK : parameters of K / environmental variables
 # pR : parameters of r / environmental variables
-# shapesK : shapes of niche funciotn (reaction norm)
+# shapesK : shapes of niche function (reaction norm)
 # pDisp : parameters of dispersion 
 # rasterStack : environmental variables raster stack
 # genetic data table : with coordinates

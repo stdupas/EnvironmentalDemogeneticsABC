@@ -1,3 +1,5 @@
+
+
 setMethod(
   f = "laplaceMatrix",
   signature = "TransitionBackward",

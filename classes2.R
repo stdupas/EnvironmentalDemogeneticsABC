@@ -134,7 +134,8 @@ mat3 <- rbind(c(0.2,0.8),c(0.6,0.4))
 mat4 <- rbind(c(0.2,0.7),c(0.3,0.4))
 
 mic<-TransitionBackward(mat3)
-
+mic["matrix"]
+mic
 
 laplaceMatrix(mic)
 commute_time_undigraph(mic)

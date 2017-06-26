@@ -7,12 +7,19 @@ v <- "poid"
 v1<-"taille"
 wa<-LandPeriod(matrix=mat3,date=d,var=v)
 wo<-LandPeriod(matrix=mat5,date=d1,var=v)
+wa["var"]<-v1
+wa["var"]
+wa
 l=list(wa,wo)
 l
-ya=new("MatrixList",Liste=l)
-yo=MatrixList(wa)
-lengthM(ya)
+ya<-LandPeriodList(wa)
+l1=list(wo)
+ya["Liste"]<-l1
+ya
 
+l1yo=LandPeriodList(wa)
+lengthM(ya)
+addMatrix(ya,wo)
 dimnames(mat3)
 dim(mat3)
 names(mat3)
@@ -20,9 +27,17 @@ mLength(ya)
 dimnamesM(ya)
 dimM(ya)
 namesM(ya)
+ya
+setMatrixb(wa,mat5)
+`setMatrix<-`(wa,mat5)
+class(wa)
+setVar(wa)<-v
+wa
+`setDateb<-`()
 
 ############class#############################################################################
 LandPeriod<-setClass("LandPeriod",
+                     #contains = "matrix",
                      slots = c(matrix= "matrix", date="Date",var="character"),
                      validity = function(object){
                        if(is.matrix(object@matrix)){}else{stop("The matrix is not a matrix")}
@@ -36,21 +51,37 @@ Landperiod<-function(mat=mat3,da=d,va=v){
   new("LandPeriod",matrix=ma,date=da,var=va)
 }
 
-MatrixList<-setClass("MatrixList",
+LandPeriodList<-setClass("LandPeriodList",
                      contains = "list",
-                     slots = c(Liste="list"),
+                     #slots = c(Liste="list"),
                      validity = function(object){
                        if(class(object@Liste[[1]])[1]!="LandPeriod")stop("The element is not a LandPeriod")
                      }
                      )
 
 
-MatrixList<-function(mat=mat3){
+LandPeriodList<-function(mat=mat3){
   Lis=list(mat)
-  new("MatrixList",Liste=Lis)
+  new("LandPeriodList",Liste=Lis)
 }
 
 ############METHOS ~ MATRIX###########################################################################
+
+setGeneric(
+  name = "addLandPeriod",
+  def=function(object,Lp){return(standardGeneric("addLandPeriod"))}
+)
+
+setMethod(
+  f="addLandPeriod",
+  signature = "LandPeriodList",
+  definition = function(object,Lp){
+    object[]<-Lp
+    return(object[])
+  }
+)
+
+
 setGeneric(
   name = "getList",
   def=function(object){return(standardGeneric("getList"))}
@@ -58,7 +89,7 @@ setGeneric(
 
 setMethod(
   f="getList",
-  signature = "MatrixList",
+  signature = "LandPeriodList",
   definition = function(object){
     return(object@Liste)
   }
@@ -71,7 +102,7 @@ setGeneric(
 
 setMethod(
   f="lengthM",
-  signature = "MatrixList",
+  signature = "LandPeriodList",
   definition = function(object){
     lapply(lapply(getList(object),getMatrix),length)
   }
@@ -84,7 +115,7 @@ setGeneric(
 
 setMethod(
   f="dimnamesM",
-  signature = "MatrixList",
+  signature = "LandPeriodList",
   definition = function(object){
     lapply(lapply(getList(object),getMatrix),dimnames)
   }
@@ -97,7 +128,7 @@ setGeneric(
 
 setMethod(
   f="dimM",
-  signature = "MatrixList",
+  signature = "LandPeriodList",
   definition = function(object){
     lapply(lapply(getList(object),getMatrix),dim)
   }
@@ -111,119 +142,76 @@ setGeneric(
 
 setMethod(
   f="namesM",
-  signature = "MatrixList",
+  signature = "LandPeriodList",
   definition = function(object){
     lapply(lapply(getList(object),getMatrix),names)
   }
 )
 
 ############METHODS###################################################################################
-
-setGeneric(
-  name = "getMatrix",
-  def=function(object){return(standardGeneric("getMatrix"))}
-)
-
 setMethod(
-  f="getMatrix",
-  signature = "LandPeriod",
-  definition = function(object){
-    return(object@matrix)
+  f ="[",
+  signature = c(x="LandPeriod" ,i="character",j="missing"),
+  definition = function (x ,i ,j , drop ){
+    switch ( EXPR =i,
+             "matrix" ={return(x@matrix)} ,
+             "date" ={return(x@date)} ,
+             "var" ={return(x@var)} ,
+             stop("This slots doesn't exist!")
+    )
   }
 )
 
-setGeneric(
-  name = "getDate",
-  def=function(object){return(standardGeneric("getDate"))}
-)
-
-setMethod(
-  f="getDate",
-  signature = "LandPeriod",
-  definition = function(object){
-    return(object@date)
-  }
-)
-
-
-setGeneric(
-  name = "getVar",
-  def=function(object){return(standardGeneric("getVar"))}
-)
-
-setMethod(
-  f="getVar",
-  signature = "LandPeriod",
-  definition = function(object){
-    return(object@var)
-  }
-)
-
-
-setGeneric(
-  name = "setMatrix",
-  def=function(object,mat){return(standardGeneric("setMatrix"))}
-)
-
-setGeneric(
-  name = "setMatrixb<-",
-  def=function(object,value){return(standardGeneric("setMatrixb<-"))}
-)
 
 setReplaceMethod(
-  f = "setMatrixb" ,
-  signature = "LandPeriod" ,
-  definition = function ( object , value ){
-      object@matrix <- value
-    }
-)
-
-setMethod(
-  f="setMatrix",
-  signature = "LandPeriod",
-  definition = function(object,mat){
-    (`setMatrixb<-`(object,mat))
-  }
-)
-
-setGeneric(
-  name = "setDate",
-  def=function(object,date){return(standardGeneric("setDate"))}
-)
-
-setGeneric(
-  name = "setDateb<-",
-  def=function(object,value){return(standardGeneric("setDateb<-"))}
-)
-
-setReplaceMethod(
-  f = "setDateb" ,
-  signature = "LandPeriod" ,
-  definition = function ( object , value ){
-    object@date <- value
+  f ='[',
+  signature = c(x="LandPeriod" ,i="character",j="missing",value="ANY") ,
+  definition = function(x,i,j,value){
+    switch(EXPR=i,
+           "matrix" ={x@matrix<-value} ,
+           "date" ={x@date<-value} ,
+           "var" ={x@var<-value} ,
+           stop("This slots doesn't exist!")
+    )
+    validObject(x)
+    return(x)
   }
 )
 
 setMethod(
-  f="setDate",
-  signature = "LandPeriod",
-  definition = function(object,date){
-    `setDateb<-`(object,date)
-  }
+  f ="[",
+  signature = c(x="LandPeriodList" ,i="missing",j="ANY"),
+  definition = function (x ,i ,j , drop )return(x@Liste)
 )
 
-
-setGeneric(
-  name = "setVar<-",
-  def=function(object,value){return(standardGeneric("setVar<-"))}
-)
 
 setReplaceMethod(
-  f = "setVar" ,
-  signature = "LandPeriod" ,
-  definition = function (object, value ){
-    assign(object@var,value,envir = e1)
-    return(invisible())
+  f ='[',
+  signature = c(x="LandPeriod" ,i="character",j="missing",value="list") ,
+  definition = function(x,i,j,value){
+    switch(EXPR=i,
+           "Liste" ={x@Liste<-value} ,
+           stop("This slots doesn't exist!")
+    )
+    validObject(x)
+    return(x)
   }
 )
+
+
+
+setReplaceMethod(
+  f ='[',
+  signature = c(x="LandPeriodList" ,i="missing",j="missing",value="list") ,
+  definition = function(x,i,j,value){ 
+    x@Liste<-value
+    validObject(x)
+    return(x)
+  }
+)
+
+
+
+
+
 

@@ -138,16 +138,16 @@ setMethod("nicheModelVar",
           definition = function(object,model){                  #X=object, p=,shape=
             lapply(model@variable,function(x) switch(model@reactNormList[[x]],
                                                  constant=model@parameter[model@variable==x],
-                                                 proportional = proportional(object[,,(model@var==x)],p), 
-                                                 linear = linear(object[,,(model@var==x)],p),
-                                                 enveloppe=enveloppe(object[,,(model@var==x)],p),
-                                                 envelin=envelinear(object[,,(model@var==x)],p),
-                                                 envloglin=envelinear(object[,,(model@var==x)],p,log=TRUE),
-                                                 loG = log(object[,,(model@var==x)]),
-                                                 conquadratic=conquadratic(object[,,(model@var==x)],p),
-                                                 conquadraticskewed=conquadraticskewed(object[,,(model@var==x)],p),
-                                                 conquadraticsq=conquadraticsq(object[,,(model@var==x)],p),
-                                                 conquadraticskewedsq=conquadraticskewedsq(object[,,(model@var==x)],p)
+                                                 proportional = proportional(object[,,(model@variable==x)],p), 
+                                                 linear = linear(object[,,(model@variable==x)],p),
+                                                 enveloppe=enveloppe(object[,,(model@variable==x)],p),
+                                                 envelin=envelinear(object[,,(model@variable==x)],p),
+                                                 envloglin=envelinear(object[,,(model@variable==x)],p,log=TRUE),
+                                                 loG = log(object[,,(model@variable==x)]),
+                                                 conquadratic=conquadratic(object[,,(model@variable==x)],p),
+                                                 conquadraticskewed=conquadraticskewed(object[,,(model@variable==x)],p),
+                                                 conquadraticsq=conquadraticsq(object[,,(model@variable==x)],p),
+                                                 conquadraticskewedsq=conquadraticskewedsq(object[,,(model@variable==x)],p)
                            )
                 )
           }

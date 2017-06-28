@@ -2,7 +2,7 @@ library(raster)
 ##########SET CLASS#########################################
 
 setClass("Landscape",
-         contains = "rasterStack",
+         contains = "RasterStack",
          slots = c(period="Date",vars="character"),
          validity = validLandscape
          )
@@ -20,10 +20,10 @@ validLandscape = function(object){
          }
 
 
-Landscape<-function(Array=a,period=p, vars=l){
+Landscape<-function(rasterstack=a,period=p, vars=l){
   if (length(period)==1)  period<-c(period,period)
-  dimnames(Array)[[3]] <- vars
-  new("Landscape",Array,period=period,vars=vars)
+  names(rasterstack) <- vars
+  new("Landscape",rasterstack,period=period,vars=vars)
 }
 
 ## tu as pas besion de méthode is.landscape (cf plus loin)
@@ -92,18 +92,6 @@ validityNicheModel = function(object){
 TRUE 
 }
 
-para<-list(1,2,c(4,5.2),c(3,8))
-rea<-c(l="constant",t="proportional",p="enveloppe","envelin")
-vari<-c("l","t","p","h")
-pe1 <- as.Date(c("2007-01-01","2007-12-31"))
-pe2 <- as.Date(c("2008-01-01","2009-12-31"))
-LandscapeArray1 <- array(sample(1:24,24),dim=c(2,3,4))
-LandscapeArray2 <- array(sample(1:24,24),dim=c(2,3,4))
-formul=c(1,"*","(",2,"*",3,"*",4,")")
-model<-NicheModel(variables=vari,parameterList=para,reactNorms=rea,form=formul)
-landhistory <- LandscapeHistory(list(Landscape(LandscapeArray1,period=pe1,vars=vari),Landscape(LandscapeArray2,period=pe2,vars=vari)))
-
-
 
 #######SET METHODS##########################################
 
@@ -120,17 +108,18 @@ setMethod("runNicheModel",
           definition = function(object,model){                  #X=object, p=,shape=
             Y=lapply(model@variables,function(x){
                    									switch(model@reactNorms[[x]],
-                   									       constant={object[,,x]=model@parameterList[[x]]},
-                   									       proportional = {object[,,x]=object[,,x]*model@parameterList[[x]]},
-                   									       enveloppe = {object[,,x]=envelope(object[,,x],model@parameterList[[x]])},
-                   									       envelin={object[,,x]=envelinear(object[,,x],model@parameterList[[x]])},
-                   									       conQuadratic={object[,,x]=conQuadratic(object[,,x],model@parameterList[[x]])} 
+                   									       constant={object[[x]]=model@parameterList[[x]]},
+                   									       proportional = {object[[x]]=as.matrix(object[[x]])*model@parameterList[[x]]},
+                   									       enveloppe = {object[[x]]=envelope(as.matrix(object[[x]]),model@parameterList[[x]])},
+                   									       envelin={object[[x]]=envelinear(as.matrix(object[[x]]),model@parameterList[[x]])},
+                   									       conQuadratic={object[[x]]=conQuadratic(as.matrix(object[[x]]),model@parameterList[[x]])} 
                                                  #conquadraticskewed=conquadraticskewed(object[,,(model@variables==x)],p),
                                                  #conquadraticsq=conquadraticsq(object[,,(model@variables==x)],p),
                                                  #conquadraticskewedsq=conquadraticskewedsq(object[,,(model@variables==x)],p)
                    									)
                          }
                 )
+            Y=lapply(Y,prod)
           }
 )
 
@@ -169,52 +158,31 @@ plot(1:100,quadraticConcaveSkewed(1:100,c(20,60)))
 
 ##########MANIPULATION CLASS################################
 
-
-ar<-array(1:12,c(2,2,3))
+r <- raster(ncol=40, nrow=20)
+r[] <- rnorm(n=ncell(r))
+s <- stack(x=c(r, r*2, r+1,r*3))
 per<-as.Date( c("2017-02-01","2017-02-01"))
+pe1 <- as.Date(c("2007-01-01","2007-12-31"))
+pe2 <- as.Date(c("2008-01-01","2009-12-31"))
+vari<-c("l","t","p","h")
 vari<-c("l","t","p")
 para<-list(c(1,3),2,c(4,5.2))
+para<-list(1,2,c(4,5.2),c(3,8))
+rea<-c(l="constant",t="proportional",p="enveloppe",h="envelin")
 rea<-c(l="constant",t="constant",p="constant")
-lscp1<-Landscape(Array=array(1:12,dim=c(2,2,3)),period=as.Date("2017-02-01"),vars=vari)
+formul=c(1,"*","(",2,"*",3,"*",4,")")
+
+
+
+lscp1<-Landscape(rasterstack = s,period=as.Date("2017-02-01"),vars=vari)
+
 lscp2<-Landscape(Array=array(12:1,dim=c(2,2,3)),period=as.Date(c("2017-02-02","2017-02-06")),vars=vari)
 
-model<-NicheModelPerPeriod(vari,para,rea,per)
 
-#is.Landscape(lscp) pas nécessaire utiliser class(lscp)
+model<-NicheModel(variables=vari,parameterList=para,reactNorms=rea,form=formul)
+landhistory <- LandscapeHistory(list(Landscape(LandscapeArray1,period=pe1,vars=vari),Landscape(LandscapeArray2,period=pe2,vars=vari)))
 lista<-list(lscp1,lscp2)
 lh1<-LandscapeHistory(lista)
-a=list(as.numeric(1:2))
-b=c(a,a)
-class(a[1])
-lapply(b,is.numeric)
 
-
-p=c("Xmin"=10,"Xmax"=20,"Xopt"=18,"Ymax"=0.1)
-p[rep("a",dim(ar[,,3])[1]),colnames(ar[,,3])]*ar[,,3]
-
-dim(ar[,,3])
-
-
-model<-NicheModelCombinedPerPeriod(vari,para,rea,per)
-model
-
-nicheModelVar(lscp,model)
-lscp
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+a<-runNicheModel(lscp1,model)
+a

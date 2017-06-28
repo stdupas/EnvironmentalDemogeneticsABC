@@ -1,7 +1,8 @@
+library(raster)
 ##########SET CLASS#########################################
 
 setClass("Landscape",
-         contains = "array",
+         contains = "rasterStack",
          slots = c(period="Date",vars="character"),
          validity = validLandscape
          )
@@ -65,14 +66,14 @@ setClass("NicheModel",
          validity=validityNicheModel
 )
 
-class("form",
+setClass("form",
 		slots=c(numberVar="integer",additions="integer",multiplications="integer",openParenthesis="integer",closeParenthesis="integer"),
       validity=function(object){
         if (length(object@openPatrenthesis)!=length(object@closeParenthesis)) stop("error in 'form': different number of openParenthesis and closeparenthesis")
         if (numberVar<=length(additions)+length(multiplications)) stop("error in 'form': too much operations")
 
-        if (order(append(addition,multiplications)) stop("error in 'form': too much operations")
-}
+        if (order(append(addition,multiplications))) stop("error in 'form': too much operations")
+  }
 )
 
 
@@ -117,18 +118,18 @@ setGeneric(
 setMethod("runNicheModel",
           signature=c("Landscape","NicheModel"),
           definition = function(object,model){                  #X=object, p=,shape=
-            lapply(model@variables,function(x){
+            Y=lapply(model@variables,function(x){
                    									switch(model@reactNorms[[x]],
-                                                 constant={object[,,x]=model@parameterList[[x]]},
-                                                 proportional = {object[,,x]=object[,,x]*model@parameterList[[x]]}
-                                                 enveloppe = {object[,,x]=envelope(object[,,x],model@parameter)List[[x]]},
-                                                 envelin={object[,,x]=envelinear(object[,,x],model@parameterList[[x]])},
-                                                 conQuadratic={object[,,x]=conQuadratic(object[,,x],model@parameterList[[x]]) )
+                   									       constant={object[,,x]=model@parameterList[[x]]},
+                   									       proportional = {object[,,x]=object[,,x]*model@parameterList[[x]]},
+                   									       enveloppe = {object[,,x]=envelope(object[,,x],model@parameterList[[x]])},
+                   									       envelin={object[,,x]=envelinear(object[,,x],model@parameterList[[x]])},
+                   									       conQuadratic={object[,,x]=conQuadratic(object[,,x],model@parameterList[[x]])} 
                                                  #conquadraticskewed=conquadraticskewed(object[,,(model@variables==x)],p),
                                                  #conquadraticsq=conquadraticsq(object[,,(model@variables==x)],p),
                                                  #conquadraticskewedsq=conquadraticskewedsq(object[,,(model@variables==x)],p)
-                                             } 
-            
+                   									)
+                         }
                 )
           }
 )

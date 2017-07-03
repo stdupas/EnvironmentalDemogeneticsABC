@@ -15,8 +15,8 @@ validLandscape = function(object){
            if (object@period[2]<object@period[1]) stop("the period is not valid because the starting later than the ending")
            if (length(dim(object))!=3) stop("error when creating landscape : the array does not have 3 dimensions")
            if(length(object@vars)!=dim(object)[3]) stop("error when creating landscape : the number of layers in the array differs from the number of variables in var")
-           if(any(dimnames(object)[[3]]!=object@vars)) stop("error when creating landscape : names of third dimension of landscape array do not correspond to slot vars names")
-         TRUE
+           if(any(names(object)!=object@vars)) stop("error when creating landscape : names of third dimension of landscape array do not correspond to slot vars names")
+           TRUE
          }
 
 
@@ -108,43 +108,48 @@ setMethod("runNicheModel",
           definition = function(object,model){                  #X=object, p=,shape=
             Y=lapply(model@variables,function(x){
                    									switch(model@reactNorms[[x]],
-                   									       constant={object[[x]]=model@parameterList[[x]]},
-                   									       proportional = {object[[x]]=as.matrix(object[[x]])*model@parameterList[[x]]},
-                   									       enveloppe = {object[[x]]=envelope(as.matrix(object[[x]]),model@parameterList[[x]])},
-                   									       envelin={object[[x]]=envelinear(as.matrix(object[[x]]),model@parameterList[[x]])},
-                   									       conQuadratic={object[[x]]=conQuadratic(as.matrix(object[[x]]),model@parameterList[[x]])} 
+                   									       constant={object[[x]]<-setValues(object[[x]],rep(model@parameterList[[x]],ncell(object[[x]])))},
+                   									       #proportional = {values(object[[x]])=object[[x]]*model@parameterList[[x]]},
+                   									       enveloppe = {object[[x]]=envelope(object[[x]],model@parameterList[[x]])},
+                   									       envelin={object[[x]]=envelinear(object[[x]],model@parameterList[[x]])},
+                   									       conQuadratic={object[[x]]=conQuadratic(object[[x]],model@parameterList[[x]])} 
                                                  #conquadraticskewed=conquadraticskewed(object[,,(model@variables==x)],p),
                                                  #conquadraticsq=conquadraticsq(object[,,(model@variables==x)],p),
                                                  #conquadraticskewedsq=conquadraticskewedsq(object[,,(model@variables==x)],p)
                    									)
                          }
                 )
-            Y=lapply(Y,prod)
+            Y=prod(stack(Y))
           }
 )
 
+proportional
+
 
 envelope <- function(X,p){
-X>=p[1]&X<=p[2]
+  if(length(p)!=2)stop("The parameter is  not valid because it contains more or less than two values")
+  else X>=p[1]&X<=p[2]
 }
 
 envelinear <- function(X, p) {
-(X-p[1])/(p[2]-p[1])*envelope(X,p)
+  if(length(p)!=2)stop("The parameter is  not valid because it contains more or less than two values")
+  else (X-p[1])/(p[2]-p[1])*envelope(X,p)
 }
-plot(1:100,envelinear(1:100,c(20,60)))
+#plot(1:100,envelinear(1:100,c(20,60)))
 
 constant <- function(X,p){X[]<-p}
 
 conQuadratic <- function(X,p)
 {
--4*(X-p[2])*(X-p[1])/((p[2]-p[1])^2)*envelope(X,p)
+  if(length(p)!=2)stop("The parameter is  not valid because it contains more or less than two values")
+  else -4*(X-p[2])*(X-p[1])/((p[2]-p[1])^2)*envelope(X,p)
 }
-plot(1:100,conQuadratic(1:100,c(20,60)))
+#plot(1:100,conQuadratic(1:100,c(20,60)))
 
-conQuadratic <- function(X,p){
+conQuadraticsKed <- function(X,p){
 quadraticConcave(X,p)*envelinear(X,p)
 }
-plot(1:100,quadraticConcaveSkewed(1:100,c(20,60)))
+#plot(1:100,quadraticConcaveSkewed(1:100,c(20,60)))
 
 #fonction quadratique bornée par p1 et p2 et dont le maximum est 1
 #f(x)=-ax²+bx+c
@@ -155,27 +160,161 @@ plot(1:100,quadraticConcaveSkewed(1:100,c(20,60)))
 #df/dx((p1+p2)/2)=-2a
 #1=a(p2-p1)/2*(p1-p2)/2
 #a=-4/(p2-p1)^2
+#########CREER TRANSITION MATRIX#############################
+
+
+setGeneric(
+  name = "migrationMatrix",
+  def=function(rasterStack,shapeDisp, pDisp){return(standardGeneric("migrationMatrix"))}
+)
+
+
+
+setMethod(
+  f="migrationMatrix",
+  signature="",
+  definition=function(rasterStack,shapeDisp, pDisp)
+  {
+    distMat<-distanceMatrix(rasterStack)
+    Ndim = 1+all(ncell(rasterStack)!=dim(rasterStack)[1:2])
+    migration = apply(distMat, c(1,2), 
+                      function(x)(switch(shapeDisp,
+                                         fat_tail1 = 1/(1+x^pDisp[2]/pDisp[1]),
+                                         gaussian = (dnorm(x, mean = 0, sd = pDisp[1], log = FALSE)),
+                                         exponential = (dexp(x, rate = 1/pDisp[1], log = FALSE)),
+                                         contiguous = (x==0)*(1-pDisp[1])+((x>0)-(x>1.4*res(rasterStack)[1]))*(pDisp[1]/(2*Ndim)),
+                                         contiguous8 = (x==0)*(1-pDisp[1])+((x>0)-(x>2*res(rasterStack)[1]))*(pDisp[1]/(4*Ndim)),
+                                         island = (x==0)*(1-pDisp[1])+(x>0)*(pDisp[1]),
+                                         fat_tail2 = x^pDisp[2]*exp(-2*x/(pDisp[1]^0.5)),
+                                         contiguous_long_dist_mixt = pDisp["plongdist"]/ncellA(rasterStack)+(x==0)*(1-pDisp["pcontiguous"]-pDisp["plongdist"])+((x>0)-(x>1.4*res(rasterStack)[1]))*(pDisp["pcontiguous"]/2),
+                                         gaussian_long_dist_mixt = pDisp[2]/ncellA(rasterStack) + (dnorm(x, mean = 0, sd = pDisp[1], log = FALSE))
+                      )))
+    return(migration)
+  }
+)
+
+
+setGeneric(
+  name = "xyFromCellA",
+  def=function(object){return(standardGeneric("xyFromCellA"))}
+)
+
+setMethod(
+  f = "xyFromCellA",
+  signature = "RasterLayer",
+  definition = function(object){
+    df=xyFromCell(object,cellNumA(object))
+    rownames(df) <- cellNumA(object)
+  }
+)
+
+setMethod(
+  f = "xyFromCellA",
+  signature = "RasterStack",
+  definition = function(object){
+    df =xyFromCell(object,cellNumA(object))
+    rownames(df) <- cellNumA(object)
+    df
+  }
+)
+
+setGeneric(
+  name = "nCellA",
+  def=function(object){return(standardGeneric("nCellA"))}
+)
+
+setMethod(
+  f = "nCellA",
+  signature = "RasterLayer",
+  definition = function(object){
+    length(na.omit(values(object)))
+  }
+)
+setMethod(
+  f = "nCellA",
+  signature = "RasterStack",
+  definition = function(object){
+    ncellA(object[[1]])
+  }
+)
+
+setGeneric(
+  name = "valuesA",
+  def=function(object){return(standardGeneric("valuesA"))}
+)
+
+setMethod(
+  f = "valuesA",
+  signature = "RasterLayer",
+  definition = function(object){
+    #x=data.frame(variable=na.omit(values(object)))
+    select <- !is.na(values(object))
+    x=values(object)[select]
+    names(x) <- which(select)
+    #colnames(x)=names(object)
+    x
+  }
+)
+
+setMethod(
+  f = "valuesA",
+  signature = "RasterStack",
+  definition = function(object){
+    x=na.omit(values(object))
+    colnames(x)=names(x)
+    rownames(x) <- cellNumA(object)
+    x
+  }
+)
+
+setGeneric(
+  name = "cellNumA",
+  def=function(object){return(standardGeneric("cellNumA"))}
+)
+
+setMethod(
+  f = "cellNumA",
+  signature = "RasterLayer",
+  definition = function(object){
+    which(!is.na(values(object)))
+  }
+)
+
+setMethod(
+  f = "cellNumA",
+  signature = "RasterStack",
+  definition = function(object){
+    cellNumA(object[[1]])
+  }
+)
 
 ##########MANIPULATION CLASS################################
 
-r <- raster(ncol=40, nrow=20)
-r[] <- rnorm(n=ncell(r))
+r <- raster(ncol=2, nrow=2)
+r[] <- c(c(1,2),c(3,4))#rnorm(n=ncell(r))
 s <- stack(x=c(r, r*2, r+1,r*3))
+
+class(r[])
+
 per<-as.Date( c("2017-02-01","2017-02-01"))
 pe1 <- as.Date(c("2007-01-01","2007-12-31"))
 pe2 <- as.Date(c("2008-01-01","2009-12-31"))
 vari<-c("l","t","p","h")
 vari<-c("l","t","p")
 para<-list(c(1,3),2,c(4,5.2))
-para<-list(1,2,c(4,5.2),c(3,8))
-rea<-c(l="constant",t="proportional",p="enveloppe",h="envelin")
+para<-list(1,c(1,5),c(1,5.2),c(3,8))
+rea<-c(l="constant",t="envelin",p="enveloppe",h="envelin")
 rea<-c(l="constant",t="constant",p="constant")
 formul=c(1,"*","(",2,"*",3,"*",4,")")
 
 
 
 lscp1<-Landscape(rasterstack = s,period=as.Date("2017-02-01"),vars=vari)
-
+plot(lscp1)
+for(i in 1:4){
+  plot(lscp1[[i]])
+}
+lscp1
 lscp2<-Landscape(Array=array(12:1,dim=c(2,2,3)),period=as.Date(c("2017-02-02","2017-02-06")),vars=vari)
 
 
@@ -185,4 +324,20 @@ lista<-list(lscp1,lscp2)
 lh1<-LandscapeHistory(lista)
 
 a<-runNicheModel(lscp1,model)
+lscp1
+values(a[[2]])
+setValues()
+values(a)
+b<-values(prod(a[[2]],a[[3]]))
+b
+a[[2]]
+prod(b,values(a[[3]]))
 a
+plot(a)
+par(mfrow=c(2,3))
+
+b=xyFromCellA(a)
+b
+
+
+

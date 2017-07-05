@@ -3,12 +3,9 @@ library(raster)
 
 setClass("Landscape",
          contains = "RasterStack",
-         slots = c(period="Date",vars="character"),
+         slots = c(period="Date",vars="character",distanceMatrix="matrix"),
          validity = validLandscape
          )
-# j'ai retiré : Landscape<- car tu définis la fonction après
-# j'ai modifié la longueur d la période ne peut être != 2
-# jai fait d'autres checkin
 
 validLandscape = function(object){
            if (length(object@period)!=2) stop("the period is  not valid because it contains more or less than two dates")
@@ -23,17 +20,14 @@ validLandscape = function(object){
 Landscape<-function(rasterstack=a,period=p, vars=l){
   if (length(period)==1)  period<-c(period,period)
   names(rasterstack) <- vars
-  new("Landscape",rasterstack,period=period,vars=vars)
+  b<-xyFromCellA(rasterstack)
+  mat=sapply(1:nrow(b),function(l1){
+    sapply(1:nrow(b),function(l2){
+      sqrt((b[l1,1]-b[l2,1])^2+(b[l1,2]-b[l2,2])^2)
+    })})
+  new("Landscape",rasterstack,period=period,vars=vars,distanceMatrix=mat)
 }
 
-## tu as pas besion de méthode is.landscape (cf plus loin)
-## il suffit de mettre class(object) pour savoir si c'est un landscape
-# j'ai ajouté les noms de var pour les variables de l'array
-# attention length(period)/2 peut être impair
-# j'ai retiré :
-#       if(period[1]!=period[2*i-1]&&period[2]!=period[2*i])stop("The period is not the same for each layer")
-# en fait on ne va proposer qu'une seule  période pour tout l'objet
-# une période est un vecteur de dates de longueur 2 pour laquelle la seconde  date est supérieure à la première
 
 LandscapeHistory<-setClass("LandscapeHistory",
                            contains = "list",
@@ -41,15 +35,8 @@ LandscapeHistory<-setClass("LandscapeHistory",
                              if(any(unlist(lapply(1:length(object),function(x) class(object[[x]])!="Landscape")))) stop("An element of the list is not a Landscape")
                              if (any(unlist(lapply(1:length(object),function(x) any(object[[x]]@vars!=object[[1]]@vars))))) stop("error in lanscape list, vars differ between periods")
                            }
-                           )
+                  )
 
-
-# j'ai modifié is.landscape(object) car l'objet n'est pas un landscape, mais une liste!
-# j'ai mis à la place un lapply 
-# j'ai viré LandscapeHistory<-function(a){ car la fonciton était déja définie
-## attention l'objet est une  liste, ce ne sera pas un landscape
-# is. landscape va pas marcher
-# il faut toujour etre très explicite  dans les texte d'erreur. Fais plus attention à la forme.
 
 nbpar <- function(x) {unlist(lapply(x,function(x) switch(x,
                             constant=1,
@@ -93,7 +80,74 @@ TRUE
 }
 
 
+setClass("MigrationModel",
+         slots = c(shapeDisp="ANY",pDisp="ANY"),
+         validity = validityMigrationModel
+)
+
+validityMigrationModel=function(object){
+  if(!is.character(object@shapeDisp))stop("error in  MigrationModel shapeDisp : Parameter just accept character!")
+  if(FALSE%in%lapply(object@pDisp,is.numeric))stop("error in MigrationModel pDisp : pDisp just accept numeric!")
+  TRUE
+}
+
+MigrationModel<-function(shape=s,param=p){
+  new("MigrationModel",shapeDisp=shape,pDisp=param)
+}
+
+setClass("EnvDinModel",
+         slots = c(K="NicheModel",R="NicheModel",migration="MigrationModel"),
+         validity=function(object){
+           if(class(object@K)!="NicheModel")stop("Error in envDinModel K : K just accept NicheModel!")
+           if(class(object@R)!="NicheModel")stop("Error in envDinModel R : R just accept NicheModel!")
+           if(class(object@migration)!="MigrationModel")stop("Error in envDinModel migration : migration just accept MigrationModel!")
+         }
+         )
+
+EnvDinModel<-function(K=k,R=r,migration=m){
+  new("EnvDinModel",K=K,R=R,migration=migration)
+}
+
+
 #######SET METHODS##########################################
+
+setMethod(
+  f ="[",
+  signature = c(x="EnvDinModel" ,i="character",j="missing"),
+  definition = function (x ,i ,j , drop ){
+    switch ( EXPR =i,
+             "K" ={return(x@K)} ,
+             "R" ={return(x@R)} ,
+             "migration" ={return(x@migration)} ,
+             stop("This slots doesn't exist!")
+    )
+  }
+)
+
+setMethod(
+  f ="[",
+  signature = c(x="MigrationModel" ,i="character",j="missing"),
+  definition = function (x ,i ,j , drop ){
+    switch ( EXPR =i,
+             "pDisp" ={return(x@pDisp)} ,
+             "shapeDisp" ={return(x@shapeDisp)} ,
+             stop("This slots doesn't exist!")
+    )
+  }
+)
+
+setMethod(
+  f ="[",
+  signature = c(x="Landscape" ,i="character",j="missing"),
+  definition = function (x ,i ,j , drop ){
+    switch ( EXPR =i,
+             "period" ={return(x@period)} ,
+             "distanceMatrix" ={return(x@distanceMatrix)} ,
+             "vars" ={return(x@vars)} ,
+             stop("This slots doesn't exist!")
+    )
+  }
+)
 
 
 setGeneric(
@@ -123,7 +177,6 @@ setMethod("runNicheModel",
           }
 )
 
-proportional
 
 
 envelope <- function(X,p){
@@ -162,37 +215,71 @@ quadraticConcave(X,p)*envelinear(X,p)
 #a=-4/(p2-p1)^2
 #########CREER TRANSITION MATRIX#############################
 
+setGeneric(
+  name = "createTransitionMatrix",
+  def=function(object,model){return(standardGeneric("createTransitionMatrix"))}
+)
+
+setMethod(f="createTransitionMatrix",
+          signature=c("Landscape","EnvDinModel"),
+          definition=function(object,model){
+            lpar<-runEnvDinModel(object,model)
+            if ((length(lpar$R)==1)&(length(lpar$K)==1)){transition = lpar$R * lpar$K * t(lpar$migration)}
+            if ((length(lpar$R)>1)&(length(lpar$K)==1)){transition = t(matrix(lpar$R,nrow=length(lpar$R),ncol=length(lpar$R))) * lpar$K * t(lpar$migration)}
+            if ((length(lpar$R)==1)&(length(lpar$K)>1)){transition = lpar$R * t(matrix(lpar$K,nrow=length(lpar$K),ncol=length(lpar$K))) * t(lpar$migration)}
+            if ((length(lpar$R)>1)&(length(lpar$K)==1)){transition = t(matrix(lpar$R,nrow=length(lpar$R),ncol=length(lpar$R))) * lpar$K * t(lpar$migration)}
+            if ((length(lpar$R)>1)&(length(lpar$K)>1)) {transition = t(matrix(lpar$R,nrow=length(lpar$R),ncol=length(lpar$R))) * t(matrix(lpar$K,nrow=length(lpar$K),ncol=length(lpar$K))) * t(lpar$migration)}
+            #TransitionBackward(transition)
+          }
+)
+
+
+
+setGeneric(
+  name = "runEnvDinModel",
+  def=function(object,model){return(standardGeneric("runEnvDinModel"))}
+)
+
+
+setMethod(f="runEnvDinModel",
+          signature=c("Landscape","EnvDinModel"),
+          definition=function(object,model){
+            R<-values(runNicheModel(object,model["R"]))
+            K<-values(runNicheModel(object,model["K"]))
+            migrationMat<-migrationMatrix(object,model["migration"])
+            list(R=R,K=K,migration=migrationMat)
+          }
+)
+
 
 setGeneric(
   name = "migrationMatrix",
-  def=function(rasterStack,shapeDisp, pDisp){return(standardGeneric("migrationMatrix"))}
+  def=function(object,model){return(standardGeneric("migrationMatrix"))}
 )
 
 
 
 setMethod(
   f="migrationMatrix",
-  signature="",
-  definition=function(rasterStack,shapeDisp, pDisp)
+  signature=c("Landscape","MigrationModel"),
+  definition=function(object,model)
   {
-    distMat<-distanceMatrix(rasterStack)
-    Ndim = 1+all(ncell(rasterStack)!=dim(rasterStack)[1:2])
-    migration = apply(distMat, c(1,2), 
-                      function(x)(switch(shapeDisp,
-                                         fat_tail1 = 1/(1+x^pDisp[2]/pDisp[1]),
-                                         gaussian = (dnorm(x, mean = 0, sd = pDisp[1], log = FALSE)),
-                                         exponential = (dexp(x, rate = 1/pDisp[1], log = FALSE)),
-                                         contiguous = (x==0)*(1-pDisp[1])+((x>0)-(x>1.4*res(rasterStack)[1]))*(pDisp[1]/(2*Ndim)),
-                                         contiguous8 = (x==0)*(1-pDisp[1])+((x>0)-(x>2*res(rasterStack)[1]))*(pDisp[1]/(4*Ndim)),
-                                         island = (x==0)*(1-pDisp[1])+(x>0)*(pDisp[1]),
-                                         fat_tail2 = x^pDisp[2]*exp(-2*x/(pDisp[1]^0.5)),
-                                         contiguous_long_dist_mixt = pDisp["plongdist"]/ncellA(rasterStack)+(x==0)*(1-pDisp["pcontiguous"]-pDisp["plongdist"])+((x>0)-(x>1.4*res(rasterStack)[1]))*(pDisp["pcontiguous"]/2),
-                                         gaussian_long_dist_mixt = pDisp[2]/ncellA(rasterStack) + (dnorm(x, mean = 0, sd = pDisp[1], log = FALSE))
+    Ndim = 1+all(ncell(object)!=dim(object)[1:2])
+    migration = apply(object["distanceMatrix"], c(1,2), 
+                      function(x)(switch(model["shapeDisp"],
+                                         fat_tail1 = 1/(1+x^model["pDisp"][2]/model["pDisp"][1]),
+                                         gaussian = (dnorm(x, mean = 0, sd = model["pDisp"][1], log = FALSE)),
+                                         exponential = (dexp(x, rate = 1/model["pDisp"][1], log = FALSE)),
+                                         contiguous = (x==0)*(1-model["pDisp"][1])+((x>0)-(x>1.4*res(object)[1]))*(model["pDisp"][1]/(2*Ndim)),
+                                         contiguous8 = (x==0)*(1-object["pDisp"][1])+((x>0)-(x>2*res(object)[1]))*(model["pDisp"][1]/(4*Ndim)),
+                                         island = (x==0)*(1-model["pDisp"][1])+(x>0)*(model["pDisp"][1]),
+                                         fat_tail2 = x^model["pDisp"][2]*exp(-2*x/(model["pDisp"][1]^0.5)),
+                                         contiguous_long_dist_mixt = model["pDisp"]["plongdist"]/ncellA(object)+(x==0)*(1-model["pDisp"]["pcontiguous"]-model["pDisp"]["plongdist"])+((x>0)-(x>1.4*res(object)[1]))*(model["pDisp"]["pcontiguous"]/2),
+                                         gaussian_long_dist_mixt = model["pDisp"][2]/ncellA(object) + (dnorm(x, mean = 0, sd = model["pDisp"][1], log = FALSE))
                       )))
-    return(migration)
+        return(migration/sapply(rowSums(migration),function(x)rep(x,ncol(migration))))
   }
 )
-
 
 setGeneric(
   name = "xyFromCellA",
@@ -230,6 +317,7 @@ setMethod(
     length(na.omit(values(object)))
   }
 )
+
 setMethod(
   f = "nCellA",
   signature = "RasterStack",
@@ -288,6 +376,9 @@ setMethod(
   }
 )
 
+
+
+
 ##########MANIPULATION CLASS################################
 
 r <- raster(ncol=2, nrow=2)
@@ -296,15 +387,12 @@ s <- stack(x=c(r, r*2, r+1,r*3))
 
 class(r[])
 
-per<-as.Date( c("2017-02-01","2017-02-01"))
-pe1 <- as.Date(c("2007-01-01","2007-12-31"))
-pe2 <- as.Date(c("2008-01-01","2009-12-31"))
 vari<-c("l","t","p","h")
-vari<-c("l","t","p")
-para<-list(c(1,3),2,c(4,5.2))
+#vari<-c("l","t","p")
+#para<-list(c(1,3),2,c(4,5.2))
 para<-list(1,c(1,5),c(1,5.2),c(3,8))
 rea<-c(l="constant",t="envelin",p="enveloppe",h="envelin")
-rea<-c(l="constant",t="constant",p="constant")
+#rea<-c(l="constant",t="constant",p="constant")
 formul=c(1,"*","(",2,"*",3,"*",4,")")
 
 
@@ -319,25 +407,47 @@ lscp2<-Landscape(Array=array(12:1,dim=c(2,2,3)),period=as.Date(c("2017-02-02","2
 
 
 model<-NicheModel(variables=vari,parameterList=para,reactNorms=rea,form=formul)
+
 landhistory <- LandscapeHistory(list(Landscape(LandscapeArray1,period=pe1,vars=vari),Landscape(LandscapeArray2,period=pe2,vars=vari)))
 lista<-list(lscp1,lscp2)
 lh1<-LandscapeHistory(lista)
 
 a<-runNicheModel(lscp1,model)
-lscp1
-values(a[[2]])
-setValues()
+lscp1["distanceMatrix"]
+class(lscp1[1])
 values(a)
-b<-values(prod(a[[2]],a[[3]]))
-b
-a[[2]]
-prod(b,values(a[[3]]))
+setValues()
+class(values(a))
 a
 plot(a)
 par(mfrow=c(2,3))
+valuesA(a)
 
-b=xyFromCellA(a)
+m<-MigrationModel(shape="gaussian",param = 1)
+m["pDisp"]
+edm1<-EnvDinModel(K=model,R=model,migration = m)
+createTransitionMatrix(lscp1,edm1)
+edm1
+transi1<-createTransitionMatrix(lscp1,edm1)
+
+
+
+###################################################################################"
+r1<- raster(ncol=2, nrow=2)
+r2<- raster(ncol=2, nrow=2)
+r2[] <- rep(2,2:2)
+r1[] <- rep(1,2:2)
+s <- stack(x=c(r1,r2))
+land1<-Landscape(rasterstack = s,period = as.Date(c("2017-02-02","2017-02-06")),vars = c("l","p"))
+model1<-NicheModel(var=c("l","p"),reactNorms = c(l="constant",p="constant"),parameterList = list(0.5,1),form =c("(",1,"*",2,")") )
+migra1<-MigrationModel(shape = "fat_tail1",param = c(1,1))
+env1<-EnvDinModel(K=model1,R=model1,migration = migra1)
+a=(runEnvDinModel(land1,env1))
+a
+b=createTransitionMatrix(land1,env1)
 b
+
+
 
 
 

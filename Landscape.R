@@ -1,5 +1,58 @@
 library(raster)
+
+#########PRECURSEUR #######################################
+
+setGeneric(
+  name = "xyFromCellA",
+  def=function(object){return(standardGeneric("xyFromCellA"))}
+)
+
+setMethod(
+  f = "xyFromCellA",
+  signature = "RasterLayer",
+  definition = function(object){
+    df=xyFromCell(object,cellNumA(object))
+    rownames(df) <- cellNumA(object)
+  }
+)
+
+setMethod(
+  f = "xyFromCellA",
+  signature = "RasterStack",
+  definition = function(object){
+    df =xyFromCell(object,cellNumA(object))
+    rownames(df) <- cellNumA(object)
+    df
+  }
+)
+
+setGeneric(
+  name = "cellNumA",
+  def=function(object){return(standardGeneric("cellNumA"))}
+)
+
+setMethod(
+  f = "cellNumA",
+  signature = "RasterLayer",
+  definition = function(object){
+    which(!is.na(values(object)))
+  }
+)
+
+setMethod(
+  f = "cellNumA",
+  signature = "RasterStack",
+  definition = function(object){
+    cellNumA(object[[1]])
+  }
+)
 ##########SET CLASS#########################################
+
+validLandscape = function(object){
+  if (length(object@period)!=2) stop("the period is  not valid because it contains more or less than two dates")
+  if (object@period[2]<object@period[1]) stop("the period is not valid because the starting later than the ending")
+  TRUE
+}
 
 setClass("Landscape",
          contains = "RasterStack",
@@ -7,18 +60,15 @@ setClass("Landscape",
          validity = validLandscape
          )
 
-validLandscape = function(object){
-           if (length(object@period)!=2) stop("the period is  not valid because it contains more or less than two dates")
-           if (object@period[2]<object@period[1]) stop("the period is not valid because the starting later than the ending")
-           if (length(dim(object))!=3) stop("error when creating landscape : the array does not have 3 dimensions")
-           if(length(object@vars)!=dim(object)[3]) stop("error when creating landscape : the number of layers in the array differs from the number of variables in var")
-           if(any(names(object)!=object@vars)) stop("error when creating landscape : names of third dimension of landscape array do not correspond to slot vars names")
-           TRUE
-         }
 
-
-Landscape<-function(rasterstack=a,period=p, vars=l){
+Landscape<-function(rasterstack=rasterstack,period=dateVector, vars=charVector){
+  if(class(rasterstack)!="RasterStack")stop("error in Landscape rasterstack : rasterstack just accept RasterStack!")
+  if (length(rasterstack@layers)==0)stop("rasterstack values is null!")
+  if(class(period)!="Date")stop("error in Landscape period : period just accept Date!")
+  if(!is.character(vars))stop("error in Landscape vars : vars just accept character!")
   if (length(period)==1)  period<-c(period,period)
+  if(length(names(rasterstack))!=length(vars)) stop("error when creating landscape : the number of layers in the rasterstack differs from the number of variables in var")
+  if(any(names(rasterstack)!=vars)) stop("error when creating landscape : names of layers of landscape rasterstack do not correspond to slot vars names")
   names(rasterstack) <- vars
   b<-xyFromCellA(rasterstack)
   mat=sapply(1:nrow(b),function(l1){
@@ -29,13 +79,20 @@ Landscape<-function(rasterstack=a,period=p, vars=l){
 }
 
 
-LandscapeHistory<-setClass("LandscapeHistory",
+setClass("LandscapeHistory",
                            contains = "list",
                            validity = function(object){
-                             if(any(unlist(lapply(1:length(object),function(x) class(object[[x]])!="Landscape")))) stop("An element of the list is not a Landscape")
-                             if (any(unlist(lapply(1:length(object),function(x) any(object[[x]]@vars!=object[[1]]@vars))))) stop("error in lanscape list, vars differ between periods")
+                             if(!is.list(object))stop("error in lanscape list : landscape list just accept list.")
+                             if(any(unlist(lapply(1:length(object),function(x) class(object[[x]])!="Landscape")))) stop("An element of the list is not a Landscape.")
+                             if (any(unlist(lapply(1:length(object),function(x) any(object[[x]]@vars!=object[[1]]@vars))))) stop("error in lanscape list, vars differ between periods.")
+                             if(length(object)>1){
+                               if(any(unlist(lapply(1:length(object),function(x) lapply(x:length(object),function(y)if(x!=y)any(object[[y]]@period==object[[x]]@period))))))stop("error in lanscape period, at least two landscape have same period.")    
+                             }
                            }
                   )
+
+LandscapeHistory<-function(Landscapelist=listOfLandscape){new("LandscapeHistory",Landscapelist)}
+
 
 
 nbpar <- function(x) {unlist(lapply(x,function(x) switch(x,
@@ -43,41 +100,54 @@ nbpar <- function(x) {unlist(lapply(x,function(x) switch(x,
                             proportional=1,
                             enveloppe=2,
                             envelin=2,
-                            quadratic=4)
+                            quadratic=4,
+                            fat_tail1=2,
+                            gaussian=1,
+                            exponential=1,
+                            contiguous=1,
+                            contiguous8=1,
+                            island=1,
+                            fat_tail2=2,
+                            contiguous_long_dist_mixt=2,
+                            gaussian_long_dist_mixt=2)
                             ))
                       }
 
 
+validityNicheModel = function(object){
+  if(class(object@variables)!="character")stop("error in NicheModel variables : variables just accept character!")
+  if(!is.list(object@parameterList))stop("error in NicheModel parameterList : parameterList just accept list!")
+  if(class(object@reactNorms)!="character")stop("error in NicheModel reactNorms : reactNorms just accept character!")
+  if(FALSE%in%lapply(object@parameterList,is.numeric))stop("error in NicheModel parameter list : Parameter list just accept numeric!")
+  if(length(object@variables)!=length(object@reactNorms))stop("error in NicheModel : number of variables and number of reaction norms do not correspond")
+  notMatching <- (nbpar(object@reactNorms) != unlist(lapply(1:length(object@parameterList),function(x) length(object@parameterList[[x]])))) 
+  if (any(notMatching)) stop(paste("error in NicheModel : number of paremeters and reactionNorm do not match for variable ",which(notMatching),". ",sep=""))
+  #              if grep("(",object@form)
+  TRUE 
+}
+
 setClass("NicheModel",
-         slots = c(variables="character",parameterList="list",reactNorms="character",form="character"),
+         slots = c(variables="ANY",parameterList="ANY",reactNorms="ANY"),#,form="character"),
          validity=validityNicheModel
 )
 
-setClass("form",
-		slots=c(numberVar="integer",additions="integer",multiplications="integer",openParenthesis="integer",closeParenthesis="integer"),
-      validity=function(object){
+#setClass("form",
+#		slots=c(numberVar="integer",additions="integer",multiplications="integer",openParenthesis="integer",closeParenthesis="integer"),
+#      validity=function(object){
         if (length(object@openPatrenthesis)!=length(object@closeParenthesis)) stop("error in 'form': different number of openParenthesis and closeparenthesis")
         if (numberVar<=length(additions)+length(multiplications)) stop("error in 'form': too much operations")
-
         if (order(append(addition,multiplications))) stop("error in 'form': too much operations")
   }
-)
+#)
 
 
-NicheModel<-function(variables=var,parameterList=par,reactNorms=rea,period=pe,form=formul){
+NicheModel<-function(variables=characterVector1,parameterList=listOfNumeric,reactNorms=characterVector2,period=pe){#,form=formul){
   names(parameterList)=variables
   names(reactNorms)=variables
-  new("NicheModel",variables=variables,parameterList=parameterList,reactNorms=reactNorms,form=form)
+  new("NicheModel",variables=variables,parameterList=parameterList,reactNorms=reactNorms)#,form=form)
 }
 
-validityNicheModel = function(object){
-              if(FALSE%in%lapply(object@parameterList,is.numeric))stop("error in NicheModel parameter list : Parameter just accept numeric!")
-              if(length(object@variables)!=length(object@reactNorms))stop("error in NicheModel : number of variables and number of reaction norms do not correspond")
-              notMatching <- (nbpar(object@reactNorms) != unlist(lapply(1:length(object@parameterList),function(x) length(object@parameterList[[x]])))) 
-              if (any(notMatching)) stop(paste("error in NicheModel : number of paremeters and reactionNorm do not match for variable ",which(notMatching),". ",sep=""))
-#              if grep("(",object@form)
-TRUE 
-}
+
 
 
 setClass("MigrationModel",
@@ -281,29 +351,7 @@ setMethod(
   }
 )
 
-setGeneric(
-  name = "xyFromCellA",
-  def=function(object){return(standardGeneric("xyFromCellA"))}
-)
 
-setMethod(
-  f = "xyFromCellA",
-  signature = "RasterLayer",
-  definition = function(object){
-    df=xyFromCell(object,cellNumA(object))
-    rownames(df) <- cellNumA(object)
-  }
-)
-
-setMethod(
-  f = "xyFromCellA",
-  signature = "RasterStack",
-  definition = function(object){
-    df =xyFromCell(object,cellNumA(object))
-    rownames(df) <- cellNumA(object)
-    df
-  }
-)
 
 setGeneric(
   name = "nCellA",
@@ -355,26 +403,7 @@ setMethod(
   }
 )
 
-setGeneric(
-  name = "cellNumA",
-  def=function(object){return(standardGeneric("cellNumA"))}
-)
 
-setMethod(
-  f = "cellNumA",
-  signature = "RasterLayer",
-  definition = function(object){
-    which(!is.na(values(object)))
-  }
-)
-
-setMethod(
-  f = "cellNumA",
-  signature = "RasterStack",
-  definition = function(object){
-    cellNumA(object[[1]])
-  }
-)
 
 
 
@@ -398,12 +427,6 @@ formul=c(1,"*","(",2,"*",3,"*",4,")")
 
 
 lscp1<-Landscape(rasterstack = s,period=as.Date("2017-02-01"),vars=vari)
-plot(lscp1)
-for(i in 1:4){
-  plot(lscp1[[i]])
-}
-lscp1
-lscp2<-Landscape(Array=array(12:1,dim=c(2,2,3)),period=as.Date(c("2017-02-02","2017-02-06")),vars=vari)
 
 
 model<-NicheModel(variables=vari,parameterList=para,reactNorms=rea,form=formul)
@@ -432,7 +455,7 @@ transi1<-createTransitionMatrix(lscp1,edm1)
 
 
 
-###################################################################################"
+###################################################################################
 r1<- raster(ncol=2, nrow=2)
 r2<- raster(ncol=2, nrow=2)
 r2[] <- rep(2,2:2)
@@ -446,6 +469,84 @@ a=(runEnvDinModel(land1,env1))
 a
 b=createTransitionMatrix(land1,env1)
 b
+
+
+######################### TEST DES FONCTION #########################################
+### Landscape############
+r1<- raster(ncol=2, nrow=1)
+r1[] <- rep(1,2:2)
+s <- stack(x=c(r1))
+r0<- raster(ncol=0, nrow=0)
+s <- stack(x=c(r0))
+s<-1
+r2<- raster(ncol=2, nrow=1)
+r2[] <- rep(1,2:2)
+s<- stack(x=c(r1,r2))
+
+p<-c(as.Date("2000-01-10"),as.Date("2000-01-11"))
+p<-"2000-01-11"
+p<-as.Date("2000-01-11")
+p<-c(as.Date("2000-01-11"),as.Date("2000-01-11"))
+p<-c(as.Date("2000-01-11"),as.Date("2000-01-10"))
+p<-c(as.Date("2000-01-11"),as.Date("2000-01-11"),as.Date("2000-01-11"))
+
+v<-"a"
+v<-c("a","b")
+v<-c("layer.1","layer.2")
+v<-1
+
+lands<-Landscape(rasterstack = s,period = p,vars = v)
+
+### LandscapeHistory ################
+r1<- raster(ncol=2, nrow=1)
+r1[] <- rep(1,2:2)
+r2<- raster(ncol=2, nrow=1)
+r2[] <- rep(1,2:2)
+s<- stack(x=c(r1,r2))
+p1<-as.Date("2000-01-11")
+p2<-as.Date("2000-01-12")
+v<-c("layer.1","layer.2")
+lands<-Landscape(rasterstack = s,period = p1,vars = v)
+lands2<-Landscape(rasterstack = s,period = p2,vars = v)
+lLands<-list(lands,lands2)
+lLands<-c(lands,lands2)
+lLands<-c(1,lands)
+lLands<-c(lands,1)
+lLands<-list(lands,lands)
+landsH<-LandscapeHistory(lLands)
+
+######## NicheModel ###################
+vari<-c("l")
+vari<-"l"
+vari<-c(1)
+vari<-c("l",1)
+vari<-c(1,"l")
+vari<-c("l","t")
+vari<-c(NA)
+vari<-c(NULL)
+
+para<-list(1)
+para<-list(c(1,5))
+para<-list(1,c(1,5))
+para<-list(1,2)
+para<-list(c(2,3),c(1,5))
+para<-list(1,c(1,5))
+
+rea<-c(l="constant")
+rea<-c(l="constant",t="envelin")
+rea<-c(l="constant",t="enveline")
+rea<-c(l="constant",t="envelin",p="enveloppe")
+
+model<-NicheModel(variables=vari,parameterList=para,reactNorms=rea)
+model
+
+
+
+
+
+
+
+
 
 
 

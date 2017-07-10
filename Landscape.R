@@ -46,6 +46,56 @@ setMethod(
     cellNumA(object[[1]])
   }
 )
+
+setGeneric(
+  name = "nCellA",
+  def=function(object){return(standardGeneric("nCellA"))}
+)
+
+setMethod(
+  f = "nCellA",
+  signature = "RasterLayer",
+  definition = function(object){
+    length(na.omit(values(object)))
+  }
+)
+
+setMethod(
+  f = "nCellA",
+  signature = "RasterStack",
+  definition = function(object){
+    ncellA(object[[1]])
+  }
+)
+
+setGeneric(
+  name = "valuesA",
+  def=function(object){return(standardGeneric("valuesA"))}
+)
+
+setMethod(
+  f = "valuesA",
+  signature = "RasterLayer",
+  definition = function(object){
+    #x=data.frame(variable=na.omit(values(object)))
+    select <- !is.na(values(object))
+    x=values(object)[select]
+    names(x) <- which(select)
+    #colnames(x)=names(object)
+    x
+  }
+)
+
+setMethod(
+  f = "valuesA",
+  signature = "RasterStack",
+  definition = function(object){
+    x=na.omit(values(object))
+    colnames(x)=names(x)
+    rownames(x) <- cellNumA(object)
+    x
+  }
+)
 ##########SET CLASS#########################################
 
 validLandscape = function(object){
@@ -68,7 +118,6 @@ Landscape<-function(rasterstack=rasterstack,period=dateVector, vars=charVector){
   if(!is.character(vars))stop("error in Landscape vars : vars just accept character!")
   if (length(period)==1)  period<-c(period,period)
   if(length(names(rasterstack))!=length(vars)) stop("error when creating landscape : the number of layers in the rasterstack differs from the number of variables in var")
-  if(any(names(rasterstack)!=vars)) stop("error when creating landscape : names of layers of landscape rasterstack do not correspond to slot vars names")
   names(rasterstack) <- vars
   b<-xyFromCellA(rasterstack)
   mat=sapply(1:nrow(b),function(l1){
@@ -134,50 +183,74 @@ setClass("NicheModel",
 #setClass("form",
 #		slots=c(numberVar="integer",additions="integer",multiplications="integer",openParenthesis="integer",closeParenthesis="integer"),
 #      validity=function(object){
-        if (length(object@openPatrenthesis)!=length(object@closeParenthesis)) stop("error in 'form': different number of openParenthesis and closeparenthesis")
-        if (numberVar<=length(additions)+length(multiplications)) stop("error in 'form': too much operations")
-        if (order(append(addition,multiplications))) stop("error in 'form': too much operations")
-  }
+#        if (length(object@openPatrenthesis)!=length(object@closeParenthesis)) stop("error in 'form': different number of openParenthesis and closeparenthesis")
+#        if (numberVar<=length(additions)+length(multiplications)) stop("error in 'form': too much operations")
+#        if (order(append(addition,multiplications))) stop("error in 'form': too much operations")
+#  }
 #)
 
 
-NicheModel<-function(variables=characterVector1,parameterList=listOfNumeric,reactNorms=characterVector2,period=pe){#,form=formul){
+NicheModel<-function(variables=characterVector1,parameterList=listOfNumeric,reactNorms=characterVector2){#,form=formul){
   names(parameterList)=variables
   names(reactNorms)=variables
   new("NicheModel",variables=variables,parameterList=parameterList,reactNorms=reactNorms)#,form=form)
 }
 
+listOfMigrationShape<-c("fat_tail1","gaussian","exponential","contiguous","contiguous8","island","fat_tail2","contiguous_long_dist_mixt","gaussian_long_dist_mixt")
 
-
+validityMigrationModel=function(object){
+  if(!is.character(object@shapeDisp))stop("error in  MigrationModel shapeDisp : ShapeDisp just accept character!")
+  if(length(object@shapeDisp)!=1)stop("error in  MigrationModel shapeDisp : ShapeDisp is  not valid because it contains more or less than one shape!")
+  if(!object@shapeDisp%in%listOfMigrationShape)stop("error in  MigrationModel shapeDisp : the given shape not exist for MigrationModel !")
+  if(FALSE%in%lapply(object@pDisp,is.numeric))stop("error in MigrationModel pDisp : pDisp just accept numeric!")
+  if(nbpar(object@shapeDisp)!=length(object@pDisp))stop("error in MigrationModel : number of paremeters and shapeDisp do not match for variable")
+  TRUE
+}
 
 setClass("MigrationModel",
          slots = c(shapeDisp="ANY",pDisp="ANY"),
          validity = validityMigrationModel
 )
 
-validityMigrationModel=function(object){
-  if(!is.character(object@shapeDisp))stop("error in  MigrationModel shapeDisp : Parameter just accept character!")
-  if(FALSE%in%lapply(object@pDisp,is.numeric))stop("error in MigrationModel pDisp : pDisp just accept numeric!")
-  TRUE
-}
 
-MigrationModel<-function(shape=s,param=p){
+
+MigrationModel<-function(shape=character,param=p){
   new("MigrationModel",shapeDisp=shape,pDisp=param)
 }
 
 setClass("EnvDinModel",
-         slots = c(K="NicheModel",R="NicheModel",migration="MigrationModel"),
+         slots = c(K="ANY",R="ANY",migration="ANY"),
          validity=function(object){
-           if(class(object@K)!="NicheModel")stop("Error in envDinModel K : K just accept NicheModel!")
-           if(class(object@R)!="NicheModel")stop("Error in envDinModel R : R just accept NicheModel!")
-           if(class(object@migration)!="MigrationModel")stop("Error in envDinModel migration : migration just accept MigrationModel!")
+           if(class(object@K)!="NicheModel")stop("Error in envDinModel K : K just accept NicheModel !")
+           if(class(object@R)!="NicheModel")stop("Error in envDinModel R : R just accept NicheModel !")
+           if(class(object@migration)!="MigrationModel")stop("Error in envDinModel migration : migration just accept MigrationModel !")
          }
          )
 
-EnvDinModel<-function(K=k,R=r,migration=m){
+EnvDinModel<-function(K=nichemodelK,R=nichemodelR,migration=m){
   new("EnvDinModel",K=K,R=R,migration=migration)
 }
 
+TransitionBackward<-setClass("TransitionBackward",
+                             contains = "matrix",
+                             prototype = prototype(matrix(nrow=100,ncol=100)),
+                             validity = function(object){
+                               if (nrow(object)==0)stop("The matrix is empty.")
+                               if (nrow(object)!=ncol(object))stop("The matrix is not square")
+                               if (all(rowSums(object)==1))TRUE else stop("The sum of probabilities in each row is not 1.")
+                             }
+)
+
+
+TransitionBackward<- function(matrix){
+  if (nrow(matrix)!=ncol(matrix))stop("The matrix is not square")
+  if(class(rownames(matrix)[1])!="character"){
+    lname <- c(1:nrow(matrix))
+    rownames(matrix) <- lname
+    colnames(matrix) <- lname
+  }
+  new(Class="TransitionBackward",matrix)
+}
 
 #######SET METHODS##########################################
 
@@ -224,8 +297,6 @@ setGeneric(
   name = "runNicheModel",
   def=function(object,model){return(standardGeneric("runNicheModel"))}
 )
-
-
 
 setMethod("runNicheModel",
           signature=c("Landscape","NicheModel"),
@@ -350,63 +421,6 @@ setMethod(
         return(migration/sapply(rowSums(migration),function(x)rep(x,ncol(migration))))
   }
 )
-
-
-
-setGeneric(
-  name = "nCellA",
-  def=function(object){return(standardGeneric("nCellA"))}
-)
-
-setMethod(
-  f = "nCellA",
-  signature = "RasterLayer",
-  definition = function(object){
-    length(na.omit(values(object)))
-  }
-)
-
-setMethod(
-  f = "nCellA",
-  signature = "RasterStack",
-  definition = function(object){
-    ncellA(object[[1]])
-  }
-)
-
-setGeneric(
-  name = "valuesA",
-  def=function(object){return(standardGeneric("valuesA"))}
-)
-
-setMethod(
-  f = "valuesA",
-  signature = "RasterLayer",
-  definition = function(object){
-    #x=data.frame(variable=na.omit(values(object)))
-    select <- !is.na(values(object))
-    x=values(object)[select]
-    names(x) <- which(select)
-    #colnames(x)=names(object)
-    x
-  }
-)
-
-setMethod(
-  f = "valuesA",
-  signature = "RasterStack",
-  definition = function(object){
-    x=na.omit(values(object))
-    colnames(x)=names(x)
-    rownames(x) <- cellNumA(object)
-    x
-  }
-)
-
-
-
-
-
 
 ##########MANIPULATION CLASS################################
 
@@ -539,6 +553,98 @@ rea<-c(l="constant",t="envelin",p="enveloppe")
 
 model<-NicheModel(variables=vari,parameterList=para,reactNorms=rea)
 model
+
+
+
+######## MigrationModel ###################
+migraShape<-"fat_tail1"
+migraShape<-"gaussian"
+migraShape<-"exponential"
+migraShape<-"contiguous"
+migraShape<-"contiguous8"
+migraShape<-"island"
+migraShape<-"fat_tail2"
+migraShape<-"contiguous_long_dist_mixt"
+migraShape<-"gaussian_long_dist_mixt"
+migraShape<-"constant"
+migraShape<-"yo"
+migraShape<-c("fat_tail1","gaussian")
+migraShape<-1
+
+migrapDisp<-1
+migrapDisp<-c(1)
+migrapDisp<-c(1,2)
+migrapDisp<-"1"
+migrapDisp<-1.2
+migrapDisp<-c(1.2)
+migrapDisp<-c(1,"1")
+
+
+migramodel<-MigrationModel(shape = migraShape,param = migrapDisp)
+
+
+######## EnvDinModel ###################
+vari<-c("l","t")
+
+para<-list(1,c(1,5))
+para<-list(1,2)
+para<-list(c(2,3),c(1,5))
+
+rea<-c(l="constant",t="envelin")
+
+migrapDisp<-c(1,2)
+migraShape<-"fat_tail1"
+
+nicheK<-NicheModel(variables = vari, parameterList = para,reactNorms = rea)
+nicheK<-1
+
+nicheR<-NicheModel(variables = vari, parameterList = para,reactNorms = rea)
+nicheR<-"2"
+  
+migramodel<-MigrationModel(shape = migraShape,param = migrapDisp)
+migramodel<-NicheModel(variables = vari, parameterList = para,reactNorms = rea)
+env1<-EnvDinModel(K=nicheK,R=nicheR,migration = migramodel)
+
+
+
+######## test fonction ###################
+r1<- raster(ncol=2, nrow=1)
+r1[] <- rep(1,2:2)
+r2<- raster(ncol=2, nrow=1)
+r2[] <- rep(1,2:2)
+s<- stack(x=c(r1,r2))
+
+p1<-as.Date("2000-01-11")
+v<-c("l","p")
+lands<-Landscape(rasterstack = s,period = p1,vars = v)
+lands<-Landscape(rasterstack = s2,period = p1,vars = v)
+
+
+########## CONSTRUCTION D'UN TRANSITION MATRIX ################
+r1<- raster(ncol=2, nrow=1)
+r1[] <- rep(1,2:2)
+r2<- raster(ncol=2, nrow=1)
+r2[] <- rep(1,2:2)
+s<- stack(x=c(r1,r2))
+p1<-as.Date("2000-01-11")
+vari<-c("l","t")
+para<-list(1,c(1,5))
+rea<-c(l="constant",t="envelin")
+
+lscp1<-Landscape(rasterstack = s,period=p1,vars=vari)
+
+modelK<-NicheModel(variables="l",parameterList=list(1),reactNorms="constant")
+modelR<-NicheModel(variables="t",parameterList=list(c(1,5)),reactNorms="envelin")
+
+m<-MigrationModel(shape="gaussian",param = 1)
+
+edm1<-EnvDinModel(K=modelK,R=modelR,migration = m)
+createTransitionMatrix(lscp1,edm1)
+edm1
+transi1<-createTransitionMatrix(lscp1,edm1)
+
+
+
 
 
 

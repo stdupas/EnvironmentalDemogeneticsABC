@@ -1,5 +1,4 @@
 library(raster)
-
 #########PRECURSEUR #######################################
 
 setGeneric(
@@ -135,14 +134,18 @@ setClass("LandscapeHistory",
                              if(any(unlist(lapply(1:length(object),function(x) class(object[[x]])!="Landscape")))) stop("An element of the list is not a Landscape.")
                              if (any(unlist(lapply(1:length(object),function(x) any(object[[x]]@vars!=object[[1]]@vars))))) stop("error in lanscape list, vars differ between periods.")
                              if(length(object)>1){
-                               if(any(unlist(lapply(1:length(object),function(x) lapply(x:length(object),function(y)if(x!=y)any(object[[y]]@period==object[[x]]@period))))))stop("error in lanscape period, at least two landscape have same period.")    
+                               if(any(unlist(lapply(1:length(object),function(x) lapply(x:length(object),function(y)if(x!=y)any(object[[y]]@period==object[[x]]@period))))))stop("error in lanscape period, at least two landscape have same period.")
+                               if(any(unlist(lapply(1:(length(object)-1),function(x) (object[[x]]["period"][2]+1)!=object[[x+1]]["period"][1]))))stop("error in lanscape list, periods are not contigous")
                              }
                            }
                   )
 
-LandscapeHistory<-function(Landscapelist=listOfLandscape){new("LandscapeHistory",Landscapelist)}
-
-
+LandscapeHistory<-function(Landscapelist=listOfLandscape){
+  li<-unlist(lapply(1:length(Landscapelist),function(x) Landscapelist[[x]]["period"][1]))
+  o<-order(c(li))
+  lo<-unlist(lapply(1:length(o),function(x)lapply(1:length(o),function(y){if(o[y]==x)Landscapelist[y]})))
+  new("LandscapeHistory",lo)
+}
 
 nbpar <- function(x) {unlist(lapply(x,function(x) switch(x,
                             constant=1,
@@ -303,7 +306,7 @@ setMethod("runNicheModel",
           definition = function(object,model){                  #X=object, p=,shape=
             Y=lapply(model@variables,function(x){
                    									switch(model@reactNorms[[x]],
-                   									       constant={object[[x]]<-setValues(object[[x]],rep(model@parameterList[[x]],ncell(object[[x]])))},
+                   									       constant={setValues(object[[x]],rep(model@parameterList[[x]],ncell(object[[x]])))},
                    									       #proportional = {values(object[[x]])=object[[x]]*model@parameterList[[x]]},
                    									       enveloppe = {object[[x]]=envelope(object[[x]],model@parameterList[[x]])},
                    									       envelin={object[[x]]=envelinear(object[[x]],model@parameterList[[x]])},
@@ -371,6 +374,7 @@ setMethod(f="createTransitionMatrix",
             if ((length(lpar$R)>1)&(length(lpar$K)==1)){transition = t(matrix(lpar$R,nrow=length(lpar$R),ncol=length(lpar$R))) * lpar$K * t(lpar$migration)}
             if ((length(lpar$R)>1)&(length(lpar$K)>1)) {transition = t(matrix(lpar$R,nrow=length(lpar$R),ncol=length(lpar$R))) * t(matrix(lpar$K,nrow=length(lpar$K),ncol=length(lpar$K))) * t(lpar$migration)}
             #TransitionBackward(transition)
+            lpar
           }
 )
 
@@ -515,20 +519,20 @@ lands<-Landscape(rasterstack = s,period = p,vars = v)
 r1<- raster(ncol=2, nrow=1)
 r1[] <- rep(1,2:2)
 r2<- raster(ncol=2, nrow=1)
-r2[] <- rep(1,2:2)
+r2[] <- rep(2,2:2)
 s<- stack(x=c(r1,r2))
-p1<-as.Date("2000-01-11")
-p2<-as.Date("2000-01-12")
-v<-c("layer.1","layer.2")
+p1<-c(as.Date("2000-01-11"),as.Date("2000-01-12"))
+p2<-c(as.Date("2000-01-13"),as.Date("2000-01-14"))
 lands<-Landscape(rasterstack = s,period = p1,vars = v)
 lands2<-Landscape(rasterstack = s,period = p2,vars = v)
 lLands<-list(lands,lands2)
-lLands<-c(lands,lands2)
+lLands<-c(lands2,lands)
 lLands<-c(1,lands)
 lLands<-c(lands,1)
 lLands<-list(lands,lands)
 landsH<-LandscapeHistory(lLands)
-
+landsH[[1]]["period"]
+#
 ######## NicheModel ###################
 vari<-c("l")
 vari<-"l"
@@ -622,39 +626,27 @@ lands<-Landscape(rasterstack = s2,period = p1,vars = v)
 
 ########## CONSTRUCTION D'UN TRANSITION MATRIX ################
 r1<- raster(ncol=2, nrow=1)
-r1[] <- rep(1,2:2)
+r1[] <- rep(2,2:2)
 r2<- raster(ncol=2, nrow=1)
-r2[] <- rep(1,2:2)
+r2[] <- rep(2,2:2)
 s<- stack(x=c(r1,r2))
 p1<-as.Date("2000-01-11")
 vari<-c("l","t")
-para<-list(1,c(1,5))
+para<-list(2,c(1,5))
 rea<-c(l="constant",t="envelin")
 
 lscp1<-Landscape(rasterstack = s,period=p1,vars=vari)
 
-modelK<-NicheModel(variables="l",parameterList=list(1),reactNorms="constant")
-modelR<-NicheModel(variables="t",parameterList=list(c(1,5)),reactNorms="envelin")
+modelK<-NicheModel(variables="l",parameterList=list(2),reactNorms="constant")
+modelR<-NicheModel(variables=vari,parameterList=para,reactNorms=rea)
 
+a<-runNicheModel(lscp1,modelR )
+values(a)
 m<-MigrationModel(shape="gaussian",param = 1)
 
 edm1<-EnvDinModel(K=modelK,R=modelR,migration = m)
-createTransitionMatrix(lscp1,edm1)
-edm1
 transi1<-createTransitionMatrix(lscp1,edm1)
+transi1
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+edm1
 

@@ -147,7 +147,7 @@ LandscapeHistory<-function(Landscapelist=listOfLandscape){
   new("LandscapeHistory",lo)
 }
 
-nbpar <- function(x) {unlist(lapply(x,function(x) switch(x,
+nbpar <- function(x) {unlist(lapply(x,function(x) switch(x[],
                             constant=1,
                             proportional=1,
                             enveloppe=2,
@@ -172,7 +172,7 @@ validityNicheModel = function(object){
   if(class(object@reactNorms)!="character")stop("error in NicheModel reactNorms : reactNorms just accept character!")
   if(FALSE%in%lapply(object@parameterList,is.numeric))stop("error in NicheModel parameter list : Parameter list just accept numeric!")
   if(length(object@variables)!=length(object@reactNorms))stop("error in NicheModel : number of variables and number of reaction norms do not correspond")
-  notMatching <- (nbpar(object@reactNorms) != unlist(lapply(1:length(object@parameterList),function(x) length(object@parameterList[[x]])))) 
+  notMatching <- (unlist(lapply(1:length(object@parameterList),function(x) nbpar(object@reactNorms[x]) != length(object@parameterList[[x]])))) 
   if (any(notMatching)) stop(paste("error in NicheModel : number of paremeters and reactionNorm do not match for variable ",which(notMatching),". ",sep=""))
   #              if grep("(",object@form)
   TRUE 
@@ -240,7 +240,7 @@ TransitionBackward<-setClass("TransitionBackward",
                              validity = function(object){
                                if (nrow(object)==0)stop("The matrix is empty.")
                                if (nrow(object)!=ncol(object))stop("The matrix is not square")
-                               if (all(rowSums(object)==1))TRUE else stop("The sum of probabilities in each row is not 1.")
+                               #if (any(rowSums(object)!=1))stop("The sum of probabilities in each row is not 1.")
                              }
 )
 
@@ -308,12 +308,13 @@ setMethod("runNicheModel",
                    									switch(model@reactNorms[[x]],
                    									       constant={setValues(object[[x]],rep(model@parameterList[[x]],ncell(object[[x]])))},
                    									       #proportional = {values(object[[x]])=object[[x]]*model@parameterList[[x]]},
-                   									       enveloppe = {object[[x]]=envelope(object[[x]],model@parameterList[[x]])},
+                   									       enveloppe = {object[[x]]=enveloppe(object[[x]],model@parameterList[[x]])},
                    									       envelin={object[[x]]=envelinear(object[[x]],model@parameterList[[x]])},
-                   									       conQuadratic={object[[x]]=conQuadratic(object[[x]],model@parameterList[[x]])} 
+                   									       conQuadratic={object[[x]]=conQuadratic(object[[x]],model@parameterList[[x]])}, 
                                                  #conquadraticskewed=conquadraticskewed(object[,,(model@variables==x)],p),
                                                  #conquadraticsq=conquadraticsq(object[,,(model@variables==x)],p),
                                                  #conquadraticskewedsq=conquadraticskewedsq(object[,,(model@variables==x)],p)
+                   									       stop("This variable does not exist for NicheModel !")
                    									)
                          }
                 )
@@ -323,14 +324,14 @@ setMethod("runNicheModel",
 
 
 
-envelope <- function(X,p){
+enveloppe <- function(X,p){
   if(length(p)!=2)stop("The parameter is  not valid because it contains more or less than two values")
   else X>=p[1]&X<=p[2]
 }
 
 envelinear <- function(X, p) {
   if(length(p)!=2)stop("The parameter is  not valid because it contains more or less than two values")
-  else (X-p[1])/(p[2]-p[1])*envelope(X,p)
+  else (X-p[1])/(p[2]-p[1])*enveloppe(X,p)
 }
 #plot(1:100,envelinear(1:100,c(20,60)))
 
@@ -339,7 +340,7 @@ constant <- function(X,p){X[]<-p}
 conQuadratic <- function(X,p)
 {
   if(length(p)!=2)stop("The parameter is  not valid because it contains more or less than two values")
-  else -4*(X-p[2])*(X-p[1])/((p[2]-p[1])^2)*envelope(X,p)
+  else -4*(X-p[2])*(X-p[1])/((p[2]-p[1])^2)*enveloppe(X,p)
 }
 #plot(1:100,conQuadratic(1:100,c(20,60)))
 
@@ -373,8 +374,9 @@ setMethod(f="createTransitionMatrix",
             if ((length(lpar$R)==1)&(length(lpar$K)>1)){transition = lpar$R * t(matrix(lpar$K,nrow=length(lpar$K),ncol=length(lpar$K))) * t(lpar$migration)}
             if ((length(lpar$R)>1)&(length(lpar$K)==1)){transition = t(matrix(lpar$R,nrow=length(lpar$R),ncol=length(lpar$R))) * lpar$K * t(lpar$migration)}
             if ((length(lpar$R)>1)&(length(lpar$K)>1)) {transition = t(matrix(lpar$R,nrow=length(lpar$R),ncol=length(lpar$R))) * t(matrix(lpar$K,nrow=length(lpar$K),ncol=length(lpar$K))) * t(lpar$migration)}
-            #TransitionBackward(transition)
-            lpar
+            t<-transition/t(sapply(rowSums(transition),function(x)rep(x,ncol(transition))))
+            TransitionBackward(t)
+            
           }
 )
 
@@ -410,6 +412,7 @@ setMethod(
   definition=function(object,model)
   {
     Ndim = 1+all(ncell(object)!=dim(object)[1:2])
+    #if model["shapeDisp"]=="contiguous" matrix()
     migration = apply(object["distanceMatrix"], c(1,2), 
                       function(x)(switch(model["shapeDisp"],
                                          fat_tail1 = 1/(1+x^model["pDisp"][2]/model["pDisp"][1]),
@@ -422,7 +425,7 @@ setMethod(
                                          contiguous_long_dist_mixt = model["pDisp"]["plongdist"]/ncellA(object)+(x==0)*(1-model["pDisp"]["pcontiguous"]-model["pDisp"]["plongdist"])+((x>0)-(x>1.4*res(object)[1]))*(model["pDisp"]["pcontiguous"]/2),
                                          gaussian_long_dist_mixt = model["pDisp"][2]/ncellA(object) + (dnorm(x, mean = 0, sd = model["pDisp"][1], log = FALSE))
                       )))
-        return(migration/sapply(rowSums(migration),function(x)rep(x,ncol(migration))))
+        return(migration)
   }
 )
 
@@ -522,7 +525,7 @@ r2<- raster(ncol=2, nrow=1)
 r2[] <- rep(2,2:2)
 s<- stack(x=c(r1,r2))
 p1<-c(as.Date("2000-01-11"),as.Date("2000-01-12"))
-p2<-c(as.Date("2000-01-13"),as.Date("2000-01-14"))
+p2<-c(as.Date("2000-01-13"),as.Date("2000-01-13"))
 lands<-Landscape(rasterstack = s,period = p1,vars = v)
 lands2<-Landscape(rasterstack = s,period = p2,vars = v)
 lLands<-list(lands,lands2)
@@ -625,28 +628,28 @@ lands<-Landscape(rasterstack = s2,period = p1,vars = v)
 
 
 ########## CONSTRUCTION D'UN TRANSITION MATRIX ################
-r1<- raster(ncol=2, nrow=1)
-r1[] <- rep(2,2:2)
-r2<- raster(ncol=2, nrow=1)
+r1<- raster(ncol=2, nrow=2)
+r1[] <- rep(2:5,1)
+r2<- raster(ncol=2, nrow=2)
 r2[] <- rep(2,2:2)
 s<- stack(x=c(r1,r2))
 p1<-as.Date("2000-01-11")
-vari<-c("l","t")
-para<-list(2,c(1,5))
-rea<-c(l="constant",t="envelin")
-
+variK<-c("l","t")
+variR<-c("c","t")
+paraK<-list(c(0,5),2)
+paraR<-list(2,2)
+reaK<-c(l="envelin",t="constant")
+reaR<-c(l="constant",t="constant")
+extent(s)<-c(0,2,0,2)
 lscp1<-Landscape(rasterstack = s,period=p1,vars=vari)
-
-modelK<-NicheModel(variables="l",parameterList=list(2),reactNorms="constant")
+modelK<-NicheModel(variables=vari,parameterList=para,reactNorms=rea)
 modelR<-NicheModel(variables=vari,parameterList=para,reactNorms=rea)
-
-a<-runNicheModel(lscp1,modelR )
-values(a)
-m<-MigrationModel(shape="gaussian",param = 1)
+m<-MigrationModel(shape="gaussian",param = (1/1.96))
+a<-runNicheModel(lscp1,modelK)
+migrationMatrix(lscp1,m)
 
 edm1<-EnvDinModel(K=modelK,R=modelR,migration = m)
+runEnvDinModel(lscp1,edm1)
 transi1<-createTransitionMatrix(lscp1,edm1)
-transi1
-
-edm1
+rowSums(transi1)[4]==1
 

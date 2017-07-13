@@ -1,5 +1,5 @@
 library(raster)
-#########PRECURSEUR #######################################
+######### PRECURSEUR ######################################################
 
 setGeneric(
   name = "xyFromCellA",
@@ -95,7 +95,7 @@ setMethod(
     x
   }
 )
-##########SET CLASS#########################################
+######### SET CLASS ########################################################################################################
 
 validLandscape = function(object){
   if (length(object@period)!=2) stop("the period is  not valid because it contains more or less than two dates")
@@ -238,9 +238,9 @@ TransitionBackward<-setClass("TransitionBackward",
                              contains = "matrix",
                              prototype = prototype(matrix(nrow=100,ncol=100)),
                              validity = function(object){
-                               if (nrow(object)==0)stop("The matrix is empty.")
+                               if (all(nrow(object)==0))stop("The matrix is empty.")
                                if (nrow(object)!=ncol(object))stop("The matrix is not square")
-                               #if (any(rowSums(object)!=1))stop("The sum of probabilities in each row is not 1.")
+                               if (!all(rowSums(object)>0.999999999 && rowSums(object)<1.111111111))stop("The sum of probabilities in each row is not 1.")
                              }
 )
 
@@ -255,7 +255,7 @@ TransitionBackward<- function(matrix){
   new(Class="TransitionBackward",matrix)
 }
 
-#######SET METHODS##########################################
+######### SET METHODS ##########################################################################################################
 
 setMethod(
   f ="[",
@@ -358,7 +358,7 @@ quadraticConcave(X,p)*envelinear(X,p)
 #df/dx((p1+p2)/2)=-2a
 #1=a(p2-p1)/2*(p1-p2)/2
 #a=-4/(p2-p1)^2
-#########CREER TRANSITION MATRIX#############################
+######### CREER TRANSITION MATRIX ###############################################################################
 
 setGeneric(
   name = "createTransitionMatrix",
@@ -429,7 +429,7 @@ setMethod(
   }
 )
 
-##########MANIPULATION CLASS################################
+######### MANIPULATION CLASS ################################
 
 r <- raster(ncol=2, nrow=2)
 r[] <- c(c(1,2),c(3,4))#rnorm(n=ncell(r))
@@ -493,7 +493,7 @@ b
 
 
 ######################### TEST DES FONCTION #########################################
-### Landscape############
+######### Landscape############
 r1<- raster(ncol=2, nrow=1)
 r1[] <- rep(1,2:2)
 s <- stack(x=c(r1))
@@ -518,7 +518,7 @@ v<-1
 
 lands<-Landscape(rasterstack = s,period = p,vars = v)
 
-### LandscapeHistory ################
+######### LandscapeHistory ################
 r1<- raster(ncol=2, nrow=1)
 r1[] <- rep(1,2:2)
 r2<- raster(ncol=2, nrow=1)
@@ -536,7 +536,7 @@ lLands<-list(lands,lands)
 landsH<-LandscapeHistory(lLands)
 landsH[[1]]["period"]
 #
-######## NicheModel ###################
+######### NicheModel ###################
 vari<-c("l")
 vari<-"l"
 vari<-c(1)
@@ -563,7 +563,7 @@ model
 
 
 
-######## MigrationModel ###################
+######### MigrationModel ###################
 migraShape<-"fat_tail1"
 migraShape<-"gaussian"
 migraShape<-"exponential"
@@ -590,7 +590,7 @@ migrapDisp<-c(1,"1")
 migramodel<-MigrationModel(shape = migraShape,param = migrapDisp)
 
 
-######## EnvDinModel ###################
+######### EnvDinModel ###################
 vari<-c("l","t")
 
 para<-list(1,c(1,5))
@@ -614,7 +614,7 @@ env1<-EnvDinModel(K=nicheK,R=nicheR,migration = migramodel)
 
 
 
-######## test fonction ###################
+######### test fonction ###################
 r1<- raster(ncol=2, nrow=1)
 r1[] <- rep(1,2:2)
 r2<- raster(ncol=2, nrow=1)
@@ -627,7 +627,7 @@ lands<-Landscape(rasterstack = s,period = p1,vars = v)
 lands<-Landscape(rasterstack = s2,period = p1,vars = v)
 
 
-########## CONSTRUCTION D'UN TRANSITION MATRIX ################
+######### CONSTRUCTION D'UN TRANSITION MATRIX ################
 r1<- raster(ncol=2, nrow=2)
 r1[] <- rep(2:5,1)
 r2<- raster(ncol=2, nrow=2)
@@ -651,5 +651,3 @@ migrationMatrix(lscp1,m)
 edm1<-EnvDinModel(K=modelK,R=modelR,migration = m)
 runEnvDinModel(lscp1,edm1)
 transi1<-createTransitionMatrix(lscp1,edm1)
-rowSums(transi1)[4]==1
-

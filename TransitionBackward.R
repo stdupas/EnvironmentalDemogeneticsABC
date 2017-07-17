@@ -14,21 +14,95 @@ r2<- raster(ncol=2, nrow=2)
 r2[] <- rep(2,2:2)
 s<- stack(x=c(r1,r2))
 p1<-as.Date("2000-01-11")
-variK<-c("l","t")
-variR<-c("c","t")
+vari<-c("l","t")
 paraK<-list(c(0,5),2)
 paraR<-list(2,2)
 reaK<-c(l="envelin",t="constant")
 reaR<-c(l="constant",t="constant")
 extent(s)<-c(0,2,0,2)
 lscp1<-Landscape(rasterstack = s,period=p1,vars=vari)
-modelK<-NicheModel(variables=vari,parameterList=para,reactNorms=rea)
-modelR<-NicheModel(variables=vari,parameterList=para,reactNorms=rea)
+modelK<-NicheModel(variables=vari,parameterList=paraK,reactNorms=reaK)
+modelR<-NicheModel(variables=vari,parameterList=paraR,reactNorms=reaR)
 m<-MigrationModel(shape="gaussian",param = (1/1.96))
 edm1<-EnvDinModel(K=modelK,R=modelR,migration = m)
-transi1<-createTransitionMatrix(lscp1,edm1)
-xyFromCellA(lscp1)
+demo1<-createDemographic(lscp1,edm1)
 ###########
+
+setClass("TransitionForward",
+         contains = "matrix",
+         validity = function(object){
+                        if (all(nrow(object)==0))stop("The matrix is empty.")
+                        if (nrow(object)!=ncol(object))stop("The matrix is not square")
+                        if (!all(rowSums(object)>0.999999999 && rowSums(object)<1.111111111))stop("The sum of probabilities in each row is not 1.")
+                      }
+)
+
+setGeneric(
+  name = "transitionMatrixBackward",
+  def=function(object,model){return(standardGeneric("transitionMatrixBackward"))}
+)
+
+setMethod(f="transitionMatrixBackward",
+          signature=c("Landscape","list"),
+          definition=function(object,model){
+            if ((length(model$R)==1)&(length(model$K)==1)){transition = model$R * model$K * t(model$migration)}
+            if ((length(model$R)>1)&(length(model$K)==1)){transition = t(matrix(model$R,nrow=length(model$R),ncol=length(model$R))) * model$K * t(model$migration)}
+            if ((length(model$R)==1)&(length(model$K)>1)){transition = model$R * t(matrix(model$K,nrow=length(model$K),ncol=length(model$K))) * t(model$migration)}
+            if ((length(model$R)>1)&(length(model$K)==1)){transition = t(matrix(model$R,nrow=length(model$R),ncol=length(model$R))) * lpar$K * t(model$migration)}
+            if ((length(model$R)>1)&(length(model$K)>1)) {transition = t(matrix(model$R,nrow=length(model$R),ncol=length(model$R))) * t(matrix(model$K,nrow=length(model$K),ncol=length(model$K))) * t(model$migration)}
+            t<-transition/t(sapply(rowSums(transition),function(x)rep(x,ncol(transition))))
+            TransitionBackward(t)
+            
+          }
+)
+
+setGeneric(
+  name = "transitionMatrixForward",
+  def=function(param, meth){return(standardGeneric("transitionMatrixForward"))}
+)
+
+setMethod(
+  f="transitionMatrixForward",
+  signature=c("list","character"),
+  definition=function(param, meth)
+  {
+    rs = matrix(param$R,nrow=length(param$R),ncol=length(param$R))
+    Ku = t(matrix(param$K,nrow=length(param$K),ncol=length(param$K)))
+    leave = param$migration*(1+rs)*t(Ku); leave = leave - diag(leave)
+    tMF<-switch (meth,
+            non_overlap = param$migration * rs * Ku / colSums(rs * t(Ku) * param$migration),
+            overlap = param$migration * (1+rs) * Ku / (colSums((1+rs) * t(Ku) * param$migration - t(leave))),
+            stop("error in creation of transitionMatrixForward : the method does not exist !")
+    )
+    new(Class = "TransitionForward",tMF)
+  }
+)
+
+
+setGeneric(
+  name = "createDemographic",
+  def=function(object,model){return(standardGeneric("createDemographic"))}
+)
+
+setMethod(f="createDemographic",
+          signature=c("Landscape","EnvDinModel"),
+          definition=function(object,model){
+            lpar<-runEnvDinModel(object,model)
+            b<-transitionMatrixBackward(object,lpar)
+            f<-transitionMatrixForward(lpar,"non_overlap")
+            new(Class = "Demographic",object,K=lpar$K,R=lpar$R,TransiBackw=b,TransiForw=f)
+          }
+)
+
+
+Demographic<-setClass("Demographic",                                ### AJOUTER TRANSITION BACKWARD
+                      contains = "Landscape",
+                      slots = c(K="numeric", R="numeric",TransiBackw="TransitionBackward",TransiForw="TransitionForward"),
+                      validity = function(object){
+                        if(any(object@K<0))stop("K is negative")
+                        if(any(object@R<0))stop("R is negative")
+                      }
+)
 
 setGeneric(
   name = "laplaceMatrix",
@@ -65,27 +139,6 @@ setMethod(
 
 
 setGeneric(
-  name = "commute_time_undigraph",
-  def=function(object){return(standardGeneric("commute_time_undigraph"))}
-)
-
-setMethod(
-  f="commute_time_undigraph",
-  signature = "TransitionBackward",
-  definition = function(object){
-    laplacian = laplaceMatrix(object)
-    inverseMP = ginv(laplacian) # generalized inverse matrix  (Moore Penrose)
-    diag = diag(inverseMP) # get diagonal of the inverse matrix
-    mii = matrix(diag, nrow =dim(inverseMP), ncol = dim(inverseMP))
-    mjj = t(mii)
-    mij = inverseMP
-    mji = t(mij)
-    commute_time = mii + mjj - mij - mji
-    commute_time
-  }
-)
-
-setGeneric(
   name = "hitting_time_digraph",
   def=function(object){return(standardGeneric("hitting_time_digraph"))}
 )
@@ -113,13 +166,13 @@ setGeneric(
 setMethod(
   f="simul_coalescent",
   signature="list",
-  definition=function(transitionList,geneticData)
+  definition=function(transitionList,geneticData)    # avec K,cell number ou nodes
   {
     prob_forward=NA
     N <- round(transitionList$K);N[N==0]<-1
     coalescent = list()
     nodes = as.numeric(rownames(geneticData));names(nodes)=as.character(nodes)
-    cell_number_of_nodes <- geneticData[,"Cell_numbers"]
+    cell_number_of_nodes <- geneticData[,"Cell_numbers"]             #point d'ou part la coalescent <- vecteurc numeric dont les valeur sont dans les cellules attribué
     names(cell_number_of_nodes) <- nodes
     parent_cell_number_of_nodes <- cell_number_of_nodes
     nodes_remaining_by_cell = list() 
@@ -174,13 +227,6 @@ setMethod(
   }
 )
 
-
-
-
-
-
-
 ############# manipulation #################
-commute_time_undigraph(transi1)
 hitting_time_digraph(transi1)
 

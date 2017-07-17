@@ -234,9 +234,8 @@ EnvDinModel<-function(K=nichemodelK,R=nichemodelR,migration=m){
   new("EnvDinModel",K=K,R=R,migration=migration)
 }
 
-TransitionBackward<-setClass("TransitionBackward",
+setClass("TransitionBackward",
                              contains = "matrix",
-                             prototype = prototype(matrix(nrow=100,ncol=100)),
                              validity = function(object){
                                if (all(nrow(object)==0))stop("The matrix is empty.")
                                if (nrow(object)!=ncol(object))stop("The matrix is not square")
@@ -360,26 +359,6 @@ quadraticConcave(X,p)*envelinear(X,p)
 #a=-4/(p2-p1)^2
 ######### CREER TRANSITION MATRIX ###############################################################################
 
-setGeneric(
-  name = "createTransitionMatrix",
-  def=function(object,model){return(standardGeneric("createTransitionMatrix"))}
-)
-
-setMethod(f="createTransitionMatrix",
-          signature=c("Landscape","EnvDinModel"),
-          definition=function(object,model){
-            lpar<-runEnvDinModel(object,model)
-            if ((length(lpar$R)==1)&(length(lpar$K)==1)){transition = lpar$R * lpar$K * t(lpar$migration)}
-            if ((length(lpar$R)>1)&(length(lpar$K)==1)){transition = t(matrix(lpar$R,nrow=length(lpar$R),ncol=length(lpar$R))) * lpar$K * t(lpar$migration)}
-            if ((length(lpar$R)==1)&(length(lpar$K)>1)){transition = lpar$R * t(matrix(lpar$K,nrow=length(lpar$K),ncol=length(lpar$K))) * t(lpar$migration)}
-            if ((length(lpar$R)>1)&(length(lpar$K)==1)){transition = t(matrix(lpar$R,nrow=length(lpar$R),ncol=length(lpar$R))) * lpar$K * t(lpar$migration)}
-            if ((length(lpar$R)>1)&(length(lpar$K)>1)) {transition = t(matrix(lpar$R,nrow=length(lpar$R),ncol=length(lpar$R))) * t(matrix(lpar$K,nrow=length(lpar$K),ncol=length(lpar$K))) * t(lpar$migration)}
-            t<-transition/t(sapply(rowSums(transition),function(x)rep(x,ncol(transition))))
-            TransitionBackward(t)
-            
-          }
-)
-
 
 
 setGeneric(
@@ -429,70 +408,7 @@ setMethod(
   }
 )
 
-######### MANIPULATION CLASS ################################
-
-r <- raster(ncol=2, nrow=2)
-r[] <- c(c(1,2),c(3,4))#rnorm(n=ncell(r))
-s <- stack(x=c(r, r*2, r+1,r*3))
-
-class(r[])
-
-vari<-c("l","t","p","h")
-#vari<-c("l","t","p")
-#para<-list(c(1,3),2,c(4,5.2))
-para<-list(1,c(1,5),c(1,5.2),c(3,8))
-rea<-c(l="constant",t="envelin",p="enveloppe",h="envelin")
-#rea<-c(l="constant",t="constant",p="constant")
-formul=c(1,"*","(",2,"*",3,"*",4,")")
-
-
-
-lscp1<-Landscape(rasterstack = s,period=as.Date("2017-02-01"),vars=vari)
-
-
-model<-NicheModel(variables=vari,parameterList=para,reactNorms=rea,form=formul)
-
-landhistory <- LandscapeHistory(list(Landscape(LandscapeArray1,period=pe1,vars=vari),Landscape(LandscapeArray2,period=pe2,vars=vari)))
-lista<-list(lscp1,lscp2)
-lh1<-LandscapeHistory(lista)
-
-a<-runNicheModel(lscp1,model)
-lscp1["distanceMatrix"]
-class(lscp1[1])
-values(a)
-setValues()
-class(values(a))
-a
-plot(a)
-par(mfrow=c(2,3))
-valuesA(a)
-
-m<-MigrationModel(shape="gaussian",param = 1)
-m["pDisp"]
-edm1<-EnvDinModel(K=model,R=model,migration = m)
-createTransitionMatrix(lscp1,edm1)
-edm1
-transi1<-createTransitionMatrix(lscp1,edm1)
-
-
-
-###################################################################################
-r1<- raster(ncol=2, nrow=2)
-r2<- raster(ncol=2, nrow=2)
-r2[] <- rep(2,2:2)
-r1[] <- rep(1,2:2)
-s <- stack(x=c(r1,r2))
-land1<-Landscape(rasterstack = s,period = as.Date(c("2017-02-02","2017-02-06")),vars = c("l","p"))
-model1<-NicheModel(var=c("l","p"),reactNorms = c(l="constant",p="constant"),parameterList = list(0.5,1),form =c("(",1,"*",2,")") )
-migra1<-MigrationModel(shape = "fat_tail1",param = c(1,1))
-env1<-EnvDinModel(K=model1,R=model1,migration = migra1)
-a=(runEnvDinModel(land1,env1))
-a
-b=createTransitionMatrix(land1,env1)
-b
-
-
-######################### TEST DES FONCTION #########################################
+############### TEST DES FONCTION 
 ######### Landscape############
 r1<- raster(ncol=2, nrow=1)
 r1[] <- rep(1,2:2)

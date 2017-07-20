@@ -7,35 +7,51 @@ library(abind)
 library(rgdal)
 library(raster)
 library(MASS)
-############## CREATION OF TransitionMatrix #######################################
-r1<- raster(ncol=2, nrow=2)
-r1[] <- rep(2:5,1)
-r2<- raster(ncol=2, nrow=2)
-r2[] <- rep(2,2:2)
-s<- stack(x=c(r1,r2))
-p1<-as.Date("2000-01-11")
-vari<-c("l","t")
-paraK<-list(c(0,5),2)
-paraR<-list(2,2)
-reaK<-c(l="envelin",t="constant")
-reaR<-c(l="constant",t="constant")
-extent(s)<-c(0,2,0,2)
-lscp1<-Landscape(rasterstack = s,period=p1,vars=vari)
-modelK<-NicheModel(variables=vari,parameterList=paraK,reactNorms=reaK)
-modelR<-NicheModel(variables=vari,parameterList=paraR,reactNorms=reaR)
-m<-MigrationModel(shape="gaussian",param = (1/1.96))
-edm1<-EnvDinModel(K=modelK,R=modelR,migration = m)
-demo1<-createDemographic(lscp1,edm1)
-###########
+
+############## CLASS AND VALIDITY ####
 
 setClass("TransitionForward",
          contains = "matrix",
          validity = function(object){
                         if (all(nrow(object)==0))stop("The matrix is empty.")
                         if (nrow(object)!=ncol(object))stop("The matrix is not square")
-                        if (!all(rowSums(object)>0.999999999 && rowSums(object)<1.111111111))stop("The sum of probabilities in each row is not 1.")
                       }
 )
+
+Demographic<-setClass("Demographic",                                ### AJOUTER TRANSITION BACKWARD
+                      contains = "Landscape",
+                      slots = c(K="numeric", R="numeric",TransiBackw="TransitionBackward",TransiForw="TransitionForward"),
+                      validity = function(object){
+                        if(any(object@K<0))stop("K is negative")
+                        if(any(object@R<0))stop("R is negative")
+                      }
+)
+
+############## METHODS #####
+
+setMethod(
+  f ="[",
+  signature = c(x="Demographic" ,i="character",j="missing"),
+  definition = function (x ,i ,j , drop ){
+    switch ( EXPR =i,
+             "K" ={return(x@K)} ,
+             "R" ={return(x@R)} ,
+             "TransiBackw" ={return(x@TransiBackw)} ,
+             "TransiForw" = {return(x@TransiForw)},
+             stop("This slots doesn't exist!")
+    )
+  }
+)
+
+
+
+
+
+
+
+
+
+
 
 setGeneric(
   name = "transitionMatrixBackward",
@@ -95,14 +111,16 @@ setMethod(f="createDemographic",
 )
 
 
-Demographic<-setClass("Demographic",                                ### AJOUTER TRANSITION BACKWARD
-                      contains = "Landscape",
-                      slots = c(K="numeric", R="numeric",TransiBackw="TransitionBackward",TransiForw="TransitionForward"),
-                      validity = function(object){
-                        if(any(object@K<0))stop("K is negative")
-                        if(any(object@R<0))stop("R is negative")
-                      }
+
+
+setMethod(
+  f = "nCellA",
+  signature = "Demographic",
+  definition = function(object){
+    nCellA(object[[1]])
+  }
 )
+
 
 setGeneric(
   name = "laplaceMatrix",
@@ -159,27 +177,41 @@ setMethod(
 )
 
 setGeneric(
-  name = "simul_coalescent",
-  def=function(transitionList){return(standardGeneric("simul_coalescent"))}
+  name = "commute_time_digraph",
+  def=function(object){return(standardGeneric("commute_time_digraph"))}
 )
 
 setMethod(
+  f="commute_time_digraph",
+  signature = "TransitionBackward",
+  definition = function(object){
+    mat<-hitting_time_digraph(object)
+    sapply(1:ncol(mat),function(x)sapply(1:nrow(mat),function(y)mat[x,y]+mat[y,x]))
+  }
+)
+
+setGeneric(
+  name = "simul_coalescent",
+  def=function(demographic){return(standardGeneric("simul_coalescent"))}
+)
+############################################
+setMethod(
   f="simul_coalescent",
-  signature="list",
-  definition=function(transitionList,geneticData)    # avec K,cell number ou nodes
+  signature="Demographic",
+  definition=function(demographic)    # avec K,cell number ou nodes
   {
     prob_forward=NA
-    N <- round(transitionList$K);N[N==0]<-1
+    N <- round(demographic["K"]);N[N==0]<-1
     coalescent = list()
-    nodes = as.numeric(rownames(geneticData));names(nodes)=as.character(nodes)
-    cell_number_of_nodes <- geneticData[,"Cell_numbers"]             #point d'ou part la coalescent <- vecteurc numeric dont les valeur sont dans les cellules attribué
+    nodes = as.numeric(rownames(xyFromCellA(demographic)));names(nodes)=as.character(nodes)
+    cell_number_of_nodes <- as.numeric(rownames(xyFromCellA(demographic)))             #point d'ou part la coalescent <- vecteurc numeric dont les valeur sont dans les cellules attribué
     names(cell_number_of_nodes) <- nodes
     parent_cell_number_of_nodes <- cell_number_of_nodes
     nodes_remaining_by_cell = list() 
     time=0 
     single_coalescence_events=0
     single_and_multiple_coalescence_events=0 
-    for (cell in 1:ncellA(rasterStack))
+    for (cell in 1:nCellA(demographic))
     {
       nodes_remaining_by_cell[[cell]] <- which(cell_number_of_nodes==cell)
     }
@@ -187,17 +219,17 @@ setMethod(
     {
       for (node in 1:length(parent_cell_number_of_nodes))
       {
-        parent_cell_number_of_nodes[node] = sample(ncellA(rasterStack),size=1,prob=c(transitionList$backw[cell_number_of_nodes[node],]))
+        parent_cell_number_of_nodes[node] = sample(nCellA(demographic),size=1,prob=c(demographic["TransiBackw"][cell_number_of_nodes[node],]))
       }
-      prob_forward[time] = sum(log(transitionList$forw[parent_cell_number_of_nodes,cell_number_of_nodes]))
+      prob_forward[time] = sum(log(demographic["TransiForw"][parent_cell_number_of_nodes,cell_number_of_nodes]))
       time=time+1; if (round(time/10)*10==time) {print(time)}
-      for (cell in 1:ncellA(rasterStack))
+      for (cell in 1:nCellA(demographic))
       {
         nodes_remaining_in_the_cell = nodes_remaining_by_cell[[cell]] <- as.numeric(names(which(parent_cell_number_of_nodes==cell)))
       }
-      prob_forward[time] = sum(log(transitionList$forw[parent_cell_number_of_nodes,cell_number_of_nodes]))
+      prob_forward[time] = sum(log(demographic["TransiForw"][parent_cell_number_of_nodes,cell_number_of_nodes]))
       time=time+1; if (round(time/10)*10==time) {print(time)}
-      for (cell in 1:ncellA(rasterStack))
+      for (cell in 1:nCellA(demographic))
       {     
         nodes_remaining_in_the_cell = nodes_remaining_by_cell[[cell]] <- as.numeric(names(which(parent_cell_number_of_nodes==cell)))
         if (length(nodes_remaining_in_the_cell)>1) 
@@ -223,10 +255,130 @@ setMethod(
       }
       cell_number_of_nodes = parent_cell_number_of_nodes
     }
+    tips = NULL
+    internals = NULL
+    nodes = NULL
+    times = NULL
+    for (i in 1:length(coalescent))#i=1;i=2
+    {
+      nodes = append(nodes,c(coalescent[[i]]$coalescing,coalescent[[i]]$new_node))
+      internals = append(internals,coalescent[[i]]$new_node)
+      times = append(times,coalescent[[i]]$time)
+    }
+    nodes = as.numeric(levels(as.factor(c(nodes,internals))));nodes = nodes[order(nodes)]
+    tips = nodes[!((nodes)%in%(internals))]
+    # getting the branch length of each coalescing node
+    for (i in 1:length(coalescent))#i=1
+    {
+      for (coalescing in coalescent[[i]]$coalescing)# coalescing = coalescent[[i]]$coalescing[1]
+      {
+        if (coalescing %in% tips) {coalescent[[i]]$br_length <- append(coalescent[[i]]$br_length,coalescent[[i]]$time)
+        } else {
+          coalescent[[i]]$br_length <- append(coalescent[[i]]$br_length,coalescent[[i]]$time-times[which(internals==coalescing)]) 
+        } 
+      }
+    }
     list(coalescent=coalescent,prob_forward=sum(prob_forward))
   }
 )
 
-############# manipulation #################
-hitting_time_digraph(transi1)
+############################################
+setMethod(
+  f = "valuesA",
+  signature = "Landscape",
+  definition = function(object){
+    x=na.omit(values(object))
+    colnames(x)=names(x)
+    rownames(x) <- cellNumA(object)
+    x
+  }
+)
+
+
+
+
+setGeneric(
+  name = "linearizedFstDigraph",
+  def=function(transition, popSize){return(standardGeneric("linearizedFstDigraph"))}
+)
+setMethod(
+  f="linearizedFstDigraph",
+  signature=c("TransitionBackward","Landscape"),
+  definition=function(transition, popSize)#popSize is raster class
+  {
+    H <- hitting_time_digraph(transition)
+    dim2 <- dim(H);dim2[[3]]=2
+    H2 <- array(c(H,t(H)),dim=dim2)
+    MaxH <- apply(H2,c(1,2),max)
+    genetic_dist = MaxH / (8*sum(valuesA(popSize))*nCellA(popSize))
+    genetic_dist
+  }
+)
+
+setGeneric(
+  name = "coalescent_2_newick",
+  def=function(coalescent){return(standardGeneric("coalescent_2_newick"))}
+)
+
+setMethod(
+  f="coalescent_2_newick",
+  signature="list",
+  definition=function(coalescent)
+  {
+    tree=paste(" ",coalescent[[length(coalescent)]]$new_node," ",sep="")
+    for (i in length(coalescent):1)
+    {
+      Time = coalescent[[i]]$time
+      coalesc <- as.character(coalescent[[i]]$coalescing)
+      tree <- str_replace(tree,paste(" ",as.character(coalescent[[i]]$new_node)," ",sep=""),paste(" ( ",paste(" ",coalesc," :",coalescent[[i]]$br_length,collapse=" ,",sep=""),") ",sep=""))
+    }
+    tree <- gsub(" ","",paste(tree,";",sep=""))
+    tree
+  } 
+)
+
+setGeneric(
+  name = "linearizedFstUndigraph",
+  def=function(transition, popSize){return(standardGeneric("linearizedFstUndigraph"))}
+)
+setMethod(
+  f="linearizedFstUndigraph",
+  signature=c("TransitionBackward","Landscape"),
+  definition=function(transition, popSize)
+  {
+    commute_time <- commute_time_undigraph(transition)
+    linearizedFst = commute_time / (16*sum(valuesA(popSize))*ncellA(popSize))
+    linearizedFst
+  }
+)
+
+
+############## CREATION OF TransitionMatrix #######################################
+r1<- raster(ncol=2, nrow=2)
+r1[] <- rep(2:5,1)
+r2<- raster(ncol=2, nrow=2)
+r2[] <- rep(2,2:2)
+s<- stack(x=c(r1,r2))
+p1<-as.Date("2000-01-11")
+vari<-c("l","t")
+paraK<-list(c(0,5),2)
+paraR<-list(2,2)
+reaK<-c(l="envelin",t="constant")
+reaR<-c(l="constant",t="constant")
+extent(s)<-c(0,2,0,2)
+lscp1<-Landscape(rasterstack = s,period=p1,vars=vari)
+modelK<-NicheModel(variables=vari,parameterList=paraK,reactNorms=reaK)
+modelR<-NicheModel(variables=vari,parameterList=paraR,reactNorms=reaR)
+m<-MigrationModel(shape="gaussian",param = (1/1.96))
+edm1<-EnvDinModel(K=modelK,R=modelR,migration = m)
+demo1<-createDemographic(lscp1,edm1)
+############## manipulation #################
+a<-hitting_time_digraph(demo1@TransiBackw)
+commute_time_digraph(demo1@TransiBackw)
+coalescent<-simul_coalescent(demo1)
+a<-linearizedFstDigraph(demo1["TransiBackw"],lscp1)
+
+
+coalescent_2_newick(coalescent[[1]])
+
 

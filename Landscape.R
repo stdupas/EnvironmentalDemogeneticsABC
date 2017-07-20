@@ -63,7 +63,7 @@ setMethod(
   f = "nCellA",
   signature = "RasterStack",
   definition = function(object){
-    ncellA(object[[1]])
+    nCellA(object[[1]])
   }
 )
 

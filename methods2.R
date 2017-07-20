@@ -1042,7 +1042,11 @@ setMethod(
       linearizedFst = commute_time / (16*sum(valuesA(popSize))*ncellA(popSize))
       linearizedFst
     }
-    
+  )
+    setMethod(
+      f="Collisionijk",
+      signature="",
+      definition=function(Hitting_mat)
     {  
       Tijk=array(NA,dim=c(dim(Hitting_mat)[1],dim(Hitting_mat)[2],dim(Hitting_mat)[1]))
       for (k in 1:dim(Hitting_mat)[1]){
@@ -1054,7 +1058,6 @@ setMethod(
       }
       Tijk
     }
-    
   )
   
   

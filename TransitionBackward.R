@@ -282,6 +282,53 @@ setMethod(
   }
 )
 
+setGeneric(
+  name = "simul_coal_200",
+  def=function(demographic){return(standardGeneric("simul_coal_200"))}
+)
+
+setMethod(
+  f="simul_coal_200",
+  signature="Demographic",
+  definition=function(demographic){
+    lapply(1:200,function(x)simul_coalescent(demographic))
+  }
+)
+    
+setGeneric(
+  name = "compare",
+  def=function(demographic,popSize){return(standardGeneric("compare"))}
+)
+
+setMethod(
+  f="compare",
+  signature=c("Demographic","Landscape"),
+  definition=function(demographic,popSize){
+    coalescent<-simul_coal_200(demo1)
+    lcoal<-lapply(1:200,function(n){
+      coal_2<-coalescent_2_newick(coalescent[[n]][[1]])
+      cat(coal_2, file = "ex.tre", sep = "\n")
+      tree<-read.tree("ex.tre")
+      cophenetic(tree)
+    })
+    a<-matrix(data = apply(sapply(lcoal,as.vector),1,mean),nrow = nrow(lcoal[[1]]),ncol = ncol(lcoal[[1]]))
+    b<-linearizedFstDigraph(demographic["TransiBackw"],popSize)
+    c<-linearizedFstUndigraph(demographic["TransiBackw"],popSize)
+    d<-apply(popSize["distanceMatrix"],c(1,2),log)
+    mat<-list(a,b,c,d)
+    par(mfrow=c(2,2))
+    for(i in 1:4){
+      print(i)
+      plot(bionj(mat[[i]]),main=title(switch(EXPR=as.character(i),
+                                        "1"="Simul_coalescent_X200",
+                                        "2"="linearizedFstDigraph",
+                                        "3"="linearizedFstUnDigraph",
+                                        "4"="Stepping_Stone"))
+           )
+    }
+  }
+)
+
 ############################################
 setMethod(
   f = "valuesA",
@@ -293,9 +340,6 @@ setMethod(
     x
   }
 )
-
-
-
 
 setGeneric(
   name = "linearizedFstDigraph",
@@ -347,11 +391,31 @@ setMethod(
   definition=function(transition, popSize)
   {
     commute_time <- commute_time_undigraph(transition)
-    linearizedFst = commute_time / (16*sum(valuesA(popSize))*ncellA(popSize))
+    linearizedFst = commute_time / (16*sum(valuesA(popSize))*nCellA(popSize))
     linearizedFst
   }
 )
 
+setGeneric(
+  name = "commute_time_undigraph",
+  def=function(object){return(standardGeneric("commute_time_undigraph"))}
+)
+
+setMethod(
+  f="commute_time_undigraph",
+  signature = "TransitionBackward",
+  definition = function(object){
+    laplacian = laplaceMatrix(object)
+    inverseMP = ginv(laplacian) # generalized inverse matrix  (Moore Penrose)
+    diag = diag(inverseMP) # get diagonal of the inverse matrix
+    mii = matrix(diag, nrow =dim(inverseMP), ncol = dim(inverseMP))
+    mjj = t(mii)
+    mij = inverseMP
+    mji = t(mij)
+    commute_time = mii + mjj - mij - mji
+    commute_time
+  }
+)
 
 ############## CREATION OF TransitionMatrix #######################################
 r1<- raster(ncol=2, nrow=2)
@@ -373,12 +437,5 @@ m<-MigrationModel(shape="gaussian",param = (1/1.96))
 edm1<-EnvDinModel(K=modelK,R=modelR,migration = m)
 demo1<-createDemographic(lscp1,edm1)
 ############## manipulation #################
-a<-hitting_time_digraph(demo1@TransiBackw)
-commute_time_digraph(demo1@TransiBackw)
-coalescent<-simul_coalescent(demo1)
-a<-linearizedFstDigraph(demo1["TransiBackw"],lscp1)
-
-
-coalescent_2_newick(coalescent[[1]])
-
+yo<-compare(demo1,lscp1)
 

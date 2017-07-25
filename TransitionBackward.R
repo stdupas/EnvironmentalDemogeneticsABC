@@ -1,6 +1,6 @@
 library(ape)
 library(stringr)
-library(lattice)
+#library(lattice)
 library(markovchain)
 library(matrixcalc)
 library(abind)
@@ -18,7 +18,7 @@ setClass("TransitionForward",
                       }
 )
 
-Demographic<-setClass("Demographic",                                ### AJOUTER TRANSITION BACKWARD
+Demographic<-setClass("Demographic",
                       contains = "Landscape",
                       slots = c(K="numeric", R="numeric",TransiBackw="TransitionBackward",TransiForw="TransitionForward"),
                       validity = function(object){
@@ -43,21 +43,6 @@ setMethod(
   }
 )
 
-
-
-
-
-
-
-
-
-
-
-setGeneric(
-  name = "transitionMatrixBackward",
-  def=function(object,model){return(standardGeneric("transitionMatrixBackward"))}
-)
-
 setMethod(f="transitionMatrixBackward",
           signature=c("Landscape","list"),
           definition=function(object,model){
@@ -72,10 +57,6 @@ setMethod(f="transitionMatrixBackward",
           }
 )
 
-setGeneric(
-  name = "transitionMatrixForward",
-  def=function(param, meth){return(standardGeneric("transitionMatrixForward"))}
-)
 
 setMethod(
   f="transitionMatrixForward",
@@ -94,12 +75,6 @@ setMethod(
   }
 )
 
-
-setGeneric(
-  name = "createDemographic",
-  def=function(object,model){return(standardGeneric("createDemographic"))}
-)
-
 setMethod(f="createDemographic",
           signature=c("Landscape","EnvDinModel"),
           definition=function(object,model){
@@ -110,9 +85,6 @@ setMethod(f="createDemographic",
           }
 )
 
-
-
-
 setMethod(
   f = "nCellA",
   signature = "Demographic",
@@ -120,13 +92,6 @@ setMethod(
     nCellA(object[[1]])
   }
 )
-
-
-setGeneric(
-  name = "laplaceMatrix",
-  def=function(object){return(standardGeneric("laplaceMatrix"))}
-)
-
 
 setMethod(
   f = "laplaceMatrix",
@@ -140,11 +105,6 @@ setMethod(
   }
 )
 
-setGeneric(
-  name = "ordinary_laplacian",
-  def=function(object){return(standardGeneric("ordinary_laplacian"))}
-)
-
 setMethod(
   f="ordinary_laplacian",
   signature = "TransitionBackward",
@@ -153,12 +113,6 @@ setMethod(
     PI<-diag(steadyStates(markovB)[1,])
     PI - PI%*%transition
   }
-)
-
-
-setGeneric(
-  name = "hitting_time_digraph",
-  def=function(object){return(standardGeneric("hitting_time_digraph"))}
 )
 
 setMethod(
@@ -176,10 +130,6 @@ setMethod(
   }
 )
 
-setGeneric(
-  name = "commute_time_digraph",
-  def=function(object){return(standardGeneric("commute_time_digraph"))}
-)
 
 setMethod(
   f="commute_time_digraph",
@@ -190,10 +140,6 @@ setMethod(
   }
 )
 
-setGeneric(
-  name = "simul_coalescent",
-  def=function(demographic){return(standardGeneric("simul_coalescent"))}
-)
 ############################################
 setMethod(
   f="simul_coalescent",
@@ -282,11 +228,6 @@ setMethod(
   }
 )
 
-setGeneric(
-  name = "simul_coal_200",
-  def=function(demographic){return(standardGeneric("simul_coal_200"))}
-)
-
 setMethod(
   f="simul_coal_200",
   signature="Demographic",
@@ -295,11 +236,6 @@ setMethod(
   }
 )
     
-setGeneric(
-  name = "compare",
-  def=function(demographic,popSize){return(standardGeneric("compare"))}
-)
-
 setMethod(
   f="compare",
   signature=c("Demographic","Landscape"),
@@ -318,7 +254,6 @@ setMethod(
     mat<-list(a,b,c,d)
     par(mfrow=c(2,2))
     for(i in 1:4){
-      print(i)
       plot(bionj(mat[[i]]),main=title(switch(EXPR=as.character(i),
                                         "1"="Simul_coalescent_X200",
                                         "2"="linearizedFstDigraph",
@@ -326,6 +261,24 @@ setMethod(
                                         "4"="Stepping_Stone"))
            )
     }
+    mat
+  }
+)
+
+setMethod(
+  f="Collisionijk",
+  signature="matrix",
+  definition=function(Hitting_mat)
+  {  
+    Tijk=array(NA,dim=c(dim(Hitting_mat)[1],dim(Hitting_mat)[2],dim(Hitting_mat)[1]))
+    for (k in 1:dim(Hitting_mat)[1]){
+      for (i in 1:dim(Hitting_mat)[1]){
+        for (j in 1:dim(Hitting_mat)[2]){
+          Tijk[i,j,k] <- max(Hitting_mat[i,k],Hitting_mat[j,k]) 
+        }
+      }
+    }
+    Tijk
   }
 )
 
@@ -341,10 +294,6 @@ setMethod(
   }
 )
 
-setGeneric(
-  name = "linearizedFstDigraph",
-  def=function(transition, popSize){return(standardGeneric("linearizedFstDigraph"))}
-)
 setMethod(
   f="linearizedFstDigraph",
   signature=c("TransitionBackward","Landscape"),
@@ -357,11 +306,6 @@ setMethod(
     genetic_dist = MaxH / (8*sum(valuesA(popSize))*nCellA(popSize))
     genetic_dist
   }
-)
-
-setGeneric(
-  name = "coalescent_2_newick",
-  def=function(coalescent){return(standardGeneric("coalescent_2_newick"))}
 )
 
 setMethod(
@@ -381,10 +325,6 @@ setMethod(
   } 
 )
 
-setGeneric(
-  name = "linearizedFstUndigraph",
-  def=function(transition, popSize){return(standardGeneric("linearizedFstUndigraph"))}
-)
 setMethod(
   f="linearizedFstUndigraph",
   signature=c("TransitionBackward","Landscape"),
@@ -394,11 +334,6 @@ setMethod(
     linearizedFst = commute_time / (16*sum(valuesA(popSize))*nCellA(popSize))
     linearizedFst
   }
-)
-
-setGeneric(
-  name = "commute_time_undigraph",
-  def=function(object){return(standardGeneric("commute_time_undigraph"))}
 )
 
 setMethod(
@@ -416,26 +351,3 @@ setMethod(
     commute_time
   }
 )
-
-############## CREATION OF TransitionMatrix #######################################
-r1<- raster(ncol=2, nrow=2)
-r1[] <- rep(2:5,1)
-r2<- raster(ncol=2, nrow=2)
-r2[] <- rep(2,2:2)
-s<- stack(x=c(r1,r2))
-p1<-as.Date("2000-01-11")
-vari<-c("l","t")
-paraK<-list(c(0,5),2)
-paraR<-list(2,2)
-reaK<-c(l="envelin",t="constant")
-reaR<-c(l="constant",t="constant")
-extent(s)<-c(0,2,0,2)
-lscp1<-Landscape(rasterstack = s,period=p1,vars=vari)
-modelK<-NicheModel(variables=vari,parameterList=paraK,reactNorms=reaK)
-modelR<-NicheModel(variables=vari,parameterList=paraR,reactNorms=reaR)
-m<-MigrationModel(shape="gaussian",param = (1/1.96))
-edm1<-EnvDinModel(K=modelK,R=modelR,migration = m)
-demo1<-createDemographic(lscp1,edm1)
-############## manipulation #################
-yo<-compare(demo1,lscp1)
-

@@ -1,11 +1,5 @@
 library(raster)
 ######### PRECURSEUR ######################################################
-
-setGeneric(
-  name = "xyFromCellA",
-  def=function(object){return(standardGeneric("xyFromCellA"))}
-)
-
 setMethod(
   f = "xyFromCellA",
   signature = "RasterLayer",
@@ -25,11 +19,6 @@ setMethod(
   }
 )
 
-setGeneric(
-  name = "cellNumA",
-  def=function(object){return(standardGeneric("cellNumA"))}
-)
-
 setMethod(
   f = "cellNumA",
   signature = "RasterLayer",
@@ -46,11 +35,6 @@ setMethod(
   }
 )
 
-setGeneric(
-  name = "nCellA",
-  def=function(object){return(standardGeneric("nCellA"))}
-)
-
 setMethod(
   f = "nCellA",
   signature = "RasterLayer",
@@ -65,11 +49,6 @@ setMethod(
   definition = function(object){
     nCellA(object[[1]])
   }
-)
-
-setGeneric(
-  name = "valuesA",
-  def=function(object){return(standardGeneric("valuesA"))}
 )
 
 setMethod(
@@ -183,15 +162,6 @@ setClass("NicheModel",
          validity=validityNicheModel
 )
 
-#setClass("form",
-#		slots=c(numberVar="integer",additions="integer",multiplications="integer",openParenthesis="integer",closeParenthesis="integer"),
-#      validity=function(object){
-#        if (length(object@openPatrenthesis)!=length(object@closeParenthesis)) stop("error in 'form': different number of openParenthesis and closeparenthesis")
-#        if (numberVar<=length(additions)+length(multiplications)) stop("error in 'form': too much operations")
-#        if (order(append(addition,multiplications))) stop("error in 'form': too much operations")
-#  }
-#)
-
 
 NicheModel<-function(variables=characterVector1,parameterList=listOfNumeric,reactNorms=characterVector2){#,form=formul){
   names(parameterList)=variables
@@ -294,12 +264,6 @@ setMethod(
   }
 )
 
-
-setGeneric(
-  name = "runNicheModel",
-  def=function(object,model){return(standardGeneric("runNicheModel"))}
-)
-
 setMethod("runNicheModel",
           signature=c("Landscape","NicheModel"),
           definition = function(object,model){                  #X=object, p=,shape=
@@ -332,7 +296,6 @@ envelinear <- function(X, p) {
   if(length(p)!=2)stop("The parameter is  not valid because it contains more or less than two values")
   else (X-p[1])/(p[2]-p[1])*enveloppe(X,p)
 }
-#plot(1:100,envelinear(1:100,c(20,60)))
 
 constant <- function(X,p){X[]<-p}
 
@@ -341,32 +304,12 @@ conQuadratic <- function(X,p)
   if(length(p)!=2)stop("The parameter is  not valid because it contains more or less than two values")
   else -4*(X-p[2])*(X-p[1])/((p[2]-p[1])^2)*enveloppe(X,p)
 }
-#plot(1:100,conQuadratic(1:100,c(20,60)))
 
 conQuadraticsKed <- function(X,p){
 quadraticConcave(X,p)*envelinear(X,p)
 }
-#plot(1:100,quadraticConcaveSkewed(1:100,c(20,60)))
 
-#fonction quadratique bornée par p1 et p2 et dont le maximum est 1
-#f(x)=-ax²+bx+c
-#f(x)=0
-#f(x)=-a(X-p1)*(X-p2)=-aX²+a(p1+p2)X+ap1p2 
-#f(p1)=0;f(p2)=0
-#df/dx =-2ax+a(p1+p2)
-#df/dx((p1+p2)/2)=-2a
-#1=a(p2-p1)/2*(p1-p2)/2
-#a=-4/(p2-p1)^2
 ######### CREER TRANSITION MATRIX ###############################################################################
-
-
-
-setGeneric(
-  name = "runEnvDinModel",
-  def=function(object,model){return(standardGeneric("runEnvDinModel"))}
-)
-
-
 setMethod(f="runEnvDinModel",
           signature=c("Landscape","EnvDinModel"),
           definition=function(object,model){
@@ -376,14 +319,6 @@ setMethod(f="runEnvDinModel",
             list(R=R,K=K,migration=migrationMat)
           }
 )
-
-
-setGeneric(
-  name = "migrationMatrix",
-  def=function(object,model){return(standardGeneric("migrationMatrix"))}
-)
-
-
 
 setMethod(
   f="migrationMatrix",
@@ -407,163 +342,3 @@ setMethod(
         return(migration)
   }
 )
-
-############### TEST DES FONCTION 
-######### Landscape############
-r1<- raster(ncol=2, nrow=1)
-r1[] <- rep(1,2:2)
-s <- stack(x=c(r1))
-r0<- raster(ncol=0, nrow=0)
-s <- stack(x=c(r0))
-s<-1
-r2<- raster(ncol=2, nrow=1)
-r2[] <- rep(1,2:2)
-s<- stack(x=c(r1,r2))
-
-p<-c(as.Date("2000-01-10"),as.Date("2000-01-11"))
-p<-"2000-01-11"
-p<-as.Date("2000-01-11")
-p<-c(as.Date("2000-01-11"),as.Date("2000-01-11"))
-p<-c(as.Date("2000-01-11"),as.Date("2000-01-10"))
-p<-c(as.Date("2000-01-11"),as.Date("2000-01-11"),as.Date("2000-01-11"))
-
-v<-"a"
-v<-c("a","b")
-v<-c("layer.1","layer.2")
-v<-1
-
-lands<-Landscape(rasterstack = s,period = p,vars = v)
-
-######### LandscapeHistory ################
-r1<- raster(ncol=2, nrow=1)
-r1[] <- rep(1,2:2)
-r2<- raster(ncol=2, nrow=1)
-r2[] <- rep(2,2:2)
-s<- stack(x=c(r1,r2))
-p1<-c(as.Date("2000-01-11"),as.Date("2000-01-12"))
-p2<-c(as.Date("2000-01-13"),as.Date("2000-01-13"))
-lands<-Landscape(rasterstack = s,period = p1,vars = v)
-lands2<-Landscape(rasterstack = s,period = p2,vars = v)
-lLands<-list(lands,lands2)
-lLands<-c(lands2,lands)
-lLands<-c(1,lands)
-lLands<-c(lands,1)
-lLands<-list(lands,lands)
-landsH<-LandscapeHistory(lLands)
-landsH[[1]]["period"]
-#
-######### NicheModel ###################
-vari<-c("l")
-vari<-"l"
-vari<-c(1)
-vari<-c("l",1)
-vari<-c(1,"l")
-vari<-c("l","t")
-vari<-c(NA)
-vari<-c(NULL)
-
-para<-list(1)
-para<-list(c(1,5))
-para<-list(1,c(1,5))
-para<-list(1,2)
-para<-list(c(2,3),c(1,5))
-para<-list(1,c(1,5))
-
-rea<-c(l="constant")
-rea<-c(l="constant",t="envelin")
-rea<-c(l="constant",t="enveline")
-rea<-c(l="constant",t="envelin",p="enveloppe")
-
-model<-NicheModel(variables=vari,parameterList=para,reactNorms=rea)
-model
-
-
-
-######### MigrationModel ###################
-migraShape<-"fat_tail1"
-migraShape<-"gaussian"
-migraShape<-"exponential"
-migraShape<-"contiguous"
-migraShape<-"contiguous8"
-migraShape<-"island"
-migraShape<-"fat_tail2"
-migraShape<-"contiguous_long_dist_mixt"
-migraShape<-"gaussian_long_dist_mixt"
-migraShape<-"constant"
-migraShape<-"yo"
-migraShape<-c("fat_tail1","gaussian")
-migraShape<-1
-
-migrapDisp<-1
-migrapDisp<-c(1)
-migrapDisp<-c(1,2)
-migrapDisp<-"1"
-migrapDisp<-1.2
-migrapDisp<-c(1.2)
-migrapDisp<-c(1,"1")
-
-
-migramodel<-MigrationModel(shape = migraShape,param = migrapDisp)
-
-
-######### EnvDinModel ###################
-vari<-c("l","t")
-
-para<-list(1,c(1,5))
-para<-list(1,2)
-para<-list(c(2,3),c(1,5))
-
-rea<-c(l="constant",t="envelin")
-
-migrapDisp<-c(1,2)
-migraShape<-"fat_tail1"
-
-nicheK<-NicheModel(variables = vari, parameterList = para,reactNorms = rea)
-nicheK<-1
-
-nicheR<-NicheModel(variables = vari, parameterList = para,reactNorms = rea)
-nicheR<-"2"
-  
-migramodel<-MigrationModel(shape = migraShape,param = migrapDisp)
-migramodel<-NicheModel(variables = vari, parameterList = para,reactNorms = rea)
-env1<-EnvDinModel(K=nicheK,R=nicheR,migration = migramodel)
-
-
-
-######### test fonction ###################
-r1<- raster(ncol=2, nrow=1)
-r1[] <- rep(1,2:2)
-r2<- raster(ncol=2, nrow=1)
-r2[] <- rep(1,2:2)
-s<- stack(x=c(r1,r2))
-
-p1<-as.Date("2000-01-11")
-v<-c("l","p")
-lands<-Landscape(rasterstack = s,period = p1,vars = v)
-lands<-Landscape(rasterstack = s2,period = p1,vars = v)
-
-
-######### CONSTRUCTION D'UN TRANSITION MATRIX ################
-r1<- raster(ncol=2, nrow=2)
-r1[] <- rep(2:5,1)
-r2<- raster(ncol=2, nrow=2)
-r2[] <- rep(2,2:2)
-s<- stack(x=c(r1,r2))
-p1<-as.Date("2000-01-11")
-variK<-c("l","t")
-variR<-c("c","t")
-paraK<-list(c(0,5),2)
-paraR<-list(2,2)
-reaK<-c(l="envelin",t="constant")
-reaR<-c(l="constant",t="constant")
-extent(s)<-c(0,2,0,2)
-lscp1<-Landscape(rasterstack = s,period=p1,vars=vari)
-modelK<-NicheModel(variables=vari,parameterList=para,reactNorms=rea)
-modelR<-NicheModel(variables=vari,parameterList=para,reactNorms=rea)
-m<-MigrationModel(shape="gaussian",param = (1/1.96))
-a<-runNicheModel(lscp1,modelK)
-migrationMatrix(lscp1,m)
-
-edm1<-EnvDinModel(K=modelK,R=modelR,migration = m)
-runEnvDinModel(lscp1,edm1)
-transi1<-createTransitionMatrix(lscp1,edm1)

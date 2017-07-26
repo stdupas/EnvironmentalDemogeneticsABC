@@ -340,7 +340,7 @@ setMethod(
   f="commute_time_undigraph",
   signature = "TransitionBackward",
   definition = function(object){
-    laplacian = laplaceMatrix((object+t(object)/2)
+    laplacian = laplaceMatrix((object+t(object))/2)
     inverseMP = ginv(laplacian) # generalized inverse matrix  (Moore Penrose)
     diag = diag(inverseMP) # get diagonal of the inverse matrix
     mii = matrix(diag, nrow =dim(inverseMP), ncol = dim(inverseMP))

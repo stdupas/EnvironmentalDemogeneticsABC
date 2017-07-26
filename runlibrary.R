@@ -38,3 +38,26 @@ for(i in 1:4){
 }
 
 lscp1@distanceMatrix
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

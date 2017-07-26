@@ -4,7 +4,7 @@ library(stringr)
 library(markovchain)
 library(matrixcalc)
 library(abind)
-library(rgdal)
+#library(rgdal)
 library(raster)
 library(MASS)
 
@@ -53,7 +53,7 @@ setMethod(f="transitionMatrixBackward",
             if ((length(model$R)>1)&(length(model$K)>1)) {transition = t(matrix(model$R,nrow=length(model$R),ncol=length(model$R))) * t(matrix(model$K,nrow=length(model$K),ncol=length(model$K))) * t(model$migration)}
             t<-transition/t(sapply(rowSums(transition),function(x)rep(x,ncol(transition))))
             TransitionBackward(t)
-            
+
           }
 )
 
@@ -143,8 +143,8 @@ setMethod(
 ############################################
 setMethod(
   f="simul_coalescent",
-  signature="Demographic",
-  definition=function(demographic)    # avec K,cell number ou nodes
+  signature=c("Demographic","logical"),
+  definition=function(demographic,printCoal)    # avec K,cell number ou nodes
   {
     prob_forward=NA
     N <- round(demographic["K"]);N[N==0]<-1
@@ -153,32 +153,32 @@ setMethod(
     cell_number_of_nodes <- as.numeric(rownames(xyFromCellA(demographic)))             #point d'ou part la coalescent <- vecteurc numeric dont les valeur sont dans les cellules attribué
     names(cell_number_of_nodes) <- nodes
     parent_cell_number_of_nodes <- cell_number_of_nodes
-    nodes_remaining_by_cell = list() 
-    time=0 
+    nodes_remaining_by_cell = list()
+    time=0
     single_coalescence_events=0
-    single_and_multiple_coalescence_events=0 
+    single_and_multiple_coalescence_events=0
     for (cell in 1:nCellA(demographic))
     {
       nodes_remaining_by_cell[[cell]] <- which(cell_number_of_nodes==cell)
     }
-    while (length(unlist(nodes_remaining_by_cell))>1) 
+    while (length(unlist(nodes_remaining_by_cell))>1)
     {
       for (node in 1:length(parent_cell_number_of_nodes))
       {
         parent_cell_number_of_nodes[node] = sample(nCellA(demographic),size=1,prob=c(demographic["TransiBackw"][cell_number_of_nodes[node],]))
       }
       prob_forward[time] = sum(log(demographic["TransiForw"][parent_cell_number_of_nodes,cell_number_of_nodes]))
-      time=time+1; if (round(time/10)*10==time) {print(time)}
+      time=time+1; if(printCoal==TRUE){if (round(time/10)*10==time) {print(time)}}
       for (cell in 1:nCellA(demographic))
       {
         nodes_remaining_in_the_cell = nodes_remaining_by_cell[[cell]] <- as.numeric(names(which(parent_cell_number_of_nodes==cell)))
       }
       prob_forward[time] = sum(log(demographic["TransiForw"][parent_cell_number_of_nodes,cell_number_of_nodes]))
-      time=time+1; if (round(time/10)*10==time) {print(time)}
+      time=time+1;  if(printCoal==TRUE){if (round(time/10)*10==time) {print(time)}}
       for (cell in 1:nCellA(demographic))
-      {     
+      {
         nodes_remaining_in_the_cell = nodes_remaining_by_cell[[cell]] <- as.numeric(names(which(parent_cell_number_of_nodes==cell)))
-        if (length(nodes_remaining_in_the_cell)>1) 
+        if (length(nodes_remaining_in_the_cell)>1)
         {
           nbgenesremaining=length(nodes_remaining_in_the_cell)
           smp = sample(N[cell],length(nodes_remaining_in_the_cell),replace=TRUE)
@@ -220,8 +220,8 @@ setMethod(
       {
         if (coalescing %in% tips) {coalescent[[i]]$br_length <- append(coalescent[[i]]$br_length,coalescent[[i]]$time)
         } else {
-          coalescent[[i]]$br_length <- append(coalescent[[i]]$br_length,coalescent[[i]]$time-times[which(internals==coalescing)]) 
-        } 
+          coalescent[[i]]$br_length <- append(coalescent[[i]]$br_length,coalescent[[i]]$time-times[which(internals==coalescing)])
+        }
       }
     }
     list(coalescent=coalescent,prob_forward=sum(prob_forward))
@@ -230,17 +230,17 @@ setMethod(
 
 setMethod(
   f="simul_coal_200",
-  signature="Demographic",
-  definition=function(demographic){
-    lapply(1:200,function(x)simul_coalescent(demographic))
+  signature=c("Demographic","logical"),
+  definition=function(demographic,printCoal){
+    lapply(1:200,function(x)simul_coalescent(demographic,printCoal))
   }
 )
-    
+
 setMethod(
   f="compare",
-  signature=c("Demographic","Landscape"),
-  definition=function(demographic,popSize){
-    coalescent<-simul_coal_200(demo1)
+  signature=c("Demographic","Landscape","logical"),
+  definition=function(demographic,popSize,printCoal){
+    coalescent<-simul_coal_200(demo1,printCoal)
     lcoal<-lapply(1:200,function(n){
       coal_2<-coalescent_2_newick(coalescent[[n]][[1]])
       cat(coal_2, file = "ex.tre", sep = "\n")
@@ -269,12 +269,12 @@ setMethod(
   f="Collisionijk",
   signature="matrix",
   definition=function(Hitting_mat)
-  {  
+  {
     Tijk=array(NA,dim=c(dim(Hitting_mat)[1],dim(Hitting_mat)[2],dim(Hitting_mat)[1]))
     for (k in 1:dim(Hitting_mat)[1]){
       for (i in 1:dim(Hitting_mat)[1]){
         for (j in 1:dim(Hitting_mat)[2]){
-          Tijk[i,j,k] <- max(Hitting_mat[i,k],Hitting_mat[j,k]) 
+          Tijk[i,j,k] <- max(Hitting_mat[i,k],Hitting_mat[j,k])
         }
       }
     }
@@ -322,7 +322,7 @@ setMethod(
     }
     tree <- gsub(" ","",paste(tree,";",sep=""))
     tree
-  } 
+  }
 )
 
 setMethod(

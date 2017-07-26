@@ -18,8 +18,8 @@ m<-MigrationModel(shape="gaussian",param = (1/1.96))
 edm1<-EnvDinModel(K=modelK,R=modelR,migration = m)
 demo1<-createDemographic(lscp1,edm1)
 ############## manipulation #################
-yo<-compare(demo1,lscp1)
-
+yo<-compare(demo1,lscp1,FALSE)
+lscp1@distanceMatrix
 raster(yo[[4]])
 plot(yo[[1]])
 heatmap(demo1["TransiBackw"])
@@ -29,6 +29,12 @@ Collisionijk(hitting_time_digraph(demo1["TransiBackw"]))
 par(mfrow=c(2,2))
 for(i in 1:4){
   a<-raster(yo[[i]])
-  plot(a)
+  plot(a,main=title(switch(EXPR=as.character(i),
+                          "1"="Simul_coalescent_X200",
+                          "2"="linearizedFstDigraph",
+                          "3"="linearizedFstUnDigraph",
+                          "4"="Stepping_Stone"))
+  )
 }
 
+lscp1@distanceMatrix

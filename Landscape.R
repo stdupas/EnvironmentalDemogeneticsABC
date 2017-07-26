@@ -100,7 +100,8 @@ Landscape<-function(rasterstack=rasterstack,period=dateVector, vars=charVector){
   b<-xyFromCellA(rasterstack)
   mat=sapply(1:nrow(b),function(l1){
     sapply(1:nrow(b),function(l2){
-      sqrt((b[l1,1]-b[l2,1])^2+(b[l1,2]-b[l2,2])^2)
+      if(l1==l2)sqrt(res(rasterstack)[1]^2+res(rasterstack)[2]^2)/3
+      else{ sqrt((b[l1,1]-b[l2,1])^2+(b[l1,2]-b[l2,2])^2)}
     })})
   new("Landscape",rasterstack,period=period,vars=vars,distanceMatrix=mat)
 }
@@ -151,10 +152,10 @@ validityNicheModel = function(object){
   if(class(object@reactNorms)!="character")stop("error in NicheModel reactNorms : reactNorms just accept character!")
   if(FALSE%in%lapply(object@parameterList,is.numeric))stop("error in NicheModel parameter list : Parameter list just accept numeric!")
   if(length(object@variables)!=length(object@reactNorms))stop("error in NicheModel : number of variables and number of reaction norms do not correspond")
-  notMatching <- (unlist(lapply(1:length(object@parameterList),function(x) nbpar(object@reactNorms[x]) != length(object@parameterList[[x]])))) 
+  notMatching <- (unlist(lapply(1:length(object@parameterList),function(x) nbpar(object@reactNorms[x]) != length(object@parameterList[[x]]))))
   if (any(notMatching)) stop(paste("error in NicheModel : number of paremeters and reactionNorm do not match for variable ",which(notMatching),". ",sep=""))
   #              if grep("(",object@form)
-  TRUE 
+  TRUE
 }
 
 setClass("NicheModel",
@@ -273,7 +274,7 @@ setMethod("runNicheModel",
                    									       #proportional = {values(object[[x]])=object[[x]]*model@parameterList[[x]]},
                    									       enveloppe = {object[[x]]=enveloppe(object[[x]],model@parameterList[[x]])},
                    									       envelin={object[[x]]=envelinear(object[[x]],model@parameterList[[x]])},
-                   									       conQuadratic={object[[x]]=conQuadratic(object[[x]],model@parameterList[[x]])}, 
+                   									       conQuadratic={object[[x]]=conQuadratic(object[[x]],model@parameterList[[x]])},
                                                  #conquadraticskewed=conquadraticskewed(object[,,(model@variables==x)],p),
                                                  #conquadraticsq=conquadraticsq(object[,,(model@variables==x)],p),
                                                  #conquadraticskewedsq=conquadraticskewedsq(object[,,(model@variables==x)],p)
@@ -327,7 +328,7 @@ setMethod(
   {
     Ndim = 1+all(ncell(object)!=dim(object)[1:2])
     #if model["shapeDisp"]=="contiguous" matrix()
-    migration = apply(object["distanceMatrix"], c(1,2), 
+    migration = apply(object["distanceMatrix"], c(1,2),
                       function(x)(switch(model["shapeDisp"],
                                          fat_tail1 = 1/(1+x^model["pDisp"][2]/model["pDisp"][1]),
                                          gaussian = (dnorm(x, mean = 0, sd = model["pDisp"][1], log = FALSE)),

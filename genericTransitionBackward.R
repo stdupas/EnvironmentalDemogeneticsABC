@@ -37,17 +37,17 @@ setGeneric(
 
 setGeneric(
   name = "simul_coalescent",
-  def=function(demographic){return(standardGeneric("simul_coalescent"))}
+  def=function(demographic,printCoal){return(standardGeneric("simul_coalescent"))}
 )
 
 setGeneric(
   name = "simul_coal_200",
-  def=function(demographic){return(standardGeneric("simul_coal_200"))}
+  def=function(demographic,printCoal){return(standardGeneric("simul_coal_200"))}
 )
 
 setGeneric(
   name = "compare",
-  def=function(demographic,popSize){return(standardGeneric("compare"))}
+  def=function(demographic,popSize,printCoal){return(standardGeneric("compare"))}
 )
 
 setGeneric(

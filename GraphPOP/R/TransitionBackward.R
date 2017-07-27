@@ -1,13 +1,27 @@
-library(ape)
-library(stringr)
-#library(lattice)
-library(markovchain)
-library(matrixcalc)
-library(abind)
-#library(rgdal)
-library(raster)
-library(MASS)
-
+if(!require("ape")){
+  install.packages("ape")
+  require("ape")
+}else{library(ape)}
+if(!require("stringr")){
+  install.packages("stringr")
+  require("stringr")
+}else{library(stringr)}
+if(!require("markovchain")){
+  install.packages("markovchain")
+  require("markovchain")
+}else{library(markovchain)}
+if(!require("matrixcalc")){
+  install.packages("matrixcalc")
+  require("matrixcalc")
+}else{library(matrixcalc)}
+if(!require("raster")){
+  install.packages("raster")
+  require("raster")
+}else{library(raster)}
+if(!require("MASS")){
+  install.packages("MASS")
+  require("MASS")
+}else{library(MASS)}
 ############## CLASS AND VALIDITY ####
 
 setClass("TransitionForward",

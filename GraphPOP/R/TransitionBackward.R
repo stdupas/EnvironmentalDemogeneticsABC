@@ -4,7 +4,6 @@ library(markovchain)
 library(matrixcalc)
 library(MASS)
 
-
 ############## CLASS AND VALIDITY ####
 
 setClass("TransitionForward",
@@ -17,7 +16,7 @@ setClass("TransitionForward",
 
 Demographic<-setClass("Demographic",
                       contains = "Landscape",
-                      slots = c(K="numeric", R="numeric",TransiBackw="TransitionBackward",TransiForw="TransitionForward"),
+                      slots = c(K="numeric", R="numeric",TransiBackw="TransitionBackward",TransiBackwSym="TransitionBackward",TransiForw="TransitionForward"),
                       validity = function(object){
                         if(any(object@K<0))stop("K is negative")
                         if(any(object@R<0))stop("R is negative")
@@ -28,7 +27,7 @@ Demographic<-setClass("Demographic",
 
 setGeneric(
   name = "transitionMatrixBackward",
-  def=function(object,model){return(standardGeneric("transitionMatrixBackward"))}
+  def=function(object,model,symetric){return(standardGeneric("transitionMatrixBackward"))}
 )
 
 setGeneric(
@@ -69,13 +68,13 @@ setGeneric(
 )
 
 setGeneric(
-  name = "simul_coal_200",
-  def=function(demographic,printCoal){return(standardGeneric("simul_coal_200"))}
+  name = "simul_multi_coal",
+  def=function(demographic,printCoal,iteration){return(standardGeneric("simul_multi_coal"))}
 )
 
 setGeneric(
   name = "compare",
-  def=function(demographic,popSize,printCoal){return(standardGeneric("compare"))}
+  def=function(demographic,popSize,printCoal,iteration){return(standardGeneric("compare"))}
 )
 
 setGeneric(
@@ -113,6 +112,7 @@ setMethod(
              "K" ={return(x@K)} ,
              "R" ={return(x@R)} ,
              "TransiBackw" ={return(x@TransiBackw)} ,
+             "TransiBackwSym"={return(x@TransiBackwSym)},
              "TransiForw" = {return(x@TransiForw)},
              stop("This slots doesn't exist!")
     )
@@ -120,31 +120,37 @@ setMethod(
 )
 
 setMethod(f="transitionMatrixBackward",
-          signature=c("Landscape","list"),
-          definition=function(object,model){
+          signature=c("Landscape","list","logical"),
+          definition=function(object,model,symetric){
             if ((length(model$R)==1)&(length(model$K)==1)){transition = model$R * model$K * t(model$migration)}
             if ((length(model$R)>1)&(length(model$K)==1)){transition = t(matrix(model$R,nrow=length(model$R),ncol=length(model$R))) * model$K * t(model$migration)}
             if ((length(model$R)==1)&(length(model$K)>1)){transition = model$R * t(matrix(model$K,nrow=length(model$K),ncol=length(model$K))) * t(model$migration)}
             if ((length(model$R)>1)&(length(model$K)==1)){transition = t(matrix(model$R,nrow=length(model$R),ncol=length(model$R))) * lpar$K * t(model$migration)}
             if ((length(model$R)>1)&(length(model$K)>1)) {transition = t(matrix(model$R,nrow=length(model$R),ncol=length(model$R))) * t(matrix(model$K,nrow=length(model$K),ncol=length(model$K))) * t(model$migration)}
-            t<-transition/t(sapply(rowSums(transition),function(x)rep(x,ncol(transition))))
+            if(symetric){
+              symMat<-transition+t(transition)
+              maxrow<-max(rowSums(symMat))
+              diag(symMat)<-(sapply(1:nrow(symMat),function(i)maxrow-(rowSums(symMat)[i]-symMat[i,i])))
+              t<-symMat/as.numeric(maxrow)
+            }
+            else{
+              t<-transition/t(sapply(rowSums(transition),function(x)rep(x,ncol(transition))))
+            }
             TransitionBackward(t)
-
           }
 )
-
 
 setMethod(
   f="transitionMatrixForward",
   signature=c("list","character"),
   definition=function(param, meth)
   {
-    rs = matrix(param$R,nrow=length(param$R),ncol=length(param$R))
+    rs <- matrix(param$R,nrow=length(param$R),ncol=length(param$R))
     Ku = t(matrix(param$K,nrow=length(param$K),ncol=length(param$K)))
-    leave = param$migration*(1+rs)*t(Ku); leave = leave - diag(leave)
+    leave = param$migration*(rs+1)*t(Ku); leave = leave - diag(leave)
     tMF<-switch (meth,
-            non_overlap = param$migration * rs * Ku / colSums(rs * t(Ku) * param$migration),
-            overlap = param$migration * (1+rs) * Ku / (colSums((1+rs) * t(Ku) * param$migration - t(leave))),
+            non_overlap = param$migration*rs*Ku/colSums(rs * t(Ku) * param$migration),
+            overlap = param$migration*(1+rs)*Ku/(colSums((1+rs)*t(Ku)*param$migration-t(leave))),
             stop("error in creation of transitionMatrixForward : the method does not exist !")
     )
     new(Class = "TransitionForward",tMF)
@@ -155,9 +161,10 @@ setMethod(f="createDemographic",
           signature=c("Landscape","EnvDinModel"),
           definition=function(object,model){
             lpar<-runEnvDinModel(object,model)
-            b<-transitionMatrixBackward(object,lpar)
+            b<-transitionMatrixBackward(object,lpar,FALSE)
+            bs<-transitionMatrixBackward(object,lpar,TRUE)
             f<-transitionMatrixForward(lpar,"non_overlap")
-            new(Class = "Demographic",object,K=lpar$K,R=lpar$R,TransiBackw=b,TransiForw=f)
+            new(Class = "Demographic",object,K=lpar$K,R=lpar$R,TransiBackw=b,TransiBackwSym=bs,TransiForw=f)
           }
 )
 
@@ -206,7 +213,6 @@ setMethod(
   }
 )
 
-
 setMethod(
   f="commute_time_digraph",
   signature = "TransitionBackward",
@@ -220,7 +226,7 @@ setMethod(
 setMethod(
   f="simul_coalescent",
   signature=c("Demographic","logical"),
-  definition=function(demographic,printCoal)    # avec K,cell number ou nodes
+  definition=function(demographic,printCoal)
   {
     prob_forward=NA
     N <- round(demographic["K"]);N[N==0]<-1
@@ -305,19 +311,19 @@ setMethod(
 )
 
 setMethod(
-  f="simul_coal_200",
-  signature=c("Demographic","logical"),
-  definition=function(demographic,printCoal){
-    lapply(1:200,function(x)simul_coalescent(demographic,printCoal))
+  f="simul_multi_coal",
+  signature=c("Demographic","logical","numeric"),
+  definition=function(demographic,printCoal,iteration){
+    lapply(1:iteration,function(x)simul_coalescent(demographic,printCoal))
   }
 )
 
 setMethod(
   f="compare",
-  signature=c("Demographic","Landscape","logical"),
-  definition=function(demographic,popSize,printCoal){
-    coalescent<-simul_coal_200(demo1,printCoal)
-    lcoal<-lapply(1:200,function(n){
+  signature=c("Demographic","Landscape","logical","numeric"),
+  definition=function(demographic,popSize,printCoal,iteration){
+    coalescent<-simul_multi_coal(demo1,printCoal,iteration)
+    lcoal<-lapply(1:iteration,function(n){
       coal_2<-coalescent_2_newick(coalescent[[n]][[1]])
       cat(coal_2, file = "ex.tre", sep = "\n")
       tree<-read.tree("ex.tre")
@@ -325,13 +331,13 @@ setMethod(
     })
     a<-matrix(data = apply(sapply(lcoal,as.vector),1,mean),nrow = nrow(lcoal[[1]]),ncol = ncol(lcoal[[1]]))
     b<-linearizedFstDigraph(demographic["TransiBackw"],popSize)
-    c<-linearizedFstUndigraph(demographic["TransiBackw"],popSize)
+    c<-linearizedFstUndigraph(demographic["TransiBackwSym"],popSize)
     d<-apply(popSize["distanceMatrix"],c(1,2),log)
     mat<-list(a,b,c,d)
     par(mfrow=c(2,2))
     for(i in 1:4){
       plot(bionj(mat[[i]]),main=title(switch(EXPR=as.character(i),
-                                        "1"="Simul_coalescent_X200",
+                                        "1"="Simul_coalescent",
                                         "2"="linearizedFstDigraph",
                                         "3"="linearizedFstUnDigraph",
                                         "4"="Stepping_Stone"))
@@ -340,7 +346,6 @@ setMethod(
     mat
   }
 )
-
 setMethod(
   f="Collisionijk",
   signature="matrix",

@@ -1,4 +1,5 @@
 ############## CREATION OF TransitionMatrix #######################################
+library(GraphPOP)
 r1<- raster(ncol=2, nrow=2)
 r1[] <- rep(2:5,1)
 r2<- raster(ncol=2, nrow=2)
@@ -18,13 +19,12 @@ m<-MigrationModel(shape="gaussian",param = (1/1.96))
 edm1<-EnvDinModel(K=modelK,R=modelR,migration = m)
 demo1<-createDemographic(lscp1,edm1)
 ############## manipulation #################
-yo<-compare(demo1,lscp1,FALSE)
+yo<-compare(demo1,lscp1,FALSE,500)
 lscp1@distanceMatrix
 raster(yo[[4]])
 plot(yo[[1]])
 heatmap(demo1["TransiBackw"])
 heatmap(demo1["TransiForw"])
-
 Collisionijk(hitting_time_digraph(demo1["TransiBackw"]))
 par(mfrow=c(2,2))
 for(i in 1:4){
@@ -36,5 +36,3 @@ for(i in 1:4){
                           "4"="Stepping_Stone"))
   )
 }
-
-lscp1@distanceMatrix

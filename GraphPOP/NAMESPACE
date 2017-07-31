@@ -18,7 +18,7 @@ exportMethods(
     "ordinary_laplacian",
     "runEnvDinModel",
     "runNicheModel",
-    "simul_coal_200",
+    "simul_multi_coal",
     "simul_coalescent",
     "transitionMatrixBackward",
     "transitionMatrixForward",

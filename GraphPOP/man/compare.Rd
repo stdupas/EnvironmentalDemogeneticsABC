@@ -1,20 +1,26 @@
-\name{simul_coal_200}
-\alias{simul_coal_200}
+\name{compare}
+\alias{compare}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{simul_coal_200}
+\title{compare}
 \description{
 %%  ~~ A concise (1-5 lines) description of what the function does. ~~
 }
 \usage{
-simul_coal_200(demographic, printCoal)
+compare(demographic, popSize, printCoal,iteration)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{demographic}{
 %%     ~~Describe \code{demographic} here~~
 }
+  \item{popSize}{
+%%     ~~Describe \code{popSize} here~~
+}
   \item{printCoal}{
 %%     ~~Describe \code{printCoal} here~~
+}
+  \item{iteration}{
+%%     ~~Describe \code{popSize} here~~
 }
 }
 \details{
@@ -48,14 +54,14 @@ simul_coal_200(demographic, printCoal)
 ##--	or do  help(data=index)  for the standard data sets.
 
 ## The function is currently defined as
-structure(function (demographic, printCoal)
+structure(function (demographic, popSize, printCoal, iterator)
 {
-    return(standardGeneric("simul_coal_200"))
-  }, generic = structure("simul_coal_200", package = "GraphPOP"), package = "GraphPOP", group = list(), valueClass = character(0), signature = c("demographic",
-"printCoal"), default = `\001NULL\001`, skeleton = (function (demographic,
-    printCoal)
-stop("invalid call in method dispatch to 'simul_coal_200' (no default method)",
-    domain = NA))(demographic, printCoal), class = structure("nonstandardGenericFunction", package = "methods"))
+    return(standardGeneric("compare"))
+  }, generic = structure("compare", package = "GraphPOP"), package = "GraphPOP", group = list(), valueClass = character(0), signature = c("demographic",
+"popSize", "printCoal","numeric"), default = `\001NULL\001`, skeleton = (function (demographic,
+    popSize, printCoal,iterator)
+stop("invalid call in method dispatch to 'compare' (no default method)",
+    domain = NA))(demographic, popSize, printCoal,iterator), class = structure("nonstandardGenericFunction", package = "methods"))
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

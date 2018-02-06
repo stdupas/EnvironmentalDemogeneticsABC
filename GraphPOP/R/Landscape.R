@@ -166,6 +166,7 @@ LandscapeHistory<-function(Landscapelist=listOfLandscape){
   new("LandscapeHistory",lo)
 }
 
+
 nbpar <- function(x) {unlist(lapply(x,function(x) switch(x[],
                             constant=1,
                             proportional=1,
@@ -193,6 +194,9 @@ validityNicheModel = function(object){
   if(length(object@variables)!=length(object@reactNorms))stop("error in NicheModel : number of variables and number of reaction norms do not correspond")
   notMatching <- (unlist(lapply(1:length(object@parameterList),function(x) nbpar(object@reactNorms[x]) != length(object@parameterList[[x]]))))
   if (any(notMatching)) stop(paste("error in NicheModel : number of paremeters and reactionNorm do not match for variable ",which(notMatching),". ",sep=""))
+  bad_reaction_norms <- object@reactNorms%in%c("constant","enveloppe","envelin","conQuadratic")
+  if(!all(bad_reaction_norms)) {
+     stop("the ",which(bad_reaction_norms),"th arguments of reaction norms are not one of 'constant','enveloppe','envelin','conQuadratic'")}
   #              if grep("(",object@form)
   TRUE
 }
@@ -201,7 +205,6 @@ setClass("NicheModel",
          slots = c(variables="ANY",parameterList="ANY",reactNorms="ANY"),#,form="character"),
          validity=validityNicheModel
 )
-
 
 NicheModel<-function(variables=characterVector1,parameterList=listOfNumeric,reactNorms=characterVector2){#,form=formul){
   names(parameterList)=variables
@@ -382,3 +385,5 @@ setMethod(
         return(migration)
   }
 )
+
+

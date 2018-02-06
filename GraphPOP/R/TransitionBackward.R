@@ -23,6 +23,13 @@ Demographic<-setClass("Demographic",
                       }
 )
 
+Coalescent <- setClass("Coalescent",
+                       contains = "list",
+                       validity = function(object){
+                       if (!any(unlist(lapply(coalescent,function(x) names(x)%in%c("time","coalescing","new_node","br_length"))))) 
+stop("missing  in coalescent list")
+                      }
+)
 ############## METHODS #####
 
 setGeneric(
@@ -318,6 +325,23 @@ setMethod(
   }
 )
 
+setMetho("plot",
+         signature="genealogy",
+         definition=function(object){
+         plot.new()
+         #tips=typeOfNodes(object)$tip
+         tips=gsub("\\(","",gsub("\\)","",gsub(";","",strsplit(coalescent_2_newick(object),",")[[1]])))
+         coords = list()
+         text(tips,x=((0:(length(tips)-1))/(length(tips)-1)),y=0)
+         for (i in names(coalescent))
+         {
+           for (j in names(coalescent$coalescing))
+           {
+           coords[[j]] <- coalescent[[i]]
+           }
+         }
+) 
+
 setMethod(
   f="compare",
   signature=c("Demographic","Landscape","logical","numeric"),
@@ -346,6 +370,8 @@ setMethod(
     mat
   }
 )
+
+
 setMethod(
   f="Collisionijk",
   signature="matrix",
@@ -406,6 +432,18 @@ setMethod(
   }
 )
 
+setMethod(
+  f="typeOfNodes",
+  signature="coalescent",
+  definition=function(coalescent)
+  {
+    nodes  = as.character(levels(as.factor(unlist(lapply(coalescent, function(x) x$coalescing)))))
+    internals = unlist(lapply(coalescent, function(x) x$new_node))
+    tip = nodes[!(nodes%in%internals)]
+  }
+x=NULL; x$tip=tip;x$internals=x$internals;x$nodes=nodes
+x
+)
 setMethod(
   f="linearizedFstUndigraph",
   signature=c("TransitionBackward","Landscape"),

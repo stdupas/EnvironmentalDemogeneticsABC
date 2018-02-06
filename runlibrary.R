@@ -24,9 +24,6 @@ edm1<-EnvDinModel(K=modelK,R=modelR,migration = m)
 demo1<-createDemographic(lscp1,edm1)
 ############## manipulation #################
 yo<-compare(demo1,lscp1,FALSE,500)
-lscp1@distanceMatrix
-raster(yo[[4]])
-plot(yo[[1]])
 heatmap(demo1["TransiBackw"])
 heatmap(demo1["TransiForw"])
 Collisionijk(hitting_time_digraph(demo1["TransiBackw"]))

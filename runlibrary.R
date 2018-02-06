@@ -1,5 +1,9 @@
 ############## CREATION OF TransitionMatrix #######################################
-library(GraphPOP)
+R
+#library(GraphPOP)
+#library(Essai)
+#source("./Essai/R/Landscape.R")
+#source("./Essai/R/TransitionBackward.R")
 r1<- raster(ncol=2, nrow=2)
 r1[] <- rep(2:5,1)
 r2<- raster(ncol=2, nrow=2)
@@ -36,3 +40,18 @@ for(i in 1:4){
                           "4"="Stepping_Stone"))
   )
 }
+
+## Complex landscape
+lscp<-Landscape(stack(
+      raster(vals=2000,nrow=9,ncol=19),
+      raster(vals=2E5*matrix(dnorm(1:9,5,2.5),ncol=1)%*%matrix(dnorm(c(1:10,1:9),5,2.5),nrow=1),ncol=19, nrow=9)),   
+      period=as.Date("2017-08-03"),
+      vars=c("constant","elevation")
+)
+
+modelK<-NicheModel(variables=c("constant"),parameterList=c(2000),reactNorms=reaK)
+modelR<-NicheModel(variables=vari,parameterList=paraR,reactNorms=reaR)
+m<-MigrationModel(shape="gaussian",param = (1/1.96))
+edm1<-EnvDinModel(K=modelK,R=modelR,migration = m)
+demo1<-createDemographic(lscp1,edm1)
+

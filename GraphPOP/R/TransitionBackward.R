@@ -23,13 +23,30 @@ Demographic<-setClass("Demographic",
                       }
 )
 
+coalescentEvent <- setClass("coalescentEvent",
+                          contains="environment",
+                          slot = c(time="numeric",coalescing="integer",internal="integer",br_length="numeric",descendantTips="integer"),
+                          prototype=list(time=10,coalescing=as.integer(c(1,2)),internal=as.integer(3),br_length=c(10,10),descendantTips=as.integer(c(1,2))),
+                          )                          
+                          
 Coalescent <- setClass("Coalescent",
                        contains = "list",
                        validity = function(object){
-                       if (!any(unlist(lapply(coalescent,function(x) names(x)%in%c("time","coalescing","new_node","br_length"))))) 
-stop("missing  in coalescent list")
-                      }
+                       if (any(unlist(lapply(object,function(x) class(x)!="coalescentEvent")))) 
+stop("error in class Coalescent constructor : should be a list of coalescentEvent")
+}
 )
+
+
+#Coalescent <- setClass("Coalescent",
+#                       contains = "list",
+#                       validity = function(object){
+#                       if (!any(unlist(lapply(object,function(x) names(x)%in%c("time","coalescing","internal","br_length","descendantTips"))))) 
+#stop("missing in coalescent list")
+#}
+#)
+
+
 ############## METHODS #####
 
 setGeneric(
@@ -109,7 +126,10 @@ setGeneric(
   def=function(object){return(standardGeneric("commute_time_undigraph"))}
 )
 
-
+setGeneric(
+  name = "nodesInfo",
+  def = function(coalescent){return(standardGeneric("nodesInfo"))}
+)
 
 setMethod(
   f ="[",
@@ -125,6 +145,12 @@ setMethod(
     )
   }
 )
+
+setMethod(f="show",
+          signature = "Demographic",
+          definition = function(object){
+            print(list(landscape=raster(object),K=object@K,R=object@R,TransiBackw=object@TransiBackw,TransiBackwSym=object@TransiBackwSym,TransiForw=object@TransiForw))
+})
 
 setMethod(f="transitionMatrixBackward",
           signature=c("Landscape","list","logical"),
@@ -229,7 +255,74 @@ setMethod(
   }
 )
 
+          
+          
+
 ############################################
+
+setMethod("subset",
+          signature="Coalescent",
+          definition=function(x,internal=NULL,Time=NULL)
+          {
+            subCoal <- list()
+            if (!is.null(internal)) 
+            {
+              if (!(internal%in%nodesInfo(x)$internals)) 
+              {
+                stop("subset is empty : internal node requested in subset does not exist in this genealogy") } else 
+                {
+                elements = grep(internal,lapply(x,function(x) slot(x,"internal"))) 
+                subCoal[[1]] <- x[[internal]]
+                tips <- nodesInfo(x)$tip
+                i=1
+                while (!all(subCoal[[i]]$coalescing%in%tips))
+                  {
+                  for (descendant in subCoal[[i]]$coalescing)
+                    {
+                    if (!(descendant%in%tips))
+                      {
+                      i=i+1
+                      subCoal[[i]] <- x[[grep(descendant,lapply(x,function(x) x$internal))]]
+                      }
+                    }
+                  }
+                }
+              subCoal <- lapply(order(unlist(lapply(subCoal,function(x) x$time))),function(i) subCoal[[i]])
+              new("Coalescent",subCoal)
+              } else {
+              if (time>0) 
+                {
+                stop("time requested is negative in Coalescent subset") } else {
+                Nodes <- which(unlist(lapply(x,function(x) x$time))<Time)
+                tips <- nodesInfo(x)$tip
+                subCoal
+                i=0
+                for (intNode in Nodes) 
+                  {
+                  i=i+1
+                  subCoal[[i]] = x[[Nodes[intNode]]]
+                  while (!all(subCoal[[i]]$coalescing%in%tips))
+                    {
+                    for (descendant in subCoal[[i]]$coalescing)
+                      {
+                      if (!(descendant%in%tips))
+                        {
+                        i=i+1
+                        subCoal[[i]] <- x[[grep(descendant,lapply(x,function(x) x$internal))]]
+                        }
+                      }
+                    }
+                  }
+                NewNodes <- lapply(subCoal,function(x) x$newNodes)
+                uniqueElts <- !duplicated(NewNodes)
+                subCoal <- lapply(uniqueElts,function(i) subCoal[[i]])
+                subCoal <- lapply(order(unlist(lapply(subCoal,function(x) x$time))),function(i) subCoal[[i]])
+                new("Coalescent",subCoal)
+                }
+             }
+          }
+)
+
 setMethod(
   f="simul_coalescent",
   signature=c("Demographic","logical"),
@@ -238,8 +331,8 @@ setMethod(
     prob_forward=NA
     N <- round(demographic["K"]);N[N==0]<-1
     coalescent = list()
-    nodes = as.numeric(rownames(xyFromCellA(demographic)));names(nodes)=as.character(nodes)
-    cell_number_of_nodes <- as.numeric(rownames(xyFromCellA(demographic)))             #point d'ou part la coalescent <- vecteurc numeric dont les valeur sont dans les cellules attribué
+    nodes = as.integer(rownames(xyFromCellA(demographic)));names(nodes)=as.character(nodes)
+    cell_number_of_nodes <- as.integer(rownames(xyFromCellA(demographic)))             #point d'ou part la coalescent <- vecteurc numeric dont les valeur sont dans les cellules attribué
     names(cell_number_of_nodes) <- nodes
     parent_cell_number_of_nodes <- cell_number_of_nodes
     nodes_remaining_by_cell = list()
@@ -260,29 +353,23 @@ setMethod(
       time=time+1; if(printCoal==TRUE){if (round(time/10)*10==time) {print(time)}}
       for (cell in 1:nCellA(demographic))
       {
-        nodes_remaining_in_the_cell = nodes_remaining_by_cell[[cell]] <- as.numeric(names(which(parent_cell_number_of_nodes==cell)))
-      }
-      prob_forward[time] = sum(log(demographic["TransiForw"][parent_cell_number_of_nodes,cell_number_of_nodes]))
-      time=time+1;  if(printCoal==TRUE){if (round(time/10)*10==time) {print(time)}}
-      for (cell in 1:nCellA(demographic))
-      {
-        nodes_remaining_in_the_cell = nodes_remaining_by_cell[[cell]] <- as.numeric(names(which(parent_cell_number_of_nodes==cell)))
-        if (length(nodes_remaining_in_the_cell)>1)
+        nodes_remaining_by_cell[[cell]] <- as.integer(names(which(parent_cell_number_of_nodes==cell)))
+        if (length(nodes_remaining_by_cell[[cell]])>1)
         {
-          nbgenesremaining=length(nodes_remaining_in_the_cell)
-          smp = sample(N[cell],length(nodes_remaining_in_the_cell),replace=TRUE)
-          parentoffspringmatrix <- matrix(smp,nrow=nbgenesremaining,ncol=N[cell])==matrix(1:N[cell],nrow=nbgenesremaining,ncol=N[cell],byrow=TRUE)
-          rownames(parentoffspringmatrix) <- nodes_remaining_in_the_cell
+          nbgenesremaining=length(nodes_remaining_by_cell[[cell]])
+          smp = sample(N[cell],length(nodes_remaining_by_cell[[cell]]),replace=TRUE) # sample the parents among the N[cell] individuals of the cell
+          parentoffspringmatrix <- matrix(smp,nrow=nbgenesremaining,ncol=N[cell])==matrix(1:N[cell],nrow=nbgenesremaining,ncol=N[cell],byrow=TRUE) # create a binary matrix of size offspring x parent that contains offspring parent relationships
+          rownames(parentoffspringmatrix) <- nodes_remaining_by_cell[[cell]] # name the lines as the offspring nodes
           if (any(colSums(parentoffspringmatrix)>1) )
           {
             for (multiple in which(colSums(parentoffspringmatrix)>1))
             {
               single_coalescence_events = single_coalescence_events +1
               nodes_that_coalesce = names(which(parentoffspringmatrix[,multiple]))
-              new_node <- max(nodes)+1;nodes=nodes[!(names(nodes)%in%nodes_that_coalesce)];nodes=append(nodes,new_node);names(nodes)[length(nodes)]=new_node
+              new_node <- max(nodes)+integer(1);nodes=nodes[!(names(nodes)%in%nodes_that_coalesce)];nodes=append(nodes,new_node);names(nodes)[length(nodes)]=new_node
               parent_cell_number_of_nodes <- append(parent_cell_number_of_nodes[!(names(parent_cell_number_of_nodes)%in%nodes_that_coalesce)],cell);names(parent_cell_number_of_nodes)[length(parent_cell_number_of_nodes)]<-new_node
-              coalescent[[single_coalescence_events]] <- list(time=time,coalescing=as.numeric(nodes_that_coalesce),new_node=new_node)
-              nodes_remaining_in_the_cell = nodes_remaining_by_cell[[cell]] <- append(nodes_remaining_in_the_cell[!nodes_remaining_in_the_cell %in% nodes_that_coalesce],new_node)
+              coalescent[[single_coalescence_events]] <- new("coalescentEvent",time=time,coalescing=as.integer(nodes_that_coalesce),internal=new_node,br_length=integer(),descendantTips=integer())
+              nodes_remaining_by_cell[[cell]] <- append(nodes_remaining_by_cell[[cell]][!nodes_remaining_by_cell[[cell]] %in% nodes_that_coalesce],new_node)
               single_and_multiple_coalescence_events = single_and_multiple_coalescence_events + length(nodes_that_coalesce) - 1
             }
           }
@@ -290,26 +377,29 @@ setMethod(
       }
       cell_number_of_nodes = parent_cell_number_of_nodes
     }
+    coalescent <- new("Coalescent",coalescent)
     tips = NULL
     internals = NULL
     nodes = NULL
     times = NULL
-    for (i in 1:length(coalescent))#i=1;i=2
+    for (i in 1:length(coalescent))
     {
-      nodes = append(nodes,c(coalescent[[i]]$coalescing,coalescent[[i]]$new_node))
-      internals = append(internals,coalescent[[i]]$new_node)
+      nodes = append(nodes,c(coalescent[[i]]$coalescing,slot(coalescent[[i]],"internal")))
+      internals = append(internals,coalescent[[i]]$internal)
       times = append(times,coalescent[[i]]$time)
     }
     nodes = as.numeric(levels(as.factor(c(nodes,internals))));nodes = nodes[order(nodes)]
     tips = nodes[!((nodes)%in%(internals))]
     # getting the branch length of each coalescing node
+    # adding descendant tip information : internal nodes are attributed to descendant tip list
     for (i in 1:length(coalescent))#i=1
     {
       for (coalescing in coalescent[[i]]$coalescing)# coalescing = coalescent[[i]]$coalescing[1]
       {
-        if (coalescing %in% tips) {coalescent[[i]]$br_length <- append(coalescent[[i]]$br_length,coalescent[[i]]$time)
+        slot(coalescent[[i]],"tipDescendants") <- nodesInfo(subset(coalescent,internal=i))$tip
+        if (coalescing %in% tips) {slot(coalescent[[i]],"br_length") <- append(slot(coalescent[[i]],"br_length"),coalescent[[i]]$time)
         } else {
-          coalescent[[i]]$br_length <- append(coalescent[[i]]$br_length,coalescent[[i]]$time-times[which(internals==coalescing)])
+          slot(coalescent[[i]],"br_length") <- slot(coalescent[[i]],"br_length")+slot(coalescent[[i]],"time")-times[which(internals==coalescing)]
         }
       }
     }
@@ -317,19 +407,20 @@ setMethod(
   }
 )
 
+
 setMethod(
   f="simul_multi_coal",
   signature=c("Demographic","logical","numeric"),
   definition=function(demographic,printCoal,iteration){
-    lapply(1:iteration,function(x)simul_coalescent(demographic,printCoal))
+    lapply(1:iteration,function(x) simul_coalescent(demographic,printCoal))
   }
 )
 
-setMetho("plot",
-         signature="genealogy",
-         definition=function(object){
+setMethod("plot",
+         signature="Coalescent",
+         definition=function(x){
          plot.new()
-         #tips=typeOfNodes(object)$tip
+         #tips=nodesInfo(object)$tip
          tips=gsub("\\(","",gsub("\\)","",gsub(";","",strsplit(coalescent_2_newick(object),",")[[1]])))
          coords = list()
          text(tips,x=((0:(length(tips)-1))/(length(tips)-1)),y=0)
@@ -340,18 +431,45 @@ setMetho("plot",
            coords[[j]] <- coalescent[[i]]
            }
          }
+}
 ) 
+
+setMethod(f="dist",
+          signature="Coalescent",
+          definition = function(x){
+            ninfo = nodesInfo(x)
+            coalPairMat <- diag(length(ninfo$nodes)) # we set the pairs of nodes that have coalesced together to the digaonal of tip nodes
+            matDist = matrix(0,nrow=length(ninfo$tip),ncol=length(ninfo$tip), dimnames=list(ninfo$tip,ninfo$tip))
+            # we set the matDist result to a 0 distance matrix
+            coalesced=rep(FALSE,length(ninfo$tip))
+            remaining=!coalesced
+            remaining=ninfo$tip
+            coalesced=NULL
+            Time = 0 # we set to zero the time of the last coalescence
+            # we loop over the coalescence events
+            for (i in 1:length(x))
+              {                
+                # we add a distance to the pairs of nodes that have not coalesced that equals to the time since the last coalescence event 
+                matDist = matDist+!coalPairMat*(x[[i]]$time - Time)  
+                if length(coalPaiMat[x[[i]]$descendantTips==0) coalPaiMat[x[[i]]$descendantTips<-subset  
+                coalPaiMat[x[[i]]$descendantTips,x[[i]]$descendantTips]<-TRUE
+                matDist[remaining,ninfo$tip]=matDist[remaining,ninfo$tip]+slot(x[[i]],"br_length")
+                coalesced = as.character(levels(as.factor(append(coalesced,remaining[remaining%in%slot(x[[i]],"coalescing")]))))
+                remaining = remaining[!remaining%in%slot(x[[i]],"coalescing")]
+              }
+})
 
 setMethod(
   f="compare",
   signature=c("Demographic","Landscape","logical","numeric"),
   definition=function(demographic,popSize,printCoal,iteration){
-    coalescent<-simul_multi_coal(demo1,printCoal,iteration)
+    coalescent<-simul_multi_coal(demographic,printCoal,iteration)
     lcoal<-lapply(1:iteration,function(n){
-      coal_2<-coalescent_2_newick(coalescent[[n]][[1]])
-      cat(coal_2, file = "ex.tre", sep = "\n")
-      tree<-read.tree("ex.tre")
-      cophenetic(tree)
+      dist(coalescent[[n]][[1]])
+#      coal_2<-coalescent_2_newick(coalescent[[n]][[1]])
+#      cat(coal_2, file = "ex.tre", sep = "\n")
+#      tree<-read.tree("ex.tre")
+#      cophenetic(tree)
     })
     a<-matrix(data = apply(sapply(lcoal,as.vector),1,mean),nrow = nrow(lcoal[[1]]),ncol = ncol(lcoal[[1]]))
     b<-linearizedFstDigraph(demographic["TransiBackw"],popSize)
@@ -417,15 +535,15 @@ setMethod(
 
 setMethod(
   f="coalescent_2_newick",
-  signature="list",
+  signature="Coalescent",
   definition=function(coalescent)
   {
-    tree=paste(" ",coalescent[[length(coalescent)]]$new_node," ",sep="")
+    tree=paste(" ",slot(coalescent[[length(coalescent)]],"internal")," ",sep="")
     for (i in length(coalescent):1)
     {
       Time = coalescent[[i]]$time
-      coalesc <- as.character(coalescent[[i]]$coalescing)
-      tree <- str_replace(tree,paste(" ",as.character(coalescent[[i]]$new_node)," ",sep=""),paste(" ( ",paste(" ",coalesc," :",coalescent[[i]]$br_length,collapse=" ,",sep=""),") ",sep=""))
+      coalesc <- as.character(slot(coalescent[[i]],"coalescing"))
+      tree <- str_replace(tree,paste(" ",as.character(slot(coalescent[[i]],"internal"))," ",sep=""),paste(" ( ",paste(" ",coalesc," :",slot(coalescent[[i]],"br_length"),collapse=" ,",sep=""),") ",sep=""))
     }
     tree <- gsub(" ","",paste(tree,";",sep=""))
     tree
@@ -433,17 +551,18 @@ setMethod(
 )
 
 setMethod(
-  f="typeOfNodes",
-  signature="coalescent",
+  f="nodesInfo",
+  signature="Coalescent",
   definition=function(coalescent)
   {
-    nodes  = as.character(levels(as.factor(unlist(lapply(coalescent, function(x) x$coalescing)))))
-    internals = unlist(lapply(coalescent, function(x) x$new_node))
+    nodes  = as.integer(levels(as.factor(unlist(lapply(coalescent, function(x) slot(x,"coalescing"))))))
+    internals = unlist(lapply(coalescent, function(x) slot(x,"internal")))
     tip = nodes[!(nodes%in%internals)]
+    x=list(tip=tip,internals=internals,nodes=nodes)
+    x
   }
-x=NULL; x$tip=tip;x$internals=x$internals;x$nodes=nodes
-x
 )
+
 setMethod(
   f="linearizedFstUndigraph",
   signature=c("TransitionBackward","Landscape"),

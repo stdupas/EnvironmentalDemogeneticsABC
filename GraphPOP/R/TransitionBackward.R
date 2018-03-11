@@ -450,8 +450,8 @@ setMethod(f="dist",
             for (i in 1:length(x))
               {                
                 # we add a distance to the pairs of nodes that have not coalesced that equals to the time since the last coalescence event 
-                matDist = matDist+!coalPairMat*(x[[i]]$time - Time)  
-                if length(coalPaiMat[x[[i]]$descendantTips==0) coalPaiMat[x[[i]]$descendantTips<-subset  
+                matDist = matDist+!coalPairMat*(x[[i]]$time - Time)
+                if (length(coalPaiMat[x[[i]]$descendantTips,])==0) coalPaiMat[x[[i]]$descendantTips,]<-subset  
                 coalPaiMat[x[[i]]$descendantTips,x[[i]]$descendantTips]<-TRUE
                 matDist[remaining,ninfo$tip]=matDist[remaining,ninfo$tip]+slot(x[[i]],"br_length")
                 coalesced = as.character(levels(as.factor(append(coalesced,remaining[remaining%in%slot(x[[i]],"coalescing")]))))

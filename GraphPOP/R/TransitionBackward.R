@@ -1,6 +1,6 @@
-library(ape)
+#library(ape)
 library(stringr)
-library(markovchain)
+#library(markovchain)
 library(matrixcalc)
 library(MASS)
 
@@ -334,6 +334,7 @@ setMethod(
     nodes = as.integer(rownames(xyFromCellA(demographic)));names(nodes)=as.character(nodes)
     cell_number_of_nodes <- as.integer(rownames(xyFromCellA(demographic)))             #point d'ou part la coalescent <- vecteurc numeric dont les valeur sont dans les cellules attribué
     names(cell_number_of_nodes) <- nodes
+    numberPerCell <- vector(1,)
     parent_cell_number_of_nodes <- cell_number_of_nodes
     nodes_remaining_by_cell = list()
     time=0
@@ -345,13 +346,15 @@ setMethod(
     }
     while (length(unlist(nodes_remaining_by_cell))>1)
     {
-      for (node in 1:length(parent_cell_number_of_nodes))
-      {
-        parent_cell_number_of_nodes[node] = sample(nCellA(demographic),size=1,prob=c(demographic["TransiBackw"][cell_number_of_nodes[node],]))
-      }
-      prob_forward[time] = sum(log(demographic["TransiForw"][parent_cell_number_of_nodes,cell_number_of_nodes]))
-      time=time+1; if(printCoal==TRUE){if (round(time/10)*10==time) {print(time)}}
-      for (cell in 1:nCellA(demographic))
+      parent_cell_number_of_nodes[1:length(parent_cell_number_of_nodes)]<-sapply(1:length(parent_cell_number_of_nodes),function(node) sample(nCellA(demographic),size=1,prob=c(demographic["TransiBackw"][cell_number_of_nodes[node],])))
+#      for (node in 1:length(parent_cell_number_of_nodes))
+#      {
+#        parent_cell_number_of_nodes[node] = sample(nCellA(demographic),size=1,prob=c(demographic["TransiBackw"][cell_number_of_nodes[node],]))
+#      }
+      time=time+1; prob_forward[time] = sum(log(demographic["TransiForw"][parent_cell_number_of_nodes,cell_number_of_nodes]))
+      if(printCoal==TRUE){if (round(time/10)*10==time) {print(time)}}
+      nodes_remaining_by_cell = lapply(1:nCellA(demographic),function(cell) which(parent_cell_number_of_nodes==cell))
+	for (cell in 1:nCellA(demographic))
       {
         nodes_remaining_by_cell[[cell]] <- as.integer(names(which(parent_cell_number_of_nodes==cell)))
         if (length(nodes_remaining_by_cell[[cell]])>1)
@@ -421,7 +424,7 @@ setMethod("plot",
          definition=function(x){
          plot.new()
          #tips=nodesInfo(object)$tip
-         tips=gsub("\\(","",gsub("\\)","",gsub(";","",strsplit(coalescent_2_newick(object),",")[[1]])))
+         tips=gsub("\\(","",gsub("\\)","",gsub(";","",strsplit(coalescent_2_newick(x),",")[[1]])))
          coords = list()
          text(tips,x=((0:(length(tips)-1))/(length(tips)-1)),y=0)
          for (i in names(coalescent))

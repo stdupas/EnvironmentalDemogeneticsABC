@@ -128,7 +128,7 @@ setClass("Landscape",
          )
 
 
-Landscape<-function(rasterstack=rasterstack,period=dateVector, vars=charVector){
+setLandscape<-function(rasterstack=rasterstack,period=dateVector, vars=charVector){
   if(class(rasterstack)!="RasterStack")stop("error in Landscape rasterstack : rasterstack just accept RasterStack!")
   if (length(rasterstack@layers)==0)stop("rasterstack values is null!")
   if(class(period)!="Date")stop("error in Landscape period : period just accept Date!")
@@ -159,12 +159,64 @@ setClass("LandscapeHistory",
                            }
                   )
 
+#setClass("nonSpatialLandscape",
+#         contains="dist")
+
+#setClass("multiDimLandscape",)
+
+setClass("landSample",
+         contains="Landscape",
+         slot=c(xy="SpatialPoints"),
+         validity = function(object) {if (any(is.na(cellFromXY(object,slot(object,"xy"))))) stop("points out of landscape")}
+)
+
+setLandSample <- function(landscape,xy){
+  if (class(landscape)!="Landscape") stop("Sample function needs a Landscape as first argument")
+  if (!(class(xy)%in%c("data.frame","SpatialPoints"))) stop("Sample function needs 'SpatialPoints' or data.frame xy as first argument as first argument")
+  new("landSample",landscape,xy=SpatialPoints(xy))
+}
+
+setClass("Genotypes",
+# class genotypes contains 4 slots
+# values is a data.frame locus in column and haplotypes in rows. Names of rows
+#   corespond to individualName.1:ploidy
+# locusNames
+# individualNames
+# ploidy
+         slot=c(values="data.frame",locusNames="character",ploidy="integer",individualNames="character"),
+         #validity=validityGenotypes
+         )
+
+validityGenotypes <- function(object){
+           if (length(slot(object,"individualNames"))*slot(object,"ploidy")!=nrow(slot(object,"values"))) stop("individualNames length and values nrow are differnt")
+           if (length(slot(object,"locusNames"))!=ncol(slot(object,"values"))) stop("individualNames length times ploidy differs from values nrow")
+           if (!any(rownames(slot(object,"values"))!=paste(rep(slot(object,"individualNames"),each=slot(object,"ploidy")),1:slot(object,"ploidy"),sep=""))) stop("invalid haplotypes names in values data.frame")
+}
+
+setGenotypes <- function(values=data.frame(locus1=c(NA,NA)),locusNames="locus1",ploidy=as.integer(2),individualNames="ind1"){
+  rownames(values)=paste(rep(individualNames,ploidy),1:ploidy,sep=".")
+  colnames(values)=locusNames
+  new("Genotypes",values=values,locusNames=locusNames,ploidy=ploidy,individualNames=individualNames)
+}
+
+setClass("Data",
+         slot=c(landcape="Landscape",coords="SpatialPoints",genotypes="Genotypes"),
+         validity=function(object){
+           if (length(slot(slot(object,"genotypes"),"individualNames"))==length(slot(object,"coords"))) stop("number of samples and number of genotypes differs")
+          }
+         )
+
+setData <- function(landscape=landscape,coords=SpatialPoints(data.frame(x=1,y=1)),genotypes=setGenotypes){
+  new("Data",landscape,coords,genotypes)
+}
+
 LandscapeHistory<-function(Landscapelist=listOfLandscape){
   li<-unlist(lapply(1:length(Landscapelist),function(x) Landscapelist[[x]]["period"][1]))
   o<-order(c(li))
   lo<-unlist(lapply(1:length(o),function(x)lapply(1:length(o),function(y){if(o[y]==x)Landscapelist[y]})))
   new("LandscapeHistory",lo)
 }
+
 
 
 nbpar <- function(x) {unlist(lapply(x,function(x) switch(x[],
@@ -206,7 +258,7 @@ setClass("NicheModel",
          validity=validityNicheModel
 )
 
-NicheModel<-function(variables=characterVector1,parameterList=listOfNumeric,reactNorms=characterVector2){#,form=formul){
+setNicheModel<-function(variables=characterVector1,parameterList=listOfNumeric,reactNorms=characterVector2){#,form=formul){
   names(parameterList)=variables
   names(reactNorms)=variables
   new("NicheModel",variables=variables,parameterList=parameterList,reactNorms=reactNorms)#,form=form)
@@ -230,7 +282,7 @@ setClass("MigrationModel",
 
 
 
-MigrationModel<-function(shape=character,param=p){
+setMigrationModel<-function(shape=character,param=p){
   new("MigrationModel",shapeDisp=shape,pDisp=param)
 }
 
@@ -243,7 +295,7 @@ setClass("EnvDinModel",
          }
          )
 
-EnvDinModel<-function(K=nichemodelK,R=nichemodelR,migration=m){
+setEnvDinModel<-function(K=nichemodelK,R=nichemodelR,migration=m){
   new("EnvDinModel",K=K,R=R,migration=migration)
 }
 
@@ -266,6 +318,8 @@ TransitionBackward<- function(matrix){
   }
   new(Class="TransitionBackward",matrix)
 }
+
+
 
 ######### SET METHODS ##########################################################################################################
 

@@ -1,0 +1,30 @@
+<Root>
+<Header info="Created with miMind software."></Header>
+<Content>
+<Node Title="Crop"></Node>
+<Node Title="Soil"></Node>
+<Node Title="Forest"></Node>
+<Node Title="Farmer"></Node>
+<Node Title="Informer"></Node>
+<Node Title="Begger"></Node>
+<Node Title="Heel"></Node>
+<Node Title="Exiled"></Node>
+<Node Title="Sun"></Node>
+<Node Title="Fossil fuel"></Node>
+<Node Title="Aluminium "></Node>
+<Node Title="Gaz"></Node>
+<Node Title="Biodiversity indicator"></Node>
+<Node Title="Market indicators"></Node>
+<Node Title="Factory"></Node>
+<Node Title=""></Node>
+<Node Title="Food"></Node>
+<Node Title="Water"></Node>
+<Node Title="Food minerals"></Node>
+<Node Title="Electricity "></Node>
+<Node Title="Copper"></Node>
+<Node Title="Powerclass"></Node>
+<Node Title="Transporter"></Node>
+<Node Title="Dynamic bayesian network model"></Node>
+<Node Title="Extractor"></Node>
+</Content>
+</Root>
